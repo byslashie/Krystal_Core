@@ -1,0 +1,26 @@
+{
+	"nodes":[
+		{"id":"skills","type":"text","text":"⚙️ 技能模組群\n- Python / Backtrader / Monte Carlo / PyPortfolioOpt\n- 風控模組 (VaR / Kelly)\n- AI 決策模組 (RuleEngine / GPT)","x":-170,"y":430,"width":420,"height":230,"color":"ae3ec9"},
+		{"id":"e2ede1981e3c1dba","type":"text","text":"[我的履歷](履歷.md)\n[量化作品集](策略_回測報告.md)\n","x":-85,"y":760,"width":250,"height":120},
+		{"id":"career","type":"text","text":"💼 職涯模組群\n- 履歷模板（量化成果）\n- 專案作品集\n- 面試紀錄表\n- 人脈 / 公司清單","x":320,"y":430,"width":350,"height":225,"color":"be4bdb"},
+		{"id":"eee6b6079a6b413c","type":"text","text":"[面試記錄表](面試記錄表.md)","x":370,"y":760,"width":250,"height":60},
+		{"id":"main","type":"text","text":"🎯 2025–2026 職涯轉職總藍圖","x":-10,"y":-120,"width":350,"height":80,"color":"1c7ed6"},
+		{"id":"phase3","type":"text","text":"🌟 2026 Q2｜黃金期\n- 簽約、談薪、正式轉職\n- 若留原公司→爭取升職或主導專案\n- 建立績效追蹤表","x":320,"y":80,"width":350,"height":240,"color":"339af0"},
+		{"id":"phase4","type":"text","text":"🌿 2026 Q3–Q4｜穩定期\n- 適應新節奏、強化技能\n- 維護量化系統、擴大專業曝光\n- 每季檢討職涯方向","x":760,"y":60,"width":350,"height":280,"color":"228be6"},
+		{"id":"phase1","type":"text","text":"🧭 2025 Q4｜養功期\n- 明確方向（量化交易 or 策略PM）\n- 補強技能：Python、Backtrader、PyPortfolioOpt\n- 建立作品集 + 履歷更新","x":-630,"y":40,"width":350,"height":320,"color":"74c0fc"},
+		{"id":"mindset","type":"text","text":"🧘 心態模組群\n- 每週反思筆記（情緒 × 效率 × 成果）\n- 運動與睡眠追蹤\n- 感恩與成就紀錄","x":-630,"y":430,"width":350,"height":230,"color":"da77f2"},
+		{"id":"3d73393c8dc895fb","type":"text","text":"[心態週記](心態週記.md)\n[職涯定位](職涯定位.md)\n[實作規劃表](實作規劃表.md)","x":-580,"y":745,"width":250,"height":150},
+		{"id":"phase2","type":"text","text":"🚀 2026 Q1｜啟動期\n- 投遞履歷、面試暖身\n- 接觸獵頭、人脈推薦\n- 建立面試紀錄表","x":-135,"y":100,"width":350,"height":200,"color":"4dabf7"}
+	],
+	"edges":[
+		{"id":"edge4","fromNode":"phase3","fromSide":"right","toNode":"phase4","toSide":"left"},
+		{"id":"edge5","fromNode":"phase2","fromSide":"bottom","toNode":"skills","toSide":"top"},
+		{"id":"edge6","fromNode":"phase3","fromSide":"bottom","toNode":"career","toSide":"top"},
+		{"id":"edge7","fromNode":"phase1","fromSide":"bottom","toNode":"mindset","toSide":"top"},
+		{"id":"edge3","fromNode":"phase2","fromSide":"right","toNode":"phase3","toSide":"left"},
+		{"id":"edge2","fromNode":"phase1","fromSide":"right","toNode":"phase2","toSide":"left"},
+		{"id":"555c4f277b4cf06c","fromNode":"skills","fromSide":"bottom","toNode":"e2ede1981e3c1dba","toSide":"top"},
+		{"id":"f82a2429826c8401","fromNode":"career","fromSide":"bottom","toNode":"eee6b6079a6b413c","toSide":"top"},
+		{"id":"fce3a4d43dfe5dbc","fromNode":"mindset","fromSide":"bottom","toNode":"3d73393c8dc895fb","toSide":"top"}
+	]
+}

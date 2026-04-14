@@ -1,0 +1,11 @@
+models:
+  - name: Gemma 4
+    provider: ollama
+    model: gemma4:e4b
+    roles:
+      - chat
+      - edit
+      - apply
+  - name: Autodetect
+    provider: ollama
+    model: AUTODETECT
