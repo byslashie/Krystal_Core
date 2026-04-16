@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cat \"/Users/chenyu/Krystal_Trading_Vault_v13/2026體態能量紀錄/\"*.md)"
-    ]
-  }
-}
