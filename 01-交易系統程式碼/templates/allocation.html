@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}💰 資金配置 - Krystal AI 交易系統{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>💰 資金配置</h1>
+    <p class="subtitle">優化資金分配和頭寸管理</p>
+</div>
+
+<section class="section">
+    <div class="section-header">
+        <h2>當前配置</h2>
+        <p class="section-subtitle">各類資產的配置比例</p>
+    </div>
+    <div class="card">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
+            <div id="allocation-pie-chart" style="height: 300px;"></div>
+            <div style="padding: 10px;">
+                <h3>配置詳情</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                        <span>現金</span>
+                        <span style="float: right; color: #10b981;">45%</span>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                        <span>股票</span>
+                        <span style="float: right; color: #3b82f6;">35%</span>
+                    </li>
+                    <li style="padding: 8px 0;">
+                        <span>期貨</span>
+                        <span style="float: right; color: #f59e0b;">20%</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h2>推薦配置</h2>
+        <p class="section-subtitle">基於風險評估的配置建議</p>
+    </div>
+    <div class="card" style="padding: 20px; color: #6b7280;">
+        <p>根據目前的市場環境和您的風險承受度，推薦以下配置...</p>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加載配置數據
+    console.log('Loading allocation data...');
+});
+</script>
+{% endblock %}

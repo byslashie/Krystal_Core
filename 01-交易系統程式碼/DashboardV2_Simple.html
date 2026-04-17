@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krystal AI 交易系統 v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6B21A8;
+            --secondary: #06B6D4;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg-primary: #F5F0FF;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A1A2E;
+            --text-secondary: #6B7280;
+            --border-color: #E8E0FF;
+            --header-height: 64px;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .hamburger {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: none;
+            padding: 8px;
+            margin-right: 16px;
+            color: var(--text-primary);
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: var(--header-height);
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 99;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            padding: 0 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-nav button {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .sidebar-nav button:hover {
+            background: var(--bg-primary);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .sidebar-nav button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Overlay when sidebar is open on mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 98;
+        }
+
+        .sidebar-overlay.visible {
+            display: block;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .container {
+            margin-top: var(--header-height);
+            margin-left: var(--sidebar-width);
+            padding: 24px;
+            max-width: calc(100% - var(--sidebar-width));
+            transition: margin-left 0.3s ease;
+        }
+
+        .container.full-width {
+            margin-left: 0;
+            max-width: 100%;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-box-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-box-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .account-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .account-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .account-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #dcfce7;
+            color: #10B981;
+        }
+
+        .account-metrics {
+            display: grid;
+            gap: 12px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric-value.positive {
+            color: var(--success);
+        }
+
+        .metric-value.negative {
+            color: var(--danger);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        th {
+            background: var(--bg-primary);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .container {
+                margin-left: 0;
+                max-width: 100%;
+            }
+
+            .nav-buttons {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar-overlay {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="hamburger" onclick="toggleSidebar()">☰</button>
+            <div class="logo">
+                <div>💎</div>
+                <div>Krystal AI 交易系統 v2</div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="showPage('dashboard')">總覽</button>
+            <button class="nav-btn" onclick="showPage('risk')">風控</button>
+            <button class="nav-btn" onclick="showPage('performance')">績效</button>
+            <button class="nav-btn" onclick="showPage('monitoring')">監控</button>
+            <button class="nav-btn" onclick="showPage('trading')">交易</button>
+            <button class="nav-btn" onclick="showPage('strategies')">策略</button>
+            <button class="nav-btn" onclick="showPage('intel')">情報</button>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">📊 主要功能</div>
+            <div class="sidebar-nav">
+                <button onclick="showPage('dashboard'); closeSidebar()" class="active">📊 賬戶總覽</button>
+                <button onclick="showPage('risk'); closeSidebar()">🛡️ 風控管理</button>
+                <button onclick="showPage('performance'); closeSidebar()">📈 績效分析</button>
+                <button onclick="showPage('monitoring'); closeSidebar()">🔍 監控中心</button>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">💹 交易管理</div>
+            <div class="sidebar-nav">
+                <button onclick="showPage('trading'); closeSidebar()">💹 交易面板</button>
+                <button onclick="showPage('strategies'); closeSidebar()">📁 策略配置</button>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">📡 其他</div>
+            <div class="sidebar-nav">
+                <button onclick="showPage('intel'); closeSidebar()">📡 情報資訊</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="page-title">📊 賬戶總覽</div>
+            <div class="page-subtitle">三個交易賬戶的實時狀況</div>
+
+            <div class="accounts-grid">
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-name">IB (美股/期貨)</div>
+                        <div class="account-status">已同步</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">淨資產</span>
+                            <span class="metric-value">$348,706</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">日損益</span>
+                            <span class="metric-value positive">+$2,340</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">持倉數</span>
+                            <span class="metric-value">8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-name">Yuanta (台股)</div>
+                        <div class="account-status">已同步</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">淨資產</span>
+                            <span class="metric-value">$273,983</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">日損益</span>
+                            <span class="metric-value negative">-$1,250</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">持倉數</span>
+                            <span class="metric-value">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-name">Schwab (美股)</div>
+                        <div class="account-status">已同步</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">淨資產</span>
+                            <span class="metric-value">$249,076</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">日損益</span>
+                            <span class="metric-value positive">+$1,890</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">持倉數</span>
+                            <span class="metric-value">3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📈 整體績效</h2>
+                    <p>過去 12 個月表現</p>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-box-value" style="color: #10B981;">+18.5%</div>
+                        <div class="metric-box-label">年度報酬</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-box-value">1.45</div>
+                        <div class="metric-box-label">夏普比率</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-box-value" style="color: #EF4444;">-8.2%</div>
+                        <div class="metric-box-label">最大回撤</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-box-value">56.3%</div>
+                        <div class="metric-box-label">勝率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Page -->
+        <div id="risk" class="page">
+            <div class="page-title">🛡️ 風控管理</div>
+            <div class="page-subtitle">實時風險監控與評分</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value">85/100</div>
+                    <div class="metric-box-label">風險評分</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">2.3%</div>
+                    <div class="metric-box-label">每日風險</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">1.8x</div>
+                    <div class="metric-box-label">淨槓桿率</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>⚠️ 風險警告</h2>
+                    <p>需要立即關注的風險項目</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>類型</th>
+                            <th>內容</th>
+                            <th>當前值</th>
+                            <th>等級</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>持倉集中</td>
+                            <td>單個持倉比例過高</td>
+                            <td>22.5%</td>
+                            <td style="color: #F59E0B;">中</td>
+                        </tr>
+                        <tr>
+                            <td>槓桿過高</td>
+                            <td>淨槓桿率超限</td>
+                            <td>1.8x</td>
+                            <td style="color: #F59E0B;">中</td>
+                        </tr>
+                        <tr>
+                            <td>流動性不足</td>
+                            <td>低流動性持倉數量</td>
+                            <td>2個</td>
+                            <td style="color: #10B981;">低</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Performance Page -->
+        <div id="performance" class="page">
+            <div class="page-title">📊 績效分析</div>
+            <div class="page-subtitle">策略表現與回測結果</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value" style="color: #10B981;">+18.5%</div>
+                    <div class="metric-box-label">整體年報酬</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">56.3%</div>
+                    <div class="metric-box-label">綜合勝率</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">1.45</div>
+                    <div class="metric-box-label">夏普比率</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value" style="color: #EF4444;">-8.2%</div>
+                    <div class="metric-box-label">最大回撤</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📈 活躍策略績效</h2>
+                    <p>過去 12 個月的詳細表現</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>策略名稱</th>
+                            <th>報酬</th>
+                            <th>勝率</th>
+                            <th>Sharpe</th>
+                            <th>最大回撤</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>技術面策略</td>
+                            <td style="color: #10B981;">+24.5%</td>
+                            <td>55.2%</td>
+                            <td>1.82</td>
+                            <td style="color: #EF4444;">-7.2%</td>
+                        </tr>
+                        <tr>
+                            <td>強勢股優化</td>
+                            <td style="color: #10B981;">+32.1%</td>
+                            <td>58.1%</td>
+                            <td>1.95</td>
+                            <td style="color: #EF4444;">-5.8%</td>
+                        </tr>
+                        <tr>
+                            <td>總經策略</td>
+                            <td style="color: #10B981;">+18.3%</td>
+                            <td>51.8%</td>
+                            <td>1.45</td>
+                            <td style="color: #EF4444;">-9.1%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Monitoring Page -->
+        <div id="monitoring" class="page">
+            <div class="page-title">🔍 監控中心</div>
+            <div class="page-subtitle">實時交易和市場監控</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value">12</div>
+                    <div class="metric-box-label">活躍監控</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">3</div>
+                    <div class="metric-box-label">待執行信號</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">45</div>
+                    <div class="metric-box-label">今日交易</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📡 實時交易信號</h2>
+                    <p>等待執行的交易信號</p>
+                </div>
+                <div class="card" style="border-left: 4px solid #10B981;">
+                    <div class="card-title">✓ 買入信號 - 2330.TW (台積電)</div>
+                    <div class="card-subtitle">策略: 技術面策略 | 強度: 8.5/10 | 時間: 14:35</div>
+                </div>
+                <div class="card" style="border-left: 4px solid #06B6D4;">
+                    <div class="card-title">↑ 加倉信號 - AAPL.US (蘋果)</div>
+                    <div class="card-subtitle">策略: 強勢股優化 | 強度: 7.8/10 | 時間: 14:22</div>
+                </div>
+                <div class="card" style="border-left: 4px solid #EF4444;">
+                    <div class="card-title">✕ 賣出信號 - NVDA.US (輝達)</div>
+                    <div class="card-subtitle">策略: 總經策略 | 強度: 7.2/10 | 時間: 13:58</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Page -->
+        <div id="trading" class="page">
+            <div class="page-title">💹 交易面板</div>
+            <div class="page-subtitle">執行和管理交易</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value">16</div>
+                    <div class="metric-box-label">開放持倉</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value" style="color: #10B981;">+4,250</div>
+                    <div class="metric-box-label">未實現損益</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value" style="color: #10B981;">+8,340</div>
+                    <div class="metric-box-label">已實現損益</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📊 當前持倉</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>數量</th>
+                            <th>成本價</th>
+                            <th>當前價</th>
+                            <th>損益</th>
+                            <th>損益率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2330.TW</td>
+                            <td>100</td>
+                            <td>585.00</td>
+                            <td>595.50</td>
+                            <td style="color: #10B981;">+1,050</td>
+                            <td style="color: #10B981;">+1.79%</td>
+                        </tr>
+                        <tr>
+                            <td>AAPL.US</td>
+                            <td>40</td>
+                            <td>180.00</td>
+                            <td>185.20</td>
+                            <td style="color: #10B981;">+208</td>
+                            <td style="color: #10B981;">+2.89%</td>
+                        </tr>
+                        <tr>
+                            <td>NVDA.US</td>
+                            <td>25</td>
+                            <td>850.00</td>
+                            <td>875.50</td>
+                            <td style="color: #10B981;">+638</td>
+                            <td style="color: #10B981;">+3.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Strategies Page -->
+        <div id="strategies" class="page">
+            <div class="page-title">📁 策略配置</div>
+            <div class="page-subtitle">策略列表和配置管理</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value">3</div>
+                    <div class="metric-box-label">活躍策略</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">2</div>
+                    <div class="metric-box-label">暫停策略</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">18.5%</div>
+                    <div class="metric-box-label">平均報酬</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📊 活躍策略詳情</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>策略名稱</th>
+                            <th>類型</th>
+                            <th>報酬</th>
+                            <th>勝率</th>
+                            <th>持倉</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>技術面策略</strong></td>
+                            <td>均線交叉</td>
+                            <td style="color: #10B981;">+24.5%</td>
+                            <td>55.2%</td>
+                            <td>8</td>
+                            <td style="color: #10B981;">運行中</td>
+                        </tr>
+                        <tr>
+                            <td><strong>強勢股優化</strong></td>
+                            <td>動量策略</td>
+                            <td style="color: #10B981;">+32.1%</td>
+                            <td>58.1%</td>
+                            <td>5</td>
+                            <td style="color: #10B981;">運行中</td>
+                        </tr>
+                        <tr>
+                            <td><strong>總經策略</strong></td>
+                            <td>巨集對沖</td>
+                            <td style="color: #10B981;">+18.3%</td>
+                            <td>51.8%</td>
+                            <td>3</td>
+                            <td style="color: #10B981;">運行中</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Intel Page -->
+        <div id="intel" class="page">
+            <div class="page-title">📡 情報資訊</div>
+            <div class="page-subtitle">新聞、經濟指標、投資觀點</div>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-box-value">8</div>
+                    <div class="metric-box-label">今日新聞</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">3</div>
+                    <div class="metric-box-label">高影響新聞</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-value">5</div>
+                    <div class="metric-box-label">投資觀點</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📰 金融新聞速遞</h2>
+                </div>
+                <div class="card">
+                    <div class="card-title">Fed 官員暗示降息 3 次</div>
+                    <div class="card-subtitle">2026-03-20 10:30 • Bloomberg</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">S&P 500 創新高，科技股領漲</div>
+                    <div class="card-subtitle">2026-03-20 08:45 • Reuters</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">台積電法說會即將舉行</div>
+                    <div class="card-subtitle">2026-03-18 15:20 • TaiwanNews</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>📊 經濟指標</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>指標</th>
+                            <th>當前值</th>
+                            <th>預期值</th>
+                            <th>前值</th>
+                            <th>影響</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GDP 增速</td>
+                            <td>2.4%</td>
+                            <td>2.3%</td>
+                            <td>2.1%</td>
+                            <td style="color: #10B981;">正面</td>
+                        </tr>
+                        <tr>
+                            <td>失業率</td>
+                            <td>3.9%</td>
+                            <td>4.0%</td>
+                            <td>4.1%</td>
+                            <td style="color: #10B981;">正面</td>
+                        </tr>
+                        <tr>
+                            <td>CPI 通膨率</td>
+                            <td>3.2%</td>
+                            <td>3.1%</td>
+                            <td>3.3%</td>
+                            <td style="color: #F59E0B;">中性</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // Show selected page
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.classList.add('active');
+            }
+
+            // Update active button in sidebar
+            const sidebarButtons = document.querySelectorAll('.sidebar-nav button');
+            sidebarButtons.forEach(btn => btn.classList.remove('active'));
+            const activeBtn = Array.from(sidebarButtons).find(btn =>
+                btn.textContent.includes(['總覽', '風控', '績效', '監控', '交易', '策略', '情報'][
+                    ['dashboard', 'risk', 'performance', 'monitoring', 'trading', 'strategies', 'intel'].indexOf(pageId)
+                ])
+            );
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                sidebar.classList.add('collapsed');
+                sidebar.classList.remove('open');
+                overlay.classList.remove('visible');
+            }
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.querySelector('.hamburger');
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile && !sidebar.contains(event.target) && !hamburger.contains(event.target)) {
+                closeSidebar();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('collapsed', 'open');
+                document.querySelector('.sidebar-overlay').classList.remove('visible');
+            }
+        });
+    </script>
+</body>
+</html>

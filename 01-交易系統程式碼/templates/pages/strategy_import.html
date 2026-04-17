@@ -1,0 +1,668 @@
+<!-- 策略導入頁面 - 方案 C -->
+<div class="page-title">📊 策略導入管理</div>
+<div class="page-subtitle">上傳、分析、決策、同步一體化系統</div>
+
+<!-- 同步狀態面板 -->
+<div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
+    <div class="section-header">
+        <h2>🔄 系統同步狀態</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+        <!-- Google Sheets 狀態 -->
+        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px;">
+            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">📊 Google Sheets 同步</div>
+            <div id="sheets-sync-time" style="font-size: 14px; font-weight: 600;">⏳ 檢查中...</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px;">BacktestPool: <span id="sheets-backtest-count">0</span> 待審</div>
+        </div>
+
+        <!-- 本地同步狀態 -->
+        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px;">
+            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">💾 本地同步</div>
+            <div id="local-sync-time" style="font-size: 14px; font-weight: 600;">⏳ 檢查中...</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px;">Staging: <span id="local-staging-count">0</span> 草稿</div>
+        </div>
+
+        <!-- Git 同步狀態 -->
+        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px;">
+            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">🔗 Git 同步</div>
+            <div id="git-sync-time" style="font-size: 14px; font-weight: 600;">⏳ 檢查中...</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px;">分支: <span id="git-branch">main</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 標籤頁面 -->
+<div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid #E8E0FF; overflow-x: auto;">
+    <button class="tab-btn active" onclick="switchTab(event, 'upload-tab')"
+        style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #6B21A8; color: #6B21A8; font-weight: 600; cursor: pointer;">
+        📤 上傳 & 分析
+    </button>
+    <button class="tab-btn" onclick="switchTab(event, 'preview-tab')"
+        style="padding: 12px 24px; background: none; border: none; color: #9CA3AF; font-weight: 600; cursor: pointer;">
+        👁️ 預覽決策
+    </button>
+    <button class="tab-btn" onclick="switchTab(event, 'staging-tab')"
+        style="padding: 12px 24px; background: none; border: none; color: #9CA3AF; font-weight: 600; cursor: pointer;">
+        📝 草稿池
+    </button>
+    <button class="tab-btn" onclick="switchTab(event, 'sync-log-tab')"
+        style="padding: 12px 24px; background: none; border: none; color: #9CA3AF; font-weight: 600; cursor: pointer;">
+        📋 同步日誌
+    </button>
+</div>
+
+<!-- TAB 1: 上傳 & 分析 -->
+<div id="upload-tab" class="tab-content">
+    <div class="section">
+        <div class="section-header">
+            <h2>📤 上傳策略回測文件</h2>
+            <p>支持 CSV / Excel（來自 Python 系統回測結果）</p>
+        </div>
+
+        <div style="background: white; padding: 24px; border-radius: 12px; border: 2px dashed #E8E0FF; text-align: center; margin-bottom: 20px; cursor: pointer;" id="drop-zone">
+            <div style="font-size: 48px; margin-bottom: 12px;">📁</div>
+            <p style="font-size: 16px; font-weight: 600; color: #1F2937; margin: 0;">拖拽文件到此，或點擊選擇</p>
+            <p style="font-size: 14px; color: #6B7280; margin: 8px 0 0 0;">支持格式：.csv, .xlsx（推薦 CSV）</p>
+            <input type="file" id="file-input" style="display: none;" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(event)" />
+        </div>
+
+        <!-- 策略信息表單 -->
+        <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E8E0FF; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 6px; font-weight: 600;">策略名稱 *</label>
+                    <input id="strategy-name" type="text" placeholder="例：Wave Strategy"
+                        style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 6px; font-weight: 600;">初始資金</label>
+                    <input id="initial-capital" type="number" placeholder="100000" value="100000"
+                        style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 6px; font-weight: 600;">Python 版本</label>
+                    <input id="python-version" type="text" placeholder="1.0.0" value="1.0.0"
+                        style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 6px; font-weight: 600;">備註</label>
+                    <input id="strategy-note" type="text" placeholder="可選"
+                        style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px; font-size: 14px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div style="display: flex; gap: 12px;">
+            <button id="btn-analyze" onclick="analyzeStrategy()"
+                style="flex: 1; padding: 12px; background: #6B21A8; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                🔍 分析（計算 KPI）
+            </button>
+            <button onclick="resetForm()"
+                style="flex: 1; padding: 12px; background: #E5E7EB; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                ↺ 重置
+            </button>
+        </div>
+
+        <!-- 分析進度 -->
+        <div id="analysis-progress" style="display: none; margin-top: 20px;">
+            <div style="background: #F3F4F6; padding: 16px; border-radius: 8px;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">分析進度</div>
+                <div style="background: white; border-radius: 4px; height: 8px; overflow: hidden;">
+                    <div id="progress-bar" style="height: 100%; background: #6B21A8; width: 0%; transition: width 0.3s;"></div>
+                </div>
+                <div id="progress-text" style="font-size: 12px; color: #6B7280; margin-top: 8px;">準備中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分析結果預覽 -->
+    <div id="analysis-results" style="display: none;" class="section">
+        <div class="section-header">
+            <h2>📊 KPI 計算結果</h2>
+            <p>自動計算的績效指標</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10B981;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">年化報酬 (CAGR)</div>
+                <div id="kpi-cagr" style="font-size: 24px; font-weight: 700; color: #10B981;">—</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">夏普比率</div>
+                <div id="kpi-sharpe" style="font-size: 24px; font-weight: 700; color: #3B82F6;">—</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #EF4444;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">最大回檔</div>
+                <div id="kpi-mdd" style="font-size: 24px; font-weight: 700; color: #EF4444;">—</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #F59E0B;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">勝率</div>
+                <div id="kpi-win-rate" style="font-size: 24px; font-weight: 700; color: #F59E0B;">—</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #8B5CF6;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">獲利因子</div>
+                <div id="kpi-profit-factor" style="font-size: 24px; font-weight: 700; color: #8B5CF6;">—</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #06B6D4;">
+                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">交易數量</div>
+                <div id="kpi-trades" style="font-size: 24px; font-weight: 700; color: #06B6D4;">—</div>
+            </div>
+        </div>
+
+        <!-- 圖表區域 -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <canvas id="equity-chart" style="max-height: 300px; margin-bottom: 20px;"></canvas>
+            <canvas id="monthly-returns-chart" style="max-height: 200px;"></canvas>
+        </div>
+
+        <!-- 決策按鈕 -->
+        <div style="display: flex; gap: 12px;">
+            <button id="btn-preview" onclick="goToPreview()"
+                style="flex: 1; padding: 12px; background: #10B981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                ✅ 確認 → 進入預覽決策
+            </button>
+            <button onclick="cancelAnalysis()"
+                style="flex: 1; padding: 12px; background: #EF4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                ✕ 取消
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 2: 預覽決策 -->
+<div id="preview-tab" class="tab-content" style="display: none;">
+    <div class="section">
+        <div class="section-header">
+            <h2>👁️ 預覽資料夾結構</h2>
+            <p>確認後將創建以下結構，手工決策是否導入</p>
+        </div>
+
+        <!-- 預覽信息 -->
+        <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E8E0FF; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">策略名稱</div>
+                    <div id="preview-name" style="font-size: 16px; font-weight: 600;">—</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">預設資料夾 ID</div>
+                    <div id="preview-folder-id" style="font-size: 16px; font-weight: 600; color: #6B21A8;">S7</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">初始版本</div>
+                    <div id="preview-version" style="font-size: 16px; font-weight: 600;">v1.0</div>
+                </div>
+            </div>
+
+            <!-- 資料夾結構樹狀圖 -->
+            <div style="background: #F9FAFB; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                <div>📁 <strong id="preview-folder-path">S7-Wave Strategy</strong></div>
+                <div style="margin-left: 20px; color: #6B7280;">
+                    <div>├── 📄 S7-Wave Strategy-Home.md</div>
+                    <div>├── 📁 Versions/</div>
+                    <div style="margin-left: 20px;">│  └── 📄 S7-Wave Strategy-v1.0.md</div>
+                    <div>├── 📁 Backtests/</div>
+                    <div style="margin-left: 20px;">
+                        <div>│  └── 📁 baseline/</div>
+                        <div style="margin-left: 20px;">│     └── 📄 Wave_Strategy_backtest.csv</div>
+                    </div>
+                    <div>└── 📁 Knowledge/</div>
+                    <div style="margin-left: 20px;">└── 📄 260331.md (使用筆記)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home.md 預覽 -->
+        <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E8E0FF; margin-bottom: 20px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📝 Home.md 內容預覽</div>
+            <div id="preview-home-content" style="background: #F3F4F6; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #374151; max-height: 300px; overflow-y: auto;">
+                loading...
+            </div>
+        </div>
+
+        <!-- 決策面板 -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; color: white;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">🎯 決策確認</div>
+
+            <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                <p style="margin: 0 0 12px 0;">✅ 資料夾已創建在本地 Staging 區</p>
+                <p style="margin: 0 0 12px 0;">⏳ 等待您的決策：</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+                    <div>
+                        <strong>如果批准：</strong>
+                        <ul style="margin: 8px 0; padding-left: 20px;">
+                            <li>✅ 策略將被導入到 Strategies 資料夾</li>
+                            <li>✅ Google Sheets 更新為「已批准」</li>
+                            <li>✅ Git 自動提交變更</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>如果駁回：</strong>
+                        <ul style="margin: 8px 0; padding-left: 20px;">
+                            <li>📝 保留在 Staging 繼續優化</li>
+                            <li>📋 添加備註到 Sheets</li>
+                            <li>↻ 可隨時重新決策</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button id="btn-confirm-import" onclick="confirmImport()"
+                    style="flex: 1; padding: 14px; background: #10B981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                    ✅ 批准導入（創建資料夾 + 同步）
+                </button>
+                <button onclick="rejectStrategy()"
+                    style="flex: 1; padding: 14px; background: #FCA5A5; color: #7F1D1D; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                    📝 駁回（保留草稿）
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 3: 草稿池 -->
+<div id="staging-tab" class="tab-content" style="display: none;">
+    <div class="section">
+        <div class="section-header">
+            <h2>📝 Staging 草稿池</h2>
+            <p>所有待決策的策略草稿</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #E8E0FF;">
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">策略名稱</th>
+                    <th style="text-align: right; padding: 12px; font-weight: 600;">CAGR</th>
+                    <th style="text-align: right; padding: 12px; font-weight: 600;">Sharpe</th>
+                    <th style="text-align: right; padding: 12px; font-weight: 600;">勝率</th>
+                    <th style="text-align: center; padding: 12px; font-weight: 600;">狀態</th>
+                    <th style="text-align: center; padding: 12px; font-weight: 600;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="staging-list">
+                <tr style="border-bottom: 1px solid #E8E0FF;">
+                    <td style="padding: 12px; color: #9CA3AF;">（無草稿）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TAB 4: 同步日誌 -->
+<div id="sync-log-tab" class="tab-content" style="display: none;">
+    <div class="section">
+        <div class="section-header">
+            <h2>📋 同步日誌</h2>
+            <p>所有系統事件和同步記錄</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #E8E0FF;">
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">時間</th>
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">事件</th>
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">策略</th>
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">狀態</th>
+                    <th style="text-align: left; padding: 12px; font-weight: 600;">詳情</th>
+                </tr>
+            </thead>
+            <tbody id="sync-log-list">
+                <tr style="border-bottom: 1px solid #E8E0FF;">
+                    <td colspan="5" style="padding: 12px; text-align: center; color: #9CA3AF;">（無日誌）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Chart.js 庫（用於繪圖） -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+// ===== 全局狀態 =====
+let currentAnalysis = null;
+let currentFile = null;
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', () => {
+    setupDropZone();
+    updateSyncStatus();
+    loadStagingStrategies();
+    loadSyncLog();
+    // 每 30 秒更新一次同步狀態
+    setInterval(updateSyncStatus, 30000);
+});
+
+// ===== 拖拽上傳區域 =====
+function setupDropZone() {
+    const dropZone = document.getElementById('drop-zone');
+
+    dropZone.addEventListener('click', () => {
+        document.getElementById('file-input').click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.background = '#F3F4F6';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.background = '';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.background = '';
+        handleFileSelect({target: {files: e.dataTransfer.files}});
+    });
+}
+
+// ===== 文件處理 =====
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    currentFile = file;
+    const fileName = file.name;
+
+    document.getElementById('drop-zone').innerHTML = `✅ 已選擇：<strong>${fileName}</strong>`;
+    document.getElementById('file-input').disabled = false;
+}
+
+// ===== 分析策略 =====
+async function analyzeStrategy() {
+    const strategyName = document.getElementById('strategy-name').value.trim();
+
+    if (!strategyName) {
+        alert('請輸入策略名稱');
+        return;
+    }
+
+    if (!currentFile) {
+        alert('請上傳回測文件');
+        return;
+    }
+
+    // 顯示進度
+    document.getElementById('analysis-progress').style.display = 'block';
+    document.getElementById('btn-analyze').disabled = true;
+
+    try {
+        // 讀取 CSV
+        const csv = await currentFile.text();
+        const data = Papa.parse(csv, {header: true});
+
+        updateProgress(30, '解析數據中...');
+
+        // 發送到後端計算
+        const response = await fetch('/api/strategy/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                strategy_name: strategyName,
+                initial_capital: document.getElementById('initial-capital').value,
+                python_version: document.getElementById('python-version').value,
+                note: document.getElementById('strategy-note').value,
+                csv_data: data.data,
+                csv_headers: data.meta.fields
+            })
+        });
+
+        updateProgress(70, '計算 KPI...');
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            currentAnalysis = result;
+            displayKPIs(result.kpis);
+            displayCharts(result);
+
+            updateProgress(100, '分析完成！');
+            setTimeout(() => {
+                document.getElementById('analysis-progress').style.display = 'none';
+                document.getElementById('analysis-results').style.display = 'block';
+                document.getElementById('btn-analyze').disabled = false;
+            }, 800);
+        }
+    } catch (error) {
+        console.error('分析失敗:', error);
+        alert('分析失敗：' + error.message);
+        document.getElementById('btn-analyze').disabled = false;
+    }
+}
+
+// ===== 更新進度條 =====
+function updateProgress(percent, text) {
+    document.getElementById('progress-bar').style.width = percent + '%';
+    document.getElementById('progress-text').textContent = text;
+}
+
+// ===== 顯示 KPI =====
+function displayKPIs(kpis) {
+    document.getElementById('kpi-cagr').textContent = (kpis.cagr * 100).toFixed(2) + '%';
+    document.getElementById('kpi-sharpe').textContent = kpis.sharpe.toFixed(2);
+    document.getElementById('kpi-mdd').textContent = (kpis.mdd * 100).toFixed(2) + '%';
+    document.getElementById('kpi-win-rate').textContent = (kpis.win_rate * 100).toFixed(2) + '%';
+    document.getElementById('kpi-profit-factor').textContent = kpis.profit_factor.toFixed(2);
+    document.getElementById('kpi-trades').textContent = kpis.total_trades;
+}
+
+// ===== 繪製圖表 =====
+function displayCharts(data) {
+    if (data.equity_curve) {
+        const ctx = document.getElementById('equity-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.equity_curve.dates,
+                datasets: [{
+                    label: '策略淨值',
+                    data: data.equity_curve.values,
+                    borderColor: '#6B21A8',
+                    backgroundColor: 'rgba(107, 33, 168, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {responsive: true, maintainAspectRatio: true}
+        });
+    }
+}
+
+// ===== 標籤切換 =====
+function switchTab(event, tabName) {
+    event.preventDefault();
+
+    // 隱藏所有標籤
+    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.style.borderBottom = 'none';
+        btn.style.color = '#9CA3AF';
+    });
+
+    // 顯示選定標籤
+    document.getElementById(tabName).style.display = 'block';
+    event.target.style.borderBottom = '3px solid #6B21A8';
+    event.target.style.color = '#6B21A8';
+}
+
+// ===== 進入預覽決策 =====
+function goToPreview() {
+    if (!currentAnalysis) return;
+
+    // 更新預覽信息
+    document.getElementById('preview-name').textContent = currentAnalysis.strategy_name;
+    document.getElementById('preview-folder-path').textContent = `S${currentAnalysis.next_folder_id}-${currentAnalysis.strategy_name}`;
+
+    // 生成 Home.md 預覽
+    const homeContent = `---
+name: ${currentAnalysis.strategy_name}
+type: module
+created_date: ${new Date().toISOString().split('T')[0]}
+version: v1.0
+status: active
+cagr: ${(currentAnalysis.kpis.cagr * 100).toFixed(2)}%
+sharpe: ${currentAnalysis.kpis.sharpe.toFixed(2)}
+mdd: ${(currentAnalysis.kpis.mdd * 100).toFixed(2)}%
+win_rate: ${(currentAnalysis.kpis.win_rate * 100).toFixed(2)}%
+---
+
+# ${currentAnalysis.strategy_name}
+
+## 績效指標
+- CAGR: ${(currentAnalysis.kpis.cagr * 100).toFixed(2)}%
+- Sharpe Ratio: ${currentAnalysis.kpis.sharpe.toFixed(2)}
+- Max Drawdown: ${(currentAnalysis.kpis.mdd * 100).toFixed(2)}%
+- Win Rate: ${(currentAnalysis.kpis.win_rate * 100).toFixed(2)}%
+- Profit Factor: ${currentAnalysis.kpis.profit_factor.toFixed(2)}
+
+## 版本歷史
+- v1.0: ${new Date().toISOString().split('T')[0]} 初始導入`;
+
+    document.getElementById('preview-home-content').textContent = homeContent;
+
+    switchTab({target: {style: {}}}, 'preview-tab');
+    switchTab({target: document.querySelectorAll('.tab-btn')[1]}, 'preview-tab');
+}
+
+// ===== 確認導入 =====
+async function confirmImport() {
+    if (!currentAnalysis) return;
+
+    const response = await fetch('/api/strategy/confirm-preview', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            analysis_id: currentAnalysis.analysis_id,
+            strategy_name: currentAnalysis.strategy_name,
+            kpis: currentAnalysis.kpis,
+            csv_data: currentAnalysis.csv_data
+        })
+    });
+
+    const result = await response.json();
+
+    if (result.status === 'success') {
+        alert(`✅ 策略已導入到 Staging！\n\n資料夾ID: ${result.folder_id}\n位置: ${result.folder_path}`);
+        resetForm();
+        loadStagingStrategies();
+    }
+}
+
+// ===== 駁回策略 =====
+function rejectStrategy() {
+    if (confirm('確認駁回此策略嗎？將保留在草稿區。')) {
+        // TODO: 調用後端 API
+        alert('已駁回，保留在 Staging');
+    }
+}
+
+// ===== 重置表單 =====
+function resetForm() {
+    document.getElementById('file-input').value = '';
+    document.getElementById('strategy-name').value = '';
+    document.getElementById('strategy-note').value = '';
+    document.getElementById('drop-zone').innerHTML = '<div style="font-size: 48px; margin-bottom: 12px;">📁</div><p style="font-size: 16px; font-weight: 600; color: #1F2937; margin: 0;">拖拽文件到此，或點擊選擇</p><p style="font-size: 14px; color: #6B7280; margin: 8px 0 0 0;">支持格式：.csv, .xlsx（推薦 CSV）</p>';
+    document.getElementById('analysis-results').style.display = 'none';
+    currentAnalysis = null;
+    currentFile = null;
+}
+
+// ===== 更新同步狀態 =====
+async function updateSyncStatus() {
+    try {
+        const response = await fetch('/api/sync/status');
+        const status = await response.json();
+
+        if (status.sheets_last_sync) {
+            document.getElementById('sheets-sync-time').textContent = `✓ ${formatTime(status.sheets_last_sync)}`;
+            document.getElementById('sheets-backtest-count').textContent = status.backtest_pending_count || 0;
+        }
+
+        if (status.local_last_sync) {
+            document.getElementById('local-sync-time').textContent = `✓ ${formatTime(status.local_last_sync)}`;
+            document.getElementById('local-staging-count').textContent = status.staging_draft_count || 0;
+        }
+
+        if (status.git_last_sync) {
+            document.getElementById('git-sync-time').textContent = `✓ ${formatTime(status.git_last_sync)}`;
+            document.getElementById('git-branch').textContent = status.git_branch || 'main';
+        }
+    } catch (error) {
+        console.warn('無法獲取同步狀態:', error);
+    }
+}
+
+// ===== 時間格式化 =====
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString('zh-TW');
+}
+
+// ===== 加載 Staging 策略 =====
+async function loadStagingStrategies() {
+    try {
+        const response = await fetch('/api/staging/list');
+        const data = await response.json();
+
+        if (data.strategies && data.strategies.length > 0) {
+            const html = data.strategies.map(s => `
+                <tr style="border-bottom: 1px solid #E8E0FF;">
+                    <td style="padding: 12px;">${s.name}</td>
+                    <td style="text-align: right; padding: 12px; color: #10B981;">+${(s.kpis.cagr * 100).toFixed(2)}%</td>
+                    <td style="text-align: right; padding: 12px;">${s.kpis.sharpe.toFixed(2)}</td>
+                    <td style="text-align: right; padding: 12px;">${(s.kpis.win_rate * 100).toFixed(2)}%</td>
+                    <td style="text-align: center; padding: 12px;"><span style="background: #FEF3C7; color: #D97706; padding: 4px 8px; border-radius: 4px; font-size: 12px;">待決策</span></td>
+                    <td style="text-align: center; padding: 12px;">
+                        <button onclick="editStaging('${s.id}')" style="background: none; border: none; cursor: pointer; color: #6B21A8;">✎ 編輯</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('staging-list').innerHTML = html;
+        }
+    } catch (error) {
+        console.warn('加載 Staging 失敗:', error);
+    }
+}
+
+// ===== 加載同步日誌 =====
+async function loadSyncLog() {
+    try {
+        const response = await fetch('/api/sync/log?limit=20');
+        const data = await response.json();
+
+        if (data.logs && data.logs.length > 0) {
+            const html = data.logs.map(log => `
+                <tr style="border-bottom: 1px solid #E8E0FF;">
+                    <td style="padding: 12px; font-size: 12px;">${formatTime(log.timestamp)}</td>
+                    <td style="padding: 12px; font-size: 12px;">${log.event_type}</td>
+                    <td style="padding: 12px; font-size: 12px;">${log.strategy_name || '—'}</td>
+                    <td style="padding: 12px;">
+                        <span style="background: ${log.status === 'success' ? '#DCFCE7' : '#FEE2E2'}; color: ${log.status === 'success' ? '#10B981' : '#EF4444'}; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            ${log.status === 'success' ? '✓' : '✗'} ${log.status}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; font-size: 12px; color: #6B7280;">${log.message}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('sync-log-list').innerHTML = html;
+        }
+    } catch (error) {
+        console.warn('加載同步日誌失敗:', error);
+    }
+}
+
+// ===== 編輯 Staging =====
+function editStaging(id) {
+    alert('編輯功能開發中...');
+}
+
+// ===== 取消分析 =====
+function cancelAnalysis() {
+    document.getElementById('analysis-results').style.display = 'none';
+}
+</script>

@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💎 Krystal AI Trading — v4 Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   DESIGN TOKENS — HSL Color System
+   Source: ui-ux-pro-max skill (fintech/dashboard)
+   Dark palette: "Midnight Finance"
+   Light palette: "Clean Slate Pro"
+══════════════════════════════════════════ */
+:root {
+  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --sidebar-w: 224px;
+  --header-h: 58px;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* DARK THEME */
+[data-theme="dark"] {
+  --bg-base:     hsl(222,47%,6%);
+  --bg-surface:  hsl(222,40%,9%);
+  --bg-raised:   hsl(222,35%,13%);
+  --bg-overlay:  hsl(222,30%,17%);
+  --bg-hover:    hsl(222,28%,20%);
+  --border:      hsl(222,28%,18%);
+  --border-soft: hsl(222,24%,14%);
+  --text-primary: hsl(210,40%,94%);
+  --text-secondary: hsl(215,22%,62%);
+  --text-muted:  hsl(215,18%,42%);
+  --accent:      hsl(217,91%,63%);
+  --accent-soft: hsl(217,91%,63%,0.12);
+  --accent-glow: 0 0 20px hsl(217,91%,63%,0.2);
+  --green:       hsl(152,68%,48%);
+  --green-soft:  hsl(152,68%,48%,0.12);
+  --red:         hsl(0,82%,62%);
+  --red-soft:    hsl(0,82%,62%,0.12);
+  --yellow:      hsl(38,92%,52%);
+  --yellow-soft: hsl(38,92%,52%,0.12);
+  --purple:      hsl(262,83%,68%);
+  --purple-soft: hsl(262,83%,68%,0.12);
+  --shadow-sm:   0 1px 3px hsl(0,0%,0%,0.3), 0 1px 2px hsl(0,0%,0%,0.2);
+  --shadow:      0 4px 12px hsl(0,0%,0%,0.4);
+  --shadow-lg:   0 8px 30px hsl(0,0%,0%,0.5);
+  --chart-grid:  hsl(222,28%,16%);
+  --chart-text:  hsl(215,18%,45%);
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+  --bg-base:     hsl(210,20%,98%);
+  --bg-surface:  hsl(0,0%,100%);
+  --bg-raised:   hsl(210,17%,97%);
+  --bg-overlay:  hsl(210,14%,94%);
+  --bg-hover:    hsl(210,12%,91%);
+  --border:      hsl(215,20%,88%);
+  --border-soft: hsl(215,16%,93%);
+  --text-primary: hsl(222,47%,12%);
+  --text-secondary: hsl(215,20%,38%);
+  --text-muted:  hsl(215,16%,58%);
+  --accent:      hsl(217,91%,52%);
+  --accent-soft: hsl(217,91%,52%,0.08);
+  --accent-glow: 0 0 20px hsl(217,91%,52%,0.15);
+  --green:       hsl(152,62%,36%);
+  --green-soft:  hsl(152,62%,36%,0.08);
+  --red:         hsl(0,76%,50%);
+  --red-soft:    hsl(0,76%,50%,0.08);
+  --yellow:      hsl(38,86%,42%);
+  --yellow-soft: hsl(38,86%,42%,0.1);
+  --purple:      hsl(262,72%,56%);
+  --purple-soft: hsl(262,72%,56%,0.08);
+  --shadow-sm:   0 1px 3px hsl(215,25%,80%,0.5);
+  --shadow:      0 4px 12px hsl(215,25%,80%,0.6);
+  --shadow-lg:   0 8px 30px hsl(215,25%,75%,0.4);
+  --chart-grid:  hsl(215,20%,91%);
+  --chart-text:  hsl(215,16%,55%);
+}
+
+/* ══ RESET ══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+select { font-family: inherit; }
+
+/* ══ THEME TRANSITION ══ */
+body, .header, .sidebar, .card, .kpi-card, .chart-card,
+.broker-card, .mini-table td, .mini-table th {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* ══ HEADER ══ */
+.header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 20px; z-index: 200;
+  box-shadow: var(--shadow-sm);
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  white-space: nowrap; user-select: none;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  box-shadow: var(--accent-glow);
+}
+.logo-text { font-weight: 700; font-size: 15px; letter-spacing: -.3px; }
+.logo-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; margin-top: -2px; }
+
+.main-nav { display: flex; gap: 2px; }
+.nav-btn {
+  padding: 6px 11px; border-radius: var(--radius-sm);
+  color: var(--text-secondary); font-size: 13px; font-weight: 500;
+  border: none; background: transparent;
+  transition: var(--transition); white-space: nowrap;
+}
+.nav-btn:hover { background: var(--bg-raised); color: var(--text-primary); }
+.nav-btn.active {
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid hsl(217,91%,63%,0.2);
+}
+
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+/* ── Theme Toggle ── */
+.theme-toggle {
+  width: 52px; height: 28px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 20px; cursor: pointer;
+  position: relative; padding: 3px;
+  transition: var(--transition);
+  display: flex; align-items: center;
+}
+.theme-toggle-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%; background: var(--accent);
+  position: absolute; left: 4px;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; box-shadow: 0 2px 6px hsl(0,0%,0%,0.3);
+}
+[data-theme="light"] .theme-toggle-thumb { transform: translateX(24px); }
+
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--green-soft);
+  border: 1px solid hsl(152,68%,48%,0.25);
+  color: var(--green); padding: 5px 12px;
+  border-radius: 20px; font-size: 12px; font-weight: 500;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2.5s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+
+.clock {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-muted); letter-spacing: .5px;
+}
+
+/* ══ LAYOUT ══ */
+.layout {
+  display: flex;
+  margin-top: var(--header-h);
+  min-height: calc(100vh - var(--header-h));
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.sb-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: .08em; padding: 12px 8px 5px;
+}
+.sb-control {
+  width: 100%; padding: 7px 10px;
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-size: 12.5px; transition: var(--transition);
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 28px;
+}
+.sb-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.risk-btns { display: flex; gap: 4px; }
+.risk-btn {
+  flex: 1; padding: 6px 4px; text-align: center;
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  font-size: 12px; font-weight: 500; transition: var(--transition);
+}
+.risk-btn.active { background: var(--accent-soft); border-color: hsl(217,91%,63%,0.35); color: var(--accent); }
+.risk-btn:hover:not(.active) { background: var(--bg-overlay); color: var(--text-primary); }
+
+.sb-divider { height: 1px; background: var(--border-soft); margin: 8px 4px; }
+
+.btn-sync {
+  width: 100%; padding: 9px 14px;
+  background: linear-gradient(135deg, var(--accent), hsl(217,91%,55%));
+  border: none; border-radius: var(--radius-sm);
+  color: #fff; font-size: 13px; font-weight: 600;
+  letter-spacing: .3px; transition: var(--transition);
+  box-shadow: 0 2px 8px hsl(217,91%,63%,0.3);
+}
+.btn-sync:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 4px 14px hsl(217,91%,63%,0.4); }
+.btn-sync:active { transform: translateY(0); }
+
+.broker-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--bg-raised);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-secondary); font-size: 12px;
+  transition: var(--transition); cursor: pointer;
+}
+.broker-item:hover { border-color: var(--accent); color: var(--text-primary); background: var(--bg-overlay); }
+.broker-item-icon { font-size: 14px; }
+.broker-item-name { flex: 1; }
+.badge {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 10px; letter-spacing: .02em;
+}
+.badge-ok   { background: var(--green-soft);  color: var(--green); }
+.badge-na   { background: var(--bg-overlay);  color: var(--text-muted); }
+.badge-warn { background: var(--yellow-soft); color: var(--yellow); }
+
+.sys-info {
+  font-size: 11.5px; color: var(--text-muted);
+  line-height: 2; padding: 0 4px;
+}
+.sys-info .ok  { color: var(--green); }
+.sys-info .warn { color: var(--yellow); }
+
+/* ══ MAIN ══ */
+.main { flex: 1; padding: 24px 28px 40px; overflow-x: hidden; min-width: 0; }
+
+.page-header { margin-bottom: 20px; }
+.page-header h1 { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+.page-header p { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+
+/* ══ ALERT BANNER ══ */
+.alert-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: hsl(217,91%,63%,0.07);
+  border: 1px solid hsl(217,91%,63%,0.2);
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 12.5px; color: hsl(217,91%,72%);
+  margin-bottom: 20px;
+}
+
+/* ══ KPI GRID ══ */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  position: relative; overflow: hidden;
+  transition: var(--transition);
+}
+.kpi-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.kpi-accent-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.kpi-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 10px; }
+.kpi-value {
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -.5px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-footer { margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kpi-badge {
+  font-size: 11.5px; padding: 2px 8px;
+  border-radius: 10px; font-weight: 600;
+}
+.kpi-badge.up   { background: var(--green-soft); color: var(--green); }
+.kpi-badge.dn   { background: var(--red-soft);   color: var(--red); }
+.kpi-badge.flat { background: var(--bg-overlay); color: var(--text-muted); }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ══ SECTION HEADER ══ */
+.section { margin-bottom: 20px; }
+.section-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.section-head h2 { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.section-head p { font-size: 12px; color: var(--text-muted); }
+.ml { margin-left: auto; }
+
+/* ══ CARDS ══ */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.chart-wrap { position: relative; height: 260px; }
+
+/* ══ P&L CARDS ══ */
+.pnl-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+.pnl-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.pnl-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; }
+.pnl-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
+.pnl-unit  { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+/* ══ BROKER GRID ══ */
+.broker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.broker-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.broker-card-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.broker-card-head h3 { font-size: 14px; font-weight: 700; }
+.tag {
+  font-size: 10px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px;
+}
+.tag-ib     { background: var(--accent-soft); color: var(--accent); }
+.tag-yuanta { background: var(--yellow-soft); color: var(--yellow); }
+.tag-schwab { background: var(--purple-soft); color: var(--purple); }
+
+/* ══ SEARCH ROW ══ */
+.search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-input {
+  flex: 1; padding: 7px 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary); font-size: 12px;
+  transition: var(--transition);
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* ══ TABLE ══ */
+.mini-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mini-table th {
+  color: var(--text-muted); font-weight: 600; font-size: 11px;
+  padding: 7px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.mini-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border-soft);
+  color: var(--text-primary);
+}
+.mini-table tr:last-child td { border-bottom: none; }
+.mini-table tbody tr { transition: background .12s; }
+.mini-table tbody tr:hover td { background: var(--bg-raised); }
+.mono { font-family: var(--font-mono); }
+.up { color: var(--green); }
+.dn { color: var(--red); }
+.chip {
+  display: inline-block; padding: 2px 7px;
+  border-radius: 4px; font-size: 11px; font-weight: 600;
+}
+.chip-run  { background: var(--green-soft); color: var(--green); }
+.chip-warn { background: var(--yellow-soft); color: var(--yellow); }
+
+/* ══ PROGRESS BAR ══ */
+.prog-wrap { height: 3px; background: var(--bg-overlay); border-radius: 2px; margin-top: 4px; }
+.prog-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+/* ══ BTN SMALL ══ */
+.btn-sm {
+  padding: 6px 12px;
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-size: 12px; font-weight: 500; transition: var(--transition);
+}
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ══ FOOTER ══ */
+.footer {
+  text-align: center; padding: 28px;
+  color: var(--text-muted); font-size: 11px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">💎</div>
+    <div>
+      <div class="logo-text">Krystal AI</div>
+      <div class="logo-sub">量化交易系統 v4 Pro</div>
+    </div>
+  </div>
+
+  <nav class="main-nav">
+    <button class="nav-btn active">📊 總覽</button>
+    <button class="nav-btn">💼 投資組合</button>
+    <button class="nav-btn">⚠️ 風控</button>
+    <button class="nav-btn">💰 資金配置</button>
+    <button class="nav-btn">📈 績效</button>
+    <button class="nav-btn">💹 交易</button>
+    <button class="nav-btn">📁 策略</button>
+    <button class="nav-btn">🔐 Schwab</button>
+  </nav>
+
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      系統正常
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="切換主題" title="切換亮色/暗色">
+      <div class="theme-toggle-thumb" id="themeThumb">
+        <span id="themeIcon">🌙</span>
+      </div>
+    </button>
+
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sb-label">時間範圍</div>
+    <select class="sb-control" aria-label="時間範圍">
+      <option>1日</option>
+      <option>7日</option>
+      <option>30日</option>
+      <option selected>全年</option>
+    </select>
+
+    <div class="sb-label">風險級別</div>
+    <div class="risk-btns" role="group" aria-label="風險級別">
+      <button class="risk-btn" onclick="setRisk(this,'low')">低</button>
+      <button class="risk-btn active" onclick="setRisk(this,'mid')">中</button>
+      <button class="risk-btn" onclick="setRisk(this,'high')">高</button>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-label">數據同步</div>
+    <button class="btn-sync" aria-label="同步所有 Broker">🔄 全部同步</button>
+
+    <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+      <div class="broker-item">
+        <span class="broker-item-icon">🏦</span>
+        <span class="broker-item-name">Interactive Brokers</span>
+        <span class="badge badge-ok">連線</span>
+      </div>
+      <div class="broker-item">
+        <span class="broker-item-icon">🏪</span>
+        <span class="broker-item-name">元大證券</span>
+        <span class="badge badge-ok">連線</span>
+      </div>
+      <div class="broker-item">
+        <span class="broker-item-icon">🔐</span>
+        <span class="broker-item-name">Schwab</span>
+        <span class="badge badge-na">待配置</span>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-label">系統資訊</div>
+    <div class="sys-info">
+      <div>最後更新：剛剛</div>
+      <div>數據層：<span class="warn">DISABLED</span></div>
+      <div>Ship監測：<span class="ok">OK</span></div>
+      <div>Port：<span class="ok">9999</span></div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main" role="main">
+
+    <div class="page-header">
+      <h1>📊 投資組合總覽</h1>
+      <p>實時資產表現 · 多券商整合視圖 · 2026-03-21</p>
+    </div>
+
+    <div class="alert-banner" role="status">
+      🔄 <strong>自動同步已啟用</strong> — 每次載入頁面時自動檢查持倉變化並同步至 Google Sheets
+    </div>
+
+    <!-- ── KPI CARDS ── -->
+    <div class="kpi-grid" aria-label="核心指標">
+
+      <div class="kpi-card">
+        <div class="kpi-accent-bar" style="background: linear-gradient(90deg,var(--green),hsl(152,68%,38%));"></div>
+        <div class="kpi-label">💰 總資產</div>
+        <div class="kpi-value mono">$125,345</div>
+        <div class="kpi-footer">
+          <span class="kpi-badge up">▲ +2.34%</span>
+          <span class="kpi-sub">今日</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-accent-bar" style="background: linear-gradient(90deg,var(--green),hsl(152,68%,38%));"></div>
+        <div class="kpi-label">📈 今日損益</div>
+        <div class="kpi-value mono up">+$2,891</div>
+        <div class="kpi-footer">
+          <span class="kpi-badge up">▲ +2.36%</span>
+          <span class="kpi-sub">USD</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-accent-bar" style="background: linear-gradient(90deg,var(--accent),var(--purple));"></div>
+        <div class="kpi-label">💼 持倉數</div>
+        <div class="kpi-value mono">12</div>
+        <div class="kpi-footer">
+          <span class="kpi-badge flat">IB 8</span>
+          <span class="kpi-badge flat">元大 4</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-accent-bar" style="background: linear-gradient(90deg,var(--yellow),hsl(38,86%,42%));"></div>
+        <div class="kpi-label">⚡ 風險評分</div>
+        <div class="kpi-value" style="font-size:22px;">中等</div>
+        <div class="kpi-footer">
+          <span class="kpi-badge flat">夏普 1.42</span>
+          <span class="kpi-sub">回撤 -6.2%</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── CHARTS ── -->
+    <div class="section chart-grid">
+      <div class="chart-card">
+        <div class="section-head">
+          <h2>📈 資產走勢</h2>
+          <p>累積報酬 vs 大盤對比</p>
+        </div>
+        <div class="chart-wrap"><canvas id="chartTrend" aria-label="資產走勢圖"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-head">
+          <h2>🥧 資產配置</h2>
+          <p>按券商 / 市場</p>
+        </div>
+        <div class="chart-wrap"><canvas id="chartAlloc" aria-label="資產配置圖"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── P&L ── -->
+    <div class="section">
+      <div class="section-head">
+        <h2>📊 每日損益追蹤</h2>
+        <p>IB (USD) 與 元大 (TWD) 雙幣別對比</p>
+        <button class="btn-sm ml">🔔 記錄今日</button>
+      </div>
+      <div class="pnl-grid">
+        <div class="pnl-card">
+          <div class="pnl-label">🏦 IB 未實現</div>
+          <div class="pnl-value up mono">+$3,240</div>
+          <div class="pnl-unit">USD · 今日</div>
+        </div>
+        <div class="pnl-card">
+          <div class="pnl-label">🏦 IB 已實現</div>
+          <div class="pnl-value up mono">+$890</div>
+          <div class="pnl-unit">USD · 本月</div>
+        </div>
+        <div class="pnl-card">
+          <div class="pnl-label">🏪 元大 未實現</div>
+          <div class="pnl-value dn mono">-NT$12,400</div>
+          <div class="pnl-unit">TWD · 今日</div>
+        </div>
+        <div class="pnl-card">
+          <div class="pnl-label">🏪 元大 已實現</div>
+          <div class="pnl-value up mono">+NT$48,000</div>
+          <div class="pnl-unit">TWD · 本月</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-wrap" style="height:220px;"><canvas id="chartPnl" aria-label="每日損益圖"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── HOLDINGS ── -->
+    <div class="section">
+      <div class="section-head">
+        <h2>💼 當前持倉</h2>
+        <p>按券商分類</p>
+      </div>
+      <div class="broker-grid">
+
+        <div class="broker-card">
+          <div class="broker-card-head">
+            <h3>🏦 Interactive Brokers</h3>
+            <span class="tag tag-ib">IB · 8筆</span>
+          </div>
+          <div class="search-row">
+            <input class="search-input" type="search" placeholder="🔍 搜尋代碼..." aria-label="搜尋 IB 持倉">
+          </div>
+          <table class="mini-table">
+            <thead>
+              <tr><th>代碼</th><th>市場</th><th>數量</th><th>成本</th><th>損益</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">NVDA</td><td>US</td><td>20</td><td class="mono">$840.2</td><td class="up mono">+$3,120</td></tr>
+              <tr><td class="mono">AAPL</td><td>US</td><td>50</td><td class="mono">$182.5</td><td class="up mono">+$1,250</td></tr>
+              <tr><td class="mono">TSLA</td><td>US</td><td>15</td><td class="mono">$245.0</td><td class="dn mono">−$480</td></tr>
+              <tr><td class="mono">SPY</td><td>US</td><td>30</td><td class="mono">$510.0</td><td class="up mono">+$870</td></tr>
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);font-size:12px;padding:10px;">… 另 4 筆</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="broker-card">
+          <div class="broker-card-head">
+            <h3>🏪 元大證券</h3>
+            <span class="tag tag-yuanta">Yuanta · 4筆</span>
+          </div>
+          <div class="search-row">
+            <input class="search-input" type="search" placeholder="🔍 搜尋代碼..." aria-label="搜尋元大持倉">
+          </div>
+          <table class="mini-table">
+            <thead>
+              <tr><th>代碼</th><th>名稱</th><th>張數</th><th>成本</th><th>損益</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">2330</td><td>台積電</td><td>2</td><td class="mono">895</td><td class="dn mono">−12,400</td></tr>
+              <tr><td class="mono">3034</td><td>聯詠</td><td>3</td><td class="mono">420</td><td class="up mono">+18,900</td></tr>
+              <tr><td class="mono">2454</td><td>聯發科</td><td>1</td><td class="mono">1,120</td><td class="up mono">+8,200</td></tr>
+              <tr><td class="mono">6505</td><td>台塑化</td><td>5</td><td class="mono">98</td><td class="dn mono">−3,500</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── STRATEGIES ── -->
+    <div class="section">
+      <div class="section-head">
+        <h2>📁 活躍策略</h2>
+        <p>績效排行（本月）</p>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table class="mini-table">
+          <thead>
+            <tr><th>策略</th><th>標的</th><th>報酬</th><th>勝率</th><th>狀態</th><th>本月損益</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="display:flex;align-items:center;gap:8px;padding:12px 12px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
+                趨勢追蹤
+              </td>
+              <td class="mono" style="color:var(--text-secondary);">NVDA, TSLA</td>
+              <td class="up mono">+18.4%</td>
+              <td>
+                68%
+                <div class="prog-wrap"><div class="prog-fill" style="width:68%;background:var(--accent);"></div></div>
+              </td>
+              <td><span class="chip chip-run">運行中</span></td>
+              <td class="up mono">+$2,340</td>
+            </tr>
+            <tr>
+              <td style="display:flex;align-items:center;gap:8px;padding:12px 12px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>
+                均值回歸
+              </td>
+              <td class="mono" style="color:var(--text-secondary);">SPY, QQQ</td>
+              <td class="up mono">+9.2%</td>
+              <td>
+                72%
+                <div class="prog-wrap"><div class="prog-fill" style="width:72%;background:var(--green);"></div></div>
+              </td>
+              <td><span class="chip chip-run">運行中</span></td>
+              <td class="up mono">+$870</td>
+            </tr>
+            <tr>
+              <td style="display:flex;align-items:center;gap:8px;padding:12px 12px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--yellow);flex-shrink:0;"></span>
+                台股動能
+              </td>
+              <td class="mono" style="color:var(--text-secondary);">2330, 2454</td>
+              <td class="dn mono">−2.1%</td>
+              <td>
+                45%
+                <div class="prog-wrap"><div class="prog-fill" style="width:45%;background:var(--yellow);"></div></div>
+              </td>
+              <td><span class="chip chip-warn">監控中</span></td>
+              <td class="dn mono">−NT$4,200</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="footer">
+      © 2026 Krystal AI Trading System &nbsp;·&nbsp; Mockup v4 Pro &nbsp;·&nbsp;
+      設計基準：<a href="https://github.com/nextlevelbuilder/ui-ux-pro-max-skill" style="color:var(--accent)">ui-ux-pro-max skill</a> +
+      <a href="https://github.com/careerhackeralex/visualize" style="color:var(--accent)">visualize skill</a>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+/* ══ CLOCK ══ */
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('zh-TW',{hour12:false});
+}
+tick(); setInterval(tick, 1000);
+
+/* ══ THEME TOGGLE ══ */
+const root = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+
+function getTheme() { return root.getAttribute('data-theme'); }
+function setTheme(t) {
+  root.setAttribute('data-theme', t);
+  themeIcon.textContent = t === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('krystal-theme', t);
+  updateCharts();
+}
+
+// Load saved theme
+const saved = localStorage.getItem('krystal-theme') || 'dark';
+setTheme(saved);
+
+themeToggle.addEventListener('click', () => {
+  setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+});
+
+/* ══ RISK BUTTONS ══ */
+function setRisk(el, val) {
+  document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ══ NAV BUTTONS ══ */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+/* ══ CHART HELPERS ══ */
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+let charts = {};
+
+function createCharts() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Mar\'26'];
+  const portfolio = [100,103,108,105,112,118,115,122,128,125,132,138,142];
+  const bench = [100,102,104,102,107,111,109,114,118,116,120,124,127];
+
+  // Chart 1: Trend
+  const ctxT = document.getElementById('chartTrend').getContext('2d');
+  charts.trend = new Chart(ctxT, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: '投資組合',
+          data: portfolio,
+          borderColor: cssVar('--accent'),
+          backgroundColor: cssVar('--accent-soft'),
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: cssVar('--accent'),
+          fill: true,
+          tension: 0.4,
+        },
+        {
+          label: 'SPY 大盤',
+          data: bench,
+          borderColor: cssVar('--text-muted'),
+          borderWidth: 1.5,
+          borderDash: [5,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.4,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: cssVar('--text-secondary'), font: { size: 11 }, boxWidth: 14, padding: 12 } },
+        tooltip: {
+          backgroundColor: cssVar('--bg-overlay'),
+          borderColor: cssVar('--border'),
+          borderWidth: 1,
+          titleColor: cssVar('--text-primary'),
+          bodyColor: cssVar('--text-secondary'),
+          padding: 10,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw > 100 ? '+' : ''}${(ctx.raw-100).toFixed(1)}%`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: cssVar('--chart-grid') }, ticks: { color: cssVar('--chart-text'), font:{size:11} } },
+        y: {
+          grid: { color: cssVar('--chart-grid') },
+          ticks: {
+            color: cssVar('--chart-text'), font:{size:11},
+            callback: v => (v >= 100 ? '+' : '') + (v-100) + '%'
+          }
+        }
+      }
+    }
+  });
+
+  // Chart 2: Allocation Doughnut
+  const ctxA = document.getElementById('chartAlloc').getContext('2d');
+  charts.alloc = new Chart(ctxA, {
+    type: 'doughnut',
+    data: {
+      labels: ['IB (US股)', '元大 (台股)', '現金'],
+      datasets: [{
+        data: [62, 28, 10],
+        backgroundColor: [cssVar('--accent'), cssVar('--yellow'), cssVar('--green')],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: cssVar('--text-secondary'), font:{size:11}, boxWidth:12, padding:14 }
+        },
+        tooltip: {
+          backgroundColor: cssVar('--bg-overlay'),
+          borderColor: cssVar('--border'),
+          borderWidth: 1,
+          titleColor: cssVar('--text-primary'),
+          bodyColor: cssVar('--text-secondary'),
+          padding: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` }
+        }
+      }
+    }
+  });
+
+  // Chart 3: P&L Bar
+  const days = Array.from({length:20}, (_,i) => `3/${i+1}`);
+  const ibPnl = [120,-80,340,200,-150,420,180,90,-60,310,280,-40,150,390,210,-30,460,320,180,890];
+  const ytPnl = [5,-8,12,-3,7,15,-4,2,9,-6,18,3,-2,11,6,-9,22,8,4,48];
+
+  const ctxP = document.getElementById('chartPnl').getContext('2d');
+  charts.pnl = new Chart(ctxP, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [
+        {
+          label: 'IB (USD)',
+          data: ibPnl,
+          backgroundColor: ibPnl.map(v => v >= 0 ? 'hsl(152,68%,48%,0.75)' : 'hsl(0,82%,62%,0.75)'),
+          borderRadius: 3,
+          yAxisID: 'y',
+        },
+        {
+          label: '元大 (TWD千)',
+          data: ytPnl,
+          type: 'line',
+          borderColor: cssVar('--yellow'),
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: cssVar('--yellow'),
+          tension: 0.3,
+          yAxisID: 'y2',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: cssVar('--text-secondary'), font:{size:11}, boxWidth:14, padding:12 } },
+        tooltip: {
+          backgroundColor: cssVar('--bg-overlay'),
+          borderColor: cssVar('--border'),
+          borderWidth: 1,
+          titleColor: cssVar('--text-primary'),
+          bodyColor: cssVar('--text-secondary'),
+          padding: 10,
+        }
+      },
+      scales: {
+        x: { grid: { color: cssVar('--chart-grid') }, ticks: { color: cssVar('--chart-text'), font:{size:10} } },
+        y: {
+          grid: { color: cssVar('--chart-grid') },
+          ticks: { color: cssVar('--chart-text'), font:{size:10} },
+          position: 'left',
+        },
+        y2: {
+          grid: { display: false },
+          ticks: { color: cssVar('--yellow'), font:{size:10} },
+          position: 'right',
+        }
+      }
+    }
+  });
+}
+
+function updateCharts() {
+  if (!charts.trend) return;
+  // Force chart color update on theme switch
+  Object.values(charts).forEach(c => {
+    if (c.options.scales) {
+      const g = cssVar('--chart-grid');
+      const t = cssVar('--chart-text');
+      Object.values(c.options.scales).forEach(s => {
+        if (s.grid) s.grid.color = g;
+        if (s.ticks) s.ticks.color = t;
+      });
+    }
+    if (c.options.plugins?.legend?.labels) {
+      c.options.plugins.legend.labels.color = cssVar('--text-secondary');
+    }
+    c.update('none');
+  });
+  // Recreate with updated colors
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+  createCharts();
+}
+
+createCharts();
+</script>
+</body>
+</html>

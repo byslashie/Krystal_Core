@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB 持倉查詢 - Krystal AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-query {
+            background: #667eea;
+            color: white;
+        }
+        .btn-query:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-query:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-sheets {
+            background: #34a853;
+            color: white;
+        }
+        .btn-sheets:hover {
+            background: #2d8e47;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .data-section {
+            margin-top: 30px;
+        }
+        .account-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .summary-value.positive {
+            color: #28a745;
+        }
+        .summary-value.negative {
+            color: #dc3545;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        thead {
+            background: #f8f9fa;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            font-weight: 600;
+            color: #333;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .symbol {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇺🇸 Interactive Brokers 持倉查詢</h1>
+        <p class="subtitle">Krystal AI 交易系統</p>
+
+        <div class="btn-group">
+            <button class="btn-query" onclick="queryIB()">🔄 查詢最新持倉</button>
+            <button class="btn-sheets" onclick="syncToSheets()">📊 同步到 Google Sheets</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>查詢中...</p>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="data-section" id="dataSection" style="display: none;">
+            <div class="account-summary" id="summary"></div>
+            <table id="positionsTable">
+                <thead>
+                    <tr>
+                        <th>代碼</th>
+                        <th>數量</th>
+                        <th>平均成本</th>
+                        <th>現價</th>
+                        <th>市值</th>
+                        <th>未實現損益</th>
+                        <th>損益 %</th>
+                    </tr>
+                </thead>
+                <tbody id="positions"></tbody>
+            </table>
+        </div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:9999';
+
+        async function queryIB() {
+            const btn = event.target;
+            btn.disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('status').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/query-ib`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    displayData(data.data);
+                    showStatus('✅ 查詢成功！', 'success');
+                } else {
+                    showStatus(`❌ 查詢失敗: ${data.message}`, 'error');
+                }
+            } catch (err) {
+                showStatus(`❌ 連接失敗: ${err.message}`, 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        function displayData(data) {
+            // 顯示帳戶摘要
+            const summaryHtml = `
+                <div class="summary-card">
+                    <div class="summary-label">帳戶 ID</div>
+                    <div class="summary-value">${data.account_id}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">淨值</div>
+                    <div class="summary-value">$${data.net_liquidation_value.toFixed(2)}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">未實現損益</div>
+                    <div class="summary-value ${data.unrealized_pnl >= 0 ? 'positive' : 'negative'}">
+                        ${data.unrealized_pnl >= 0 ? '+' : ''}$${data.unrealized_pnl.toFixed(2)}
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">持倉數</div>
+                    <div class="summary-value">${data.positions_count}</div>
+                </div>
+            `;
+            document.getElementById('summary').innerHTML = summaryHtml;
+
+            // 顯示持倉表
+            const positions = data.positions || [];
+            const rows = positions.map(p => {
+                const pnlPct = p.avgCost > 0 ? ((p.marketPrice - p.avgCost) / p.avgCost * 100) : 0;
+                return `
+                    <tr>
+                        <td class="symbol">${p.symbol}</td>
+                        <td>${p.position}</td>
+                        <td>$${p.avgCost.toFixed(2)}</td>
+                        <td>$${p.marketPrice.toFixed(2)}</td>
+                        <td>$${p.marketValue.toFixed(2)}</td>
+                        <td class="${p.unrealizedPNL >= 0 ? 'positive' : 'negative'}">
+                            ${p.unrealizedPNL >= 0 ? '+' : ''}$${p.unrealizedPNL.toFixed(2)}
+                        </td>
+                        <td class="${pnlPct >= 0 ? 'positive' : 'negative'}">
+                            ${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('positions').innerHTML = rows;
+            document.getElementById('dataSection').style.display = 'block';
+
+            // 顯示時間戳
+            document.getElementById('timestamp').textContent =
+                `📅 查詢時間: ${new Date().toLocaleString('zh-TW')}`;
+        }
+
+        function showStatus(message, type) {
+            const el = document.getElementById('status');
+            el.textContent = message;
+            el.className = `status ${type}`;
+        }
+
+        async function syncToSheets() {
+            showStatus('📊 同步中...', 'success');
+            try {
+                const response = await fetch(`${API_BASE}/api/ib-sync`, { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showStatus(`✅ 已同步 ${data.count} 筆持倉到 Google Sheets`, 'success');
+                } else {
+                    showStatus(`❌ 同步失敗: ${data.message}`, 'error');
+                }
+            } catch (err) {
+                showStatus(`❌ 同步失敗: ${err.message}`, 'error');
+            }
+        }
+
+        // 頁面加載時自動查詢
+        window.addEventListener('load', queryIB);
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "tw_light": {
+    "value": "🔴 紅燈",
+    "label": "38分 → 紅燈",
+    "signal": "38分 — 景氣熱絡",
+    "signal_color": "var(--red)",
+    "score": 38,
+    "pct": 84,
+    "updated": "2026-03",
+    "source": "手動更新 (2026-03-31)"
+  }
+}

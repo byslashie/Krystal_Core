@@ -1,0 +1,132 @@
+<!-- 策略配置頁面 -->
+<div class="page-title">📁 策略配置</div>
+<div class="page-subtitle">策略列表、配置和績效追蹤</div>
+
+<!-- 策略列表 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📊 活躍策略</h2>
+        <p>當前運行的交易策略</p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E8E0FF;">
+                <th style="text-align: left; padding: 12px; font-weight: 600;">策略名稱</th>
+                <th style="text-align: left; padding: 12px; font-weight: 600;">類型</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">報酬</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">勝率</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">持倉</th>
+                <th style="text-align: center; padding: 12px; font-weight: 600;">狀態</th>
+            </tr>
+        </thead>
+        <tbody id="strategies-tbody">
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px; font-weight: 600;">技術面策略</td>
+                <td style="padding: 12px;">均線交叉</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+18.5%</td>
+                <td style="text-align: right; padding: 12px;">55.2%</td>
+                <td style="text-align: right; padding: 12px;">8</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">運行中</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px; font-weight: 600;">強勢股優化</td>
+                <td style="padding: 12px;">動量策略</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+22.3%</td>
+                <td style="text-align: right; padding: 12px;">58.1%</td>
+                <td style="text-align: right; padding: 12px;">5</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">運行中</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; font-weight: 600;">總經策略</td>
+                <td style="padding: 12px;">巨集對沖</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+12.1%</td>
+                <td style="text-align: right; padding: 12px;">51.8%</td>
+                <td style="text-align: right; padding: 12px;">3</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">運行中</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 策略配置 -->
+<div class="section">
+    <div class="section-header">
+        <h2>⚙️ 策略配置</h2>
+        <p>調整策略參數和風險設定</p>
+    </div>
+    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #E8E0FF;">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">選擇策略</label>
+            <select id="strategy-select" style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px; font-size: 14px;">
+                <option>技術面策略</option>
+                <option>強勢股優化</option>
+                <option>總經策略</option>
+            </select>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div>
+                <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">最大持倉數</label>
+                <input type="number" value="10" style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">單筆風險 (%)</label>
+                <input type="number" value="2" step="0.1" style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">止損點數 (%)</label>
+                <input type="number" value="5" step="0.1" style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">止盈倍數</label>
+                <input type="number" value="2" step="0.1" style="width: 100%; padding: 10px; border: 1px solid #E8E0FF; border-radius: 8px;">
+            </div>
+        </div>
+        <button style="width: 100%; padding: 12px; background: #6B21A8; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin-top: 16px;">保存配置</button>
+    </div>
+</div>
+
+<!-- 回測結果 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📊 回測結果</h2>
+        <p>過去 12 個月的策略表現</p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E8E0FF;">
+                <th style="text-align: left; padding: 12px; font-weight: 600;">策略</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">總報酬</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">Sharpe</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">最大回撤</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">交易次數</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">技術面策略</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+24.5%</td>
+                <td style="text-align: right; padding: 12px;">1.82</td>
+                <td style="text-align: right; padding: 12px;">-7.2%</td>
+                <td style="text-align: right; padding: 12px;">145</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">強勢股優化</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+32.1%</td>
+                <td style="text-align: right; padding: 12px;">1.95</td>
+                <td style="text-align: right; padding: 12px;">-5.8%</td>
+                <td style="text-align: right; padding: 12px;">89</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px;">總經策略</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+18.3%</td>
+                <td style="text-align: right; padding: 12px;">1.45</td>
+                <td style="text-align: right; padding: 12px;">-9.1%</td>
+                <td style="text-align: right; padding: 12px;">52</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    console.log('策略配置頁面已加載');
+</script>

@@ -1,0 +1,117 @@
+<!-- 情報資訊頁面 -->
+<div class="page-title">📡 情報資訊</div>
+<div class="page-subtitle">新聞、經濟指標、投資觀點</div>
+
+<!-- 金融新聞 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📰 金融新聞</h2>
+        <p>最新的市場新聞和分析</p>
+    </div>
+    <div id="news-feed" style="background: white; border-radius: 12px; border: 1px solid #E8E0FF;">
+        <div style="padding: 16px; border-bottom: 1px solid #E8E0FF;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1A1A2E;">Fed 官員暗示 2024 年可能降息 3 次</div>
+                <span style="background: #FEE2E2; color: #EF4444; padding: 2px 6px; border-radius: 4px; font-size: 12px;">高影響</span>
+            </div>
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">2026-03-20 10:30 • Bloomberg</div>
+            <div style="font-size: 13px; color: #6B7280;">美國聯邦儲備委員會主席鮑威爾在最新發言中暗示，如果經濟出現放緩跡象，央行可能在2024年進行3次降息...</div>
+        </div>
+        <div style="padding: 16px; border-bottom: 1px solid #E8E0FF;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1A1A2E;">S&P 500 創新高，科技股領漲</div>
+                <span style="background: #DCFCE7; color: #10B981; padding: 2px 6px; border-radius: 4px; font-size: 12px;">正面</span>
+            </div>
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">2026-03-20 08:45 • Reuters</div>
+            <div style="font-size: 13px; color: #6B7280;">美國股市週四收盤再創歷史新高，科技股領漲，納指上漲 2.1%，微軟和蘋果股價創新高...</div>
+        </div>
+        <div style="padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1A1A2E;">台積電法說會即將舉行</div>
+                <span style="background: #FEF3C7; color: #F59E0B; padding: 2px 6px; border-radius: 4px; font-size: 12px;">中影響</span>
+            </div>
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">2026-03-18 15:20 • TaiwanNews</div>
+            <div style="font-size: 13px; color: #6B7280;">台積電將於 4 月初舉行法人說明會，預計公布 2026 年財測和重大投資計畫...</div>
+        </div>
+    </div>
+</div>
+
+<!-- 經濟指標 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📊 經濟指標</h2>
+        <p>關鍵經濟數據和市場指標</p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E8E0FF;">
+                <th style="text-align: left; padding: 12px; font-weight: 600;">指標</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">當前值</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">預期值</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">前值</th>
+                <th style="text-align: center; padding: 12px; font-weight: 600;">影響</th>
+            </tr>
+        </thead>
+        <tbody id="econ-indicators-tbody">
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">GDP 增速 (年率)</td>
+                <td style="text-align: right; padding: 12px; font-weight: 600;">2.4%</td>
+                <td style="text-align: right; padding: 12px;">2.3%</td>
+                <td style="text-align: right; padding: 12px;">2.1%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 2px 6px; border-radius: 4px; font-size: 12px;">正面</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">失業率</td>
+                <td style="text-align: right; padding: 12px; font-weight: 600;">3.9%</td>
+                <td style="text-align: right; padding: 12px;">4.0%</td>
+                <td style="text-align: right; padding: 12px;">4.1%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 2px 6px; border-radius: 4px; font-size: 12px;">正面</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">CPI 通膨率</td>
+                <td style="text-align: right; padding: 12px; font-weight: 600;">3.2%</td>
+                <td style="text-align: right; padding: 12px;">3.1%</td>
+                <td style="text-align: right; padding: 12px;">3.3%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #FEF3C7; color: #F59E0B; padding: 2px 6px; border-radius: 4px; font-size: 12px;">中性</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">聯邦基金利率</td>
+                <td style="text-align: right; padding: 12px; font-weight: 600;">4.75%</td>
+                <td style="text-align: right; padding: 12px;">4.75%</td>
+                <td style="text-align: right; padding: 12px;">4.75%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #FEF3C7; color: #F59E0B; padding: 2px 6px; border-radius: 4px; font-size: 12px;">中性</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 12px;">10 年期公債殖利率</td>
+                <td style="text-align: right; padding: 12px; font-weight: 600;">4.12%</td>
+                <td style="text-align: right; padding: 12px;">4.10%</td>
+                <td style="text-align: right; padding: 12px;">4.08%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #FEE2E2; color: #EF4444; padding: 2px 6px; border-radius: 4px; font-size: 12px;">負面</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 投資觀點 -->
+<div class="section">
+    <div class="section-header">
+        <h2>💡 投資觀點</h2>
+        <p>策略師和分析師的市場看法</p>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #06B6D4; margin-bottom: 16px;">
+        <div style="font-weight: 600; color: #1A1A2E; margin-bottom: 8px;">科技股仍有上升空間</div>
+        <div style="font-size: 13px; color: #6B7280;">高盛認為，儘管科技股估值已經很高，但在人工智能浪潮驅動下，大型科技公司仍有進一步上升的潛力。建議投資者保持對科技股的關注...</div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B; margin-bottom: 16px;">
+        <div style="font-weight: 600; color: #1A1A2E; margin-bottom: 8px;">新興市場面臨風險</div>
+        <div style="font-size: 13px; color: #6B7280;">摩根士丹利警告稱，新興市場可能面臨更多風險，特別是在美國加息持續的背景下。建議投資者在新興市場配置上保持謹慎...</div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+        <div style="font-weight: 600; color: #1A1A2E; margin-bottom: 8px;">看好台灣半導體產業</div>
+        <div style="font-size: 13px; color: #6B7280;">瑞銀認為，台灣半導體企業在全球供應鏈中的地位不可替代，其中台積電、聯發科等龍頭公司未來仍將受益於全球芯片需求的增長...</div>
+    </div>
+</div>
+
+<script>
+    console.log('情報資訊頁面已加載');
+</script>

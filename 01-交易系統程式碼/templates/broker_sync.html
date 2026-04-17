@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broker 數據同步 - Krystal AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #374151;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .sync-button {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-sync-all {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-sync-all:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-sync-all:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .broker-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .btn-sync {
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sync:hover:not(:disabled) {
+            border-color: #667eea;
+            background: #f3f4f6;
+            color: #667eea;
+        }
+
+        .btn-sync:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-sync:disabled,
+        .sync-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-box {
+            background: #f3f4f6;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            min-height: 60px;
+            display: none;
+        }
+
+        .status-box.show {
+            display: block;
+        }
+
+        .status-box.success {
+            background: #ecfdf5;
+            border-left-color: #10b981;
+        }
+
+        .status-box.success .status-title {
+            color: #059669;
+        }
+
+        .status-box.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .status-box.error .status-title {
+            color: #dc2626;
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .status-content {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            padding: 12px;
+            color: #1e40af;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        .separator {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Broker 數據同步</h1>
+        <p class="subtitle">從券商同步最新持倉到 Google Sheets</p>
+
+        <!-- Main Sync Section -->
+        <div class="section">
+            <div class="section-title">🔄 一鍵同步所有券商</div>
+            <div class="button-group">
+                <button class="sync-button btn-sync-all" id="sync-all-btn" onclick="syncAllBrokers()">
+                    <span>🔄</span> 全部同步
+                </button>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Individual Broker Sync -->
+        <div class="section">
+            <div class="section-title">🏦 單個券商同步</div>
+            <div class="broker-buttons">
+                <button class="sync-button btn-sync" id="sync-ib-btn" onclick="syncBroker('ib')">
+                    🏦 IB
+                </button>
+                <button class="sync-button btn-sync" id="sync-yuanta-btn" onclick="syncBroker('yuanta')">
+                    🏪 Yuanta
+                </button>
+                <button class="sync-button btn-sync" id="sync-schwab-btn" onclick="syncBroker('schwab')">
+                    🔐 Schwab
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div id="status-box" class="status-box">
+            <div class="status-title" id="status-title"></div>
+            <div class="status-content" id="status-content"></div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            ℹ️ <strong>提示：</strong> 同步前請確保相應的券商 API 已配置且連接正常。系統會自動檢查重複項再寫入 Google Sheets。
+        </div>
+    </div>
+
+    <script>
+        async function syncAllBrokers() {
+            const btn = document.getElementById('sync-all-btn');
+            const statusBox = document.getElementById('status-box');
+            const statusTitle = document.getElementById('status-title');
+            const statusContent = document.getElementById('status-content');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> 同步中...';
+            statusBox.className = 'status-box show';
+            statusTitle.textContent = '⏳ 正在同步...';
+            statusContent.textContent = '正在從所有券商獲取持倉數據...';
+
+            try {
+                const response = await fetch('/api/brokers/sync-all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let resultText = '';
+                    if (data.ib) resultText += `✅ IB: ${data.ib}\n`;
+                    if (data.yuanta) resultText += `✅ Yuanta: ${data.yuanta}\n`;
+                    if (data.schwab) resultText += `ℹ️ Schwab: ${data.schwab}\n`;
+
+                    statusBox.className = 'status-box show success';
+                    statusTitle.textContent = '✅ 同步成功！';
+                    statusContent.innerHTML = resultText.replace(/\n/g, '<br>');
+                } else {
+                    statusBox.className = 'status-box show error';
+                    statusTitle.textContent = '❌ 同步失敗';
+                    statusContent.textContent = data.error || '發生未知錯誤';
+                }
+            } catch (error) {
+                statusBox.className = 'status-box show error';
+                statusTitle.textContent = '❌ 連接錯誤';
+                statusContent.textContent = error.message || '無法連接到伺服器';
+                console.error('Sync error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 全部同步';
+            }
+        }
+
+        async function syncBroker(broker) {
+            const btn = document.getElementById(`sync-${broker}-btn`);
+            const statusBox = document.getElementById('status-box');
+            const statusTitle = document.getElementById('status-title');
+            const statusContent = document.getElementById('status-content');
+
+            const brokerNames = { ib: 'IB', yuanta: 'Yuanta', schwab: 'Schwab' };
+            const brokerName = brokerNames[broker] || broker;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+            statusBox.className = 'status-box show';
+            statusTitle.textContent = `⏳ 正在同步 ${brokerName}...`;
+            statusContent.textContent = '正在獲取持倉數據...';
+
+            try {
+                const response = await fetch(`/api/${broker}/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusBox.className = 'status-box show success';
+                    statusTitle.textContent = `✅ ${brokerName} 同步成功！`;
+                    statusContent.innerHTML = `
+                        📈 <strong>同步結果：</strong><br>
+                        ${data.message || '持倉已同步到 Google Sheets'}<br>
+                        ${data.count ? `<br>📊 <strong>同步筆數：</strong> ${data.count}` : ''}
+                    `;
+                } else {
+                    statusBox.className = 'status-box show error';
+                    statusTitle.textContent = `❌ ${brokerName} 同步失敗`;
+                    statusContent.textContent = data.error || data.message || '發生未知錯誤';
+                }
+            } catch (error) {
+                statusBox.className = 'status-box show error';
+                statusTitle.textContent = `❌ ${brokerName} 連接錯誤`;
+                statusContent.textContent = error.message || '無法連接到伺服器';
+                console.error('Sync error:', error);
+            } finally {
+                btn.disabled = false;
+                const icons = { ib: '🏦', yuanta: '🏪', schwab: '🔐' };
+                btn.innerHTML = `${icons[broker]} ${brokerName}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="aura">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krystal AI × XQ 策略系統 — 課程展示版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════ RESET ══════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+/* ══════════════════════ AURA THEME ══════════════════════ */
+:root,[data-theme="aura"]{
+  --bg:#F7F5F1;
+  --blue:#A8C5E8;--blue-deep:#6FA8D4;
+  --peach:#F0A888;--peach-deep:#E07848;
+  --glass:rgba(255,255,255,0.65);
+  --glass-border:rgba(255,255,255,0.85);
+  --text:#1A1814;--text-2:#6B6560;--text-3:#9E9891;
+  --shadow:0 8px 32px rgba(0,0,0,0.08);
+  --green:#1a7a4a;--green-soft:rgba(26,122,74,0.10);
+  --red:#c0392b;--red-soft:rgba(192,57,43,0.10);
+  --ok:#1a7a4a;--ok-soft:rgba(26,122,74,0.10);
+  --err:#c0392b;--err-soft:rgba(192,57,43,0.10);
+  --yellow:#b7770d;--yellow-soft:rgba(183,119,13,0.12);
+  --purple:#6b44d4;--purple-soft:rgba(107,68,212,0.10);
+  --accent:var(--blue-deep);--accent-soft:rgba(168,197,232,0.20);
+  --bg-base:var(--bg);--bg-surface:var(--glass);
+  --bg-raised:rgba(255,255,255,0.50);--bg-overlay:rgba(255,255,255,0.30);
+  --border:rgba(255,255,255,0.85);--border-soft:rgba(255,255,255,0.65);
+  --text-primary:var(--text);--text-secondary:var(--text-2);--text-muted:var(--text-3);
+  --header-h:62px;--sidebar-w:200px;
+  --radius:14px;--radius-sm:9px;--radius-lg:22px;
+  --transition:150ms ease;--transition-md:220ms ease;
+  --aura-grad:radial-gradient(ellipse 80% 60% at 0% 0%,rgba(168,197,232,.40) 0%,transparent 65%),
+    radial-gradient(ellipse 70% 55% at 100% 100%,rgba(240,168,136,.35) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 40% at 60% 30%,rgba(255,255,255,.15) 0%,transparent 70%);
+}
+[data-theme="dark"]{
+  --bg:hsl(222,47%,6%);
+  --blue:#A8C5E8;--blue-deep:#74B9FF;
+  --peach:#F0A888;--peach-deep:#E07848;
+  --glass:hsla(222,40%,12%,0.88);
+  --glass-border:hsla(222,28%,22%,0.9);
+  --text:hsl(210,40%,94%);--text-2:hsl(215,22%,62%);--text-3:hsl(215,18%,42%);
+  --shadow:0 8px 32px rgba(0,0,0,0.4);
+  --green:hsl(0,82%,62%);--green-soft:hsla(0,82%,62%,0.12);
+  --red:hsl(152,68%,48%);--red-soft:hsla(152,68%,48%,0.12);
+  --ok:hsl(152,68%,48%);--ok-soft:hsla(152,68%,48%,0.12);
+  --err:hsl(0,82%,62%);--err-soft:hsla(0,82%,62%,0.12);
+  --yellow:hsl(38,92%,52%);--yellow-soft:hsla(38,92%,52%,0.12);
+  --purple:hsl(262,83%,68%);--purple-soft:hsla(262,83%,68%,0.12);
+  --accent:#74B9FF;--accent-soft:hsla(217,91%,63%,0.14);
+  --bg-base:var(--bg);--bg-surface:var(--glass);
+  --bg-raised:hsl(222,35%,13%);--bg-overlay:hsl(222,30%,17%);
+  --border:var(--glass-border);--border-soft:hsla(222,24%,14%,0.9);
+  --text-primary:var(--text);--text-secondary:var(--text-2);--text-muted:var(--text-3);
+  --aura-grad:radial-gradient(ellipse 80% 60% at 0% 0%,rgba(116,185,255,.07) 0%,transparent 65%),
+    radial-gradient(ellipse 70% 55% at 100% 100%,rgba(240,168,136,.05) 0%,transparent 65%);
+}
+
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg-base);color:var(--text-primary);
+  font-size:14px;line-height:1.5;overflow-x:hidden;
+  transition:background var(--transition-md),color var(--transition-md);
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:var(--aura-grad),var(--bg-base);
+  transition:background var(--transition-md);
+}
+
+/* ══════════════════════ HEADER ══════════════════════ */
+.header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:200;
+  background:rgba(247,245,241,0.82);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border-bottom:1px solid rgba(255,255,255,0.65);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+  transition:background var(--transition-md);
+}
+[data-theme="dark"] .header{background:hsla(222,47%,6%,0.88);border-color:hsla(222,28%,18%,0.8)}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue-deep),var(--peach-deep));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(111,168,212,0.35)}
+.logo-text{display:flex;flex-direction:column;line-height:1.2}
+.logo-name{font-size:14px;font-weight:800;color:var(--text-primary);letter-spacing:-.02em}
+.logo-sub{font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:.04em}
+.nav{display:flex;align-items:center;flex:1;overflow-x:auto;scrollbar-width:none;
+  background:rgba(255,255,255,0.45);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.75);border-radius:999px;padding:4px;gap:2px}
+.nav::-webkit-scrollbar{display:none}
+[data-theme="dark"] .nav{background:hsla(222,35%,13%,0.7);border-color:hsla(222,28%,22%,0.8)}
+.nav-btn{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:999px;border:none;background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--transition);white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif;flex-shrink:0}
+.nav-btn:hover{background:rgba(255,255,255,0.65);color:var(--text-primary)}
+[data-theme="dark"] .nav-btn:hover{background:hsla(222,28%,18%,0.8)}
+.nav-btn.active{background:rgba(255,255,255,0.90);color:var(--text-primary);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+[data-theme="dark"] .nav-btn.active{background:var(--bg-raised)}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.live-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(192,57,43,0.10);border:1px solid rgba(192,57,43,0.3);font-size:11px;font-weight:700;color:#c0392b;letter-spacing:.04em}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#c0392b;animation:pulse 1.2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.35)}}
+.theme-btn{width:34px;height:34px;border-radius:999px;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 200ms}
+.theme-btn:hover{color:var(--text-primary);transform:scale(1.08)}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);min-width:72px;text-align:right;font-weight:500}
+
+/* ══════════════════════ LAYOUT ══════════════════════ */
+.layout{display:flex;margin-top:var(--header-h);min-height:calc(100vh - var(--header-h));position:relative;z-index:1}
+.main{flex:1;padding:28px 32px;overflow-x:hidden;position:relative;z-index:1}
+.page{display:none;animation:fadeIn .22s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page-heading{font-size:30px;font-weight:900;color:var(--text-primary);margin-bottom:6px;letter-spacing:-.04em;line-height:.95}
+.page-sub{font-size:13px;color:var(--text-muted);font-weight:500;margin-bottom:22px}
+
+/* ══════════════════════ COMPONENTS ══════════════════════ */
+.banner{padding:11px 16px;border-radius:var(--radius);background:var(--accent-soft);border:1px solid rgba(168,197,232,0.3);color:var(--accent);font-size:12px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.banner-yellow{background:var(--yellow-soft);border-color:rgba(183,119,13,0.2);color:var(--yellow)}
+.banner-green{background:var(--green-soft);border-color:rgba(26,122,74,0.18);color:var(--green)}
+.banner-red{background:var(--red-soft);border-color:rgba(192,57,43,0.18);color:var(--red)}
+
+/* KPI */
+.kpi-grid{display:grid;gap:12px;margin-bottom:24px}
+.kpi-4{grid-template-columns:repeat(4,1fr)}
+.kpi-3{grid-template-columns:repeat(3,1fr)}
+.kpi-2{grid-template-columns:repeat(2,1fr)}
+.kpi-6{grid-template-columns:repeat(6,1fr)}
+.kpi-card{background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:20px 22px;transition:all var(--transition);box-shadow:0 4px 16px rgba(0,0,0,.05)}
+[data-theme="dark"] .kpi-card{background:var(--bg-raised);border-color:var(--border)}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.kpi-label{font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.10em;display:flex;align-items:center;gap:5px}
+.kpi-val{font-size:34px;font-weight:900;color:var(--text-primary);letter-spacing:-.04em;line-height:.9;font-family:'Plus Jakarta Sans',sans-serif}
+.kpi-val.green{color:var(--green)}.kpi-val.red{color:var(--red)}.kpi-val.yellow{color:var(--yellow)}.kpi-val.blue{color:var(--accent)}.kpi-val.purple{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--text-secondary);margin-top:8px;display:flex;align-items:center;gap:5px;font-weight:500}
+.up{color:var(--green)}.dn{color:var(--red)}
+
+/* CHART CARD */
+.chart-row{display:grid;gap:16px;margin-bottom:20px}
+.cr-21{grid-template-columns:2fr 1fr}
+.cr-12{grid-template-columns:1fr 2fr}
+.cr-11{grid-template-columns:1fr 1fr}
+.cr-13{grid-template-columns:1fr 3fr}
+.chart-card{background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:22px;transition:all var(--transition);box-shadow:0 4px 16px rgba(0,0,0,.05)}
+[data-theme="dark"] .chart-card{background:var(--bg-raised);border-color:var(--border)}
+.chart-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.09)}
+.chart-title{font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:6px;letter-spacing:-.01em}
+.chart-sub{font-size:11px;color:var(--text-muted);font-weight:500;margin-left:auto}
+.chart-wrap{position:relative}
+
+/* TABLE */
+.table-wrap{background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+[data-theme="dark"] .table-wrap{background:var(--bg-raised);border-color:var(--border)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.10em;padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:left}
+td{font-size:13px;color:var(--text-secondary);padding:11px 16px;border-bottom:1px solid var(--border-soft);transition:background var(--transition);font-weight:500}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-raised)}
+td.num{font-family:'JetBrains Mono',monospace;font-weight:600}
+td.g{color:var(--green)}td.r{color:var(--red)}td.y{color:var(--yellow)}td.b{font-weight:700;color:var(--text-primary)}
+
+/* BADGE / CHIP */
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.04em}
+.bg-green{background:var(--green-soft);color:var(--green)}
+.bg-red{background:var(--red-soft);color:var(--red)}
+.bg-yellow{background:var(--yellow-soft);color:var(--yellow)}
+.bg-blue{background:var(--accent-soft);color:var(--accent)}
+.bg-purple{background:var(--purple-soft);color:var(--purple)}
+
+/* BUTTON */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;border-radius:999px;border:1.5px solid var(--border);background:var(--glass);backdrop-filter:blur(12px);color:var(--text-secondary);font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all var(--transition);white-space:nowrap}
+.btn:hover{background:var(--bg-raised);color:var(--text-primary);border-color:var(--accent)}
+.btn-primary{background:linear-gradient(135deg,var(--blue-deep),var(--peach-deep));border-color:transparent;color:#fff!important}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(111,168,212,.4);transform:translateY(-1px);color:#fff!important}
+
+/* SECTION HEAD */
+.section-head{font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:14px;display:flex;align-items:center;gap:6px;letter-spacing:-.01em}
+
+/* ══════════════════════ MACRO COMPASS ══════════════════════ */
+.compass-wrap{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:1}
+.compass-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:100%;height:100%;border-radius:var(--radius-lg);overflow:hidden;gap:3px;background:var(--border-soft)}
+.compass-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;cursor:pointer;transition:all var(--transition);border:2px solid transparent}
+.compass-cell:hover{filter:brightness(1.08)}
+.compass-cell.expansion{background:rgba(168,197,232,.20)}
+.compass-cell.slowdown{background:var(--yellow-soft)}
+.compass-cell.recession{background:var(--red-soft)}
+.compass-cell.recovery{background:var(--green-soft)}
+.compass-cell.active-q{border:2.5px solid var(--accent)!important;box-shadow:inset 0 0 20px rgba(168,197,232,.15)}
+.compass-cell-icon{font-size:24px;margin-bottom:4px}
+.compass-cell-label{font-size:12px;font-weight:800;color:var(--text-primary);margin-bottom:2px}
+.compass-cell-en{font-size:9px;color:var(--text-muted);margin-bottom:6px;font-weight:600;letter-spacing:.04em}
+.compass-cell-assets{font-size:9.5px;color:var(--text-secondary);text-align:center;line-height:1.5;font-weight:500}
+.compass-axis-x{position:absolute;left:0;right:0;height:1px;background:var(--border-soft);pointer-events:none;top:50%}
+.compass-axis-y{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border-soft);pointer-events:none}
+
+/* TOP-DOWN FUNNEL */
+.funnel-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.funnel-step{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);transition:all var(--transition);cursor:pointer}
+[data-theme="dark"] .funnel-step{background:var(--bg-raised);border-color:var(--border)}
+.funnel-step:hover{border-color:rgba(168,197,232,.5);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.funnel-step.active-step{border-color:var(--accent);background:var(--accent-soft)}
+.funnel-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue-deep),var(--peach-deep));color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.funnel-body{flex:1}
+.funnel-title{font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:3px;letter-spacing:-.01em}
+.funnel-desc{font-size:11px;color:var(--text-secondary);font-weight:500;line-height:1.5}
+.funnel-arrow{font-size:16px;color:var(--text-muted)}
+.funnel-result{background:var(--bg-raised);border-radius:var(--radius-sm);padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+
+/* MACRO INDICATOR */
+.macro-ind-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.macro-ind{background:var(--bg-raised);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;text-align:center;cursor:pointer;transition:all var(--transition)}
+.macro-ind:hover{border-color:var(--accent);transform:translateY(-1px)}
+.macro-ind-label{font-size:9px;color:var(--text-muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.macro-ind-val{font-size:20px;font-weight:900;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:3px;letter-spacing:-.03em}
+.macro-ind-trend{font-size:11px;font-weight:600;margin-bottom:6px}
+.ind-bar-track{height:3px;background:var(--bg-overlay);border-radius:2px;overflow:hidden}
+.ind-bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+
+/* SECTOR GRID */
+.sector-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.sector-card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;transition:all var(--transition);position:relative;overflow:hidden}
+[data-theme="dark"] .sector-card{background:var(--bg-raised);border-color:var(--border)}
+.sector-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.09)}
+.sector-card.hot{border-color:rgba(26,122,74,.4);background:var(--green-soft)}
+.sector-card.cold{border-color:rgba(192,57,43,.3);background:var(--red-soft)}
+.sector-icon{font-size:22px;margin-bottom:6px}
+.sector-name{font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:5px}
+.sector-ret{font-size:16px;font-weight:900;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em}
+.sector-signal{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;letter-spacing:.04em}
+
+/* ══════════════════════ STRATEGY CARDS ══════════════════════ */
+.s-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.s-card{background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:20px;transition:all var(--transition);box-shadow:0 4px 16px rgba(0,0,0,.05)}
+[data-theme="dark"] .s-card{background:var(--bg-raised);border-color:var(--border)}
+.s-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.09)}
+.s-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.s-card-name{font-size:15px;font-weight:800;color:var(--text-primary);letter-spacing:-.02em}
+.s-chip{font-size:10px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.s-chip.active{background:var(--green-soft);color:var(--green)}
+.s-chip.paused{background:var(--yellow-soft);color:var(--yellow)}
+.s-chip.research{background:var(--purple-soft);color:var(--purple)}
+.s-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.s-metric{background:var(--bg-raised);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border-soft)}
+.s-metric-label{font-size:9px;color:var(--text-muted);margin-bottom:3px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.s-metric-val{font-size:18px;font-weight:900;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em}
+.s-desc{font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;font-weight:500}
+.progress-track{height:3px;background:var(--bg-overlay);border-radius:2px}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue-deep),var(--peach))}
+
+/* ══════════════════════ XS BACKTEST IMPORT ══════════════════════ */
+.upload-zone{border:2px dashed rgba(168,197,232,.5);border-radius:var(--radius-lg);padding:40px;text-align:center;background:var(--accent-soft);cursor:pointer;transition:all .2s;margin-bottom:20px}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(168,197,232,.15)}
+.upload-icon{font-size:44px;margin-bottom:12px}
+.upload-title{font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:6px;letter-spacing:-.02em}
+.upload-desc{font-size:12px;color:var(--text-muted);font-weight:500;line-height:1.6}
+.upload-hint{font-size:11px;color:var(--accent);font-weight:700;margin-top:8px}
+.result-section{display:none;animation:fadeIn .3s ease}
+.result-section.show{display:block}
+
+/* HEATMAP */
+.heatmap-table{width:100%;border-collapse:collapse}
+.heatmap-table th{font-size:9px;font-weight:700;color:var(--text-muted);padding:7px 6px;text-align:center;background:var(--bg-raised);border:1px solid var(--border-soft);letter-spacing:.06em}
+.heatmap-table td{font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;padding:6px 6px;text-align:center;border:1px solid var(--border-soft)}
+.hm-pos-3{background:rgba(26,122,74,.30);color:var(--green)}
+.hm-pos-2{background:rgba(26,122,74,.16);color:var(--green)}
+.hm-pos-1{background:rgba(26,122,74,.07);color:var(--green)}
+.hm-neg-3{background:rgba(192,57,43,.30);color:var(--red)}
+.hm-neg-2{background:rgba(192,57,43,.16);color:var(--red)}
+.hm-neg-1{background:rgba(192,57,43,.07);color:var(--red)}
+.hm-neu{background:var(--bg-raised);color:var(--text-muted)}
+
+/* ══════════════════════ SCROLLBAR ══════════════════════ */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:2px}
+
+/* ══════════════════════ MOBILE ══════════════════════ */
+@media(max-width:900px){
+  .kpi-4{grid-template-columns:repeat(2,1fr)}
+  .kpi-6{grid-template-columns:repeat(3,1fr)}
+  .cr-21,.cr-12,.cr-11{grid-template-columns:1fr}
+  .s-grid{grid-template-columns:1fr}
+  .sector-grid{grid-template-columns:repeat(3,1fr)}
+  .macro-ind-grid{grid-template-columns:repeat(2,1fr)}
+  .main{padding:16px 14px}
+  .page-heading{font-size:22px}
+}
+@media(max-width:520px){
+  .kpi-4,.kpi-6{grid-template-columns:repeat(2,1fr)}
+  .sector-grid{grid-template-columns:repeat(2,1fr)}
+  .macro-ind-grid{grid-template-columns:1fr 1fr}
+}
+
+/* AI Badge */
+.ai-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(107,68,212,.15),rgba(168,197,232,.15));border:1px solid rgba(107,68,212,.25);font-size:10px;font-weight:700;color:var(--purple);letter-spacing:.05em;white-space:nowrap}
+.ai-badge::before{content:'✨';font-size:10px}
+
+/* DEMO WATERMARK */
+.demo-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:rgba(183,119,13,.12);border:1px solid rgba(183,119,13,.3);font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:.05em;margin-left:8px}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">💎</div>
+    <div class="logo-text">
+      <span class="logo-name">Krystal AI</span>
+      <span class="logo-sub">× XQ 策略系統</span>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('p1',this)" id="btn-p1">📊 系統總覽</button>
+    <button class="nav-btn" onclick="showPage('p2',this)" id="btn-p2">🌏 Top-Down 總經</button>
+    <button class="nav-btn" onclick="showPage('p3',this)" id="btn-p3">📁 策略管理</button>
+    <button class="nav-btn" onclick="showPage('p4',this)" id="btn-p4">📤 XS 回測匯入</button>
+    <button class="nav-btn" onclick="showPage('p5',this)" id="btn-p5">✨ AI 賦能總結</button>
+    <button class="nav-btn" onclick="showPage('p6',this)" id="btn-p6">🎯 AI 選股中心</button>
+  </nav>
+  <div class="header-right">
+    <div class="live-pill"><span class="live-dot"></span>DEMO 展示</div>
+    <button class="theme-btn" onclick="toggleTheme()" title="切換主題">🌸</button>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="layout">
+<main class="main">
+
+<!-- ════════════════════════════════════════
+     PAGE 1: 系統總覽
+════════════════════════════════════════ -->
+<div class="page active" id="p1">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">📊 投資組合總覽</div>
+    <span class="demo-tag">假資料</span>
+    <span class="ai-badge">AI 驅動</span>
+  </div>
+  <div class="page-sub">整合 XQ 策略訊號 × 宏觀景氣 × 風險控制的一站式儀表板</div>
+
+  <div class="banner">🌐 景氣象限：<strong>擴張期</strong>｜建議加碼成長型策略｜台灣 PMI 52.8 ↑ 持續擴張中</div>
+
+  <div class="kpi-grid kpi-4">
+    <div class="kpi-card">
+      <div class="kpi-label">💰 帳戶總資產</div>
+      <div class="kpi-val">$2,847萬</div>
+      <div class="kpi-sub"><span class="up">▲ +12.4%</span> 年初至今</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📈 本月損益</div>
+      <div class="kpi-val green">+$84萬</div>
+      <div class="kpi-sub"><span class="up">▲ +3.05%</span> vs 上月</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📁 運行策略數</div>
+      <div class="kpi-val blue">6</div>
+      <div class="kpi-sub"><span class="badge bg-green">4 運行中</span> <span class="badge bg-yellow">2 觀察</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">⚡ 最大回撤</div>
+      <div class="kpi-val yellow">-6.8%</div>
+      <div class="kpi-sub">夏普比率 <strong>1.72</strong></div>
+    </div>
+  </div>
+
+  <div class="chart-row cr-21">
+    <div class="chart-card">
+      <div class="chart-title">📈 資金曲線 <span class="chart-sub">2025/01 — 2026/04 vs 加權指數</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-equity"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 資產配置</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">台股動能</span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">45%</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">個股波段</span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">28%</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">美股 ETF</span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">17%</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">現金</span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">10%</span></div>
+      </div>
+      <div class="chart-wrap" style="height:170px"><canvas id="c-donut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-head">⚡ 今日策略訊號</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>策略</th><th>訊號</th><th>標的</th><th>理由</th><th>強度</th><th>操作</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="b">KD 低檔翻揚</td>
+          <td><span class="badge bg-green">買進</span></td>
+          <td class="b">2330 台積電</td>
+          <td>KD &lt; 20, 量能放大 156%</td>
+          <td><span style="color:var(--green);font-weight:700">★★★★★</span></td>
+          <td><button class="btn btn-primary" style="padding:4px 12px;font-size:11px">執行</button></td>
+        </tr>
+        <tr>
+          <td class="b">MACD 翻正</td>
+          <td><span class="badge bg-green">買進</span></td>
+          <td class="b">2454 聯發科</td>
+          <td>MACD 柱翻正，站穩月線</td>
+          <td><span style="color:var(--green);font-weight:700">★★★★☆</span></td>
+          <td><button class="btn" style="padding:4px 12px;font-size:11px">觀察</button></td>
+        </tr>
+        <tr>
+          <td class="b">外資強勢</td>
+          <td><span class="badge bg-blue">追蹤</span></td>
+          <td class="b">3034 聯詠</td>
+          <td>外資連 5 日買超，籌碼集中</td>
+          <td><span style="color:var(--accent);font-weight:700">★★★☆☆</span></td>
+          <td><button class="btn" style="padding:4px 12px;font-size:11px">加入觀察</button></td>
+        </tr>
+        <tr>
+          <td class="b">KD 低檔翻揚</td>
+          <td><span class="badge bg-red">賣出</span></td>
+          <td class="b">2603 長榮</td>
+          <td>KD &gt; 80，達目標獲利 18%</td>
+          <td><span style="color:var(--red);font-weight:700">★★★★☆</span></td>
+          <td><button class="btn btn-primary" style="padding:4px 12px;font-size:11px;background:linear-gradient(135deg,var(--red),var(--peach-deep))">出場</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="kpi-grid kpi-6" style="margin-bottom:0">
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">勝率</div>
+      <div class="kpi-val green" style="font-size:24px">62.4%</div>
+    </div>
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">年化報酬</div>
+      <div class="kpi-val blue" style="font-size:24px">24.7%</div>
+    </div>
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">獲利因子</div>
+      <div class="kpi-val" style="font-size:24px">2.14</div>
+    </div>
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">已執行交易</div>
+      <div class="kpi-val" style="font-size:24px">247</div>
+    </div>
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">平均持倉天</div>
+      <div class="kpi-val" style="font-size:24px">8.3</div>
+    </div>
+    <div class="kpi-card" style="padding:14px 16px">
+      <div class="kpi-label">最大連敗</div>
+      <div class="kpi-val red" style="font-size:24px">4次</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2: TOP-DOWN 總經
+════════════════════════════════════════ -->
+<div class="page" id="p2">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">🌏 Top-Down 總經視角</div>
+    <span class="demo-tag">假資料</span>
+  </div>
+  <div class="page-sub">從全球宏觀 → 台灣景氣 → 產業輪動 → 策略選股，由上而下系統性分析</div>
+
+  <!-- FUNNEL -->
+  <div class="funnel-wrap" style="margin-bottom:24px">
+    <div class="funnel-step active-step" onclick="scrollToMacro('global')">
+      <div class="funnel-num">1</div>
+      <div class="funnel-body">
+        <div class="funnel-title">🌐 全球宏觀環境</div>
+        <div class="funnel-desc">Fed 政策 / DXY 美元指數 / 全球 PMI / 風險情緒</div>
+      </div>
+      <div class="funnel-result">擴張期 ✓</div>
+      <div class="funnel-arrow">▼</div>
+    </div>
+    <div class="funnel-step" onclick="scrollToMacro('taiwan')">
+      <div class="funnel-num">2</div>
+      <div class="funnel-body">
+        <div class="funnel-title">🇹🇼 台灣景氣指標</div>
+        <div class="funnel-desc">景氣燈號 / 出口訂單 / PMI / 外資動向</div>
+      </div>
+      <div class="funnel-result">黃紅燈 ✓</div>
+      <div class="funnel-arrow">▼</div>
+    </div>
+    <div class="funnel-step" onclick="scrollToMacro('sector')">
+      <div class="funnel-num">3</div>
+      <div class="funnel-body">
+        <div class="funnel-title">🏭 產業輪動判斷</div>
+        <div class="funnel-desc">強勢產業 / 資金流向 / 相對強弱</div>
+      </div>
+      <div class="funnel-result">半導體 ↑</div>
+      <div class="funnel-arrow">▼</div>
+    </div>
+    <div class="funnel-step" onclick="scrollToMacro('strat')">
+      <div class="funnel-num">4</div>
+      <div class="funnel-body">
+        <div class="funnel-title">📋 策略 & 選股邏輯</div>
+        <div class="funnel-desc">XQ 篩選條件 / AI 生成 XS 腳本 / 回測驗證</div>
+      </div>
+      <div class="funnel-result" style="background:var(--green-soft);color:var(--green)">6 個策略</div>
+      <div class="funnel-arrow"></div>
+    </div>
+  </div>
+
+  <!-- GLOBAL MACRO -->
+  <div id="section-global">
+    <div class="section-head">🌐 全球宏觀指標 <span class="ai-badge" style="margin-left:8px">AI 自動解讀</span></div>
+    <div class="macro-ind-grid">
+      <div class="macro-ind">
+        <div class="macro-ind-label">Fed 利率</div>
+        <div class="macro-ind-val" style="color:var(--yellow)">4.25%</div>
+        <div class="macro-ind-trend" style="color:var(--yellow)">↓ 降息預期 2次</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:70%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">美元指數 DXY</div>
+        <div class="macro-ind-val" style="color:var(--red)">104.2</div>
+        <div class="macro-ind-trend" style="color:var(--red)">↓ 趨弱有利新興市場</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:55%;background:var(--red)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">美國 PMI</div>
+        <div class="macro-ind-val" style="color:var(--green)">52.8</div>
+        <div class="macro-ind-trend" style="color:var(--green)">↑ 製造業擴張</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:75%;background:var(--green)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">VIX 恐慌指數</div>
+        <div class="macro-ind-val" style="color:var(--green)">16.4</div>
+        <div class="macro-ind-trend" style="color:var(--green)">↓ 市場平靜，風險偏好↑</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:30%;background:var(--green)"></div></div>
+      </div>
+    </div>
+
+    <!-- COMPASS -->
+    <div class="chart-row cr-12" id="section-compass">
+      <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center">
+        <div class="chart-title" style="margin-bottom:12px">🧭 景氣羅盤</div>
+        <div class="compass-wrap">
+          <div class="compass-grid">
+            <div class="compass-cell expansion active-q" onclick="">
+              <div class="compass-cell-icon">🚀</div>
+              <div class="compass-cell-label">擴張</div>
+              <div class="compass-cell-en">EXPANSION</div>
+              <div class="compass-cell-assets">股票 / 成長型 / 半導體</div>
+            </div>
+            <div class="compass-cell slowdown">
+              <div class="compass-cell-icon">🌤</div>
+              <div class="compass-cell-label">趨緩</div>
+              <div class="compass-cell-en">SLOWDOWN</div>
+              <div class="compass-cell-assets">債券 / 防禦型 / 民生</div>
+            </div>
+            <div class="compass-cell recovery">
+              <div class="compass-cell-icon">🌱</div>
+              <div class="compass-cell-label">復甦</div>
+              <div class="compass-cell-en">RECOVERY</div>
+              <div class="compass-cell-assets">景氣循環 / 原物料</div>
+            </div>
+            <div class="compass-cell recession">
+              <div class="compass-cell-icon">🌧</div>
+              <div class="compass-cell-label">衰退</div>
+              <div class="compass-cell-en">RECESSION</div>
+              <div class="compass-cell-assets">現金 / 黃金 / 公債</div>
+            </div>
+          </div>
+          <div class="compass-axis-x"></div>
+          <div class="compass-axis-y"></div>
+        </div>
+        <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text-muted)">
+          當前位置：<strong style="color:var(--accent)">擴張期 Q1</strong> — 建議加碼成長型
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📊 全球主要市場強弱</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-global-bar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAIWAN MACRO -->
+  <div id="section-taiwan">
+    <div class="section-head" style="margin-top:8px">🇹🇼 台灣景氣指標</div>
+    <div class="macro-ind-grid">
+      <div class="macro-ind">
+        <div class="macro-ind-label">景氣燈號</div>
+        <div class="macro-ind-val" style="color:var(--yellow)">🟡 黃紅</div>
+        <div class="macro-ind-trend" style="color:var(--yellow)">⚡ 景氣持續轉強</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:68%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">出口訂單 YoY</div>
+        <div class="macro-ind-val" style="color:var(--green)">+18.6%</div>
+        <div class="macro-ind-trend" style="color:var(--green)">↑ 連 5 月正成長</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:80%;background:var(--green)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">台灣 PMI</div>
+        <div class="macro-ind-val" style="color:var(--green)">52.8</div>
+        <div class="macro-ind-trend" style="color:var(--green)">↑ 製造業擴張</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:72%;background:var(--green)"></div></div>
+      </div>
+      <div class="macro-ind">
+        <div class="macro-ind-label">外資買賣超 (億)</div>
+        <div class="macro-ind-val" style="color:var(--green)">+482</div>
+        <div class="macro-ind-trend" style="color:var(--green)">↑ 連 8 日淨流入</div>
+        <div class="ind-bar-track"><div class="ind-bar-fill" style="width:78%;background:var(--green)"></div></div>
+      </div>
+    </div>
+    <div class="chart-row cr-11">
+      <div class="chart-card">
+        <div class="chart-title">📊 台股大盤 vs 外資動向 <span class="chart-sub">近 12 個月</span></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c-tw-macro"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">💡 AI 總經研判</div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+          <div style="background:var(--green-soft);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid rgba(26,122,74,.2)">
+            <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">✅ 多頭訊號</div>
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">外資連續買超 + 景氣燈號黃紅 + PMI 擴張，整體方向偏多。當前景氣象限為<strong>擴張期</strong>，建議增加成長型持倉比重。</div>
+          </div>
+          <div style="background:var(--yellow-soft);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid rgba(183,119,13,.2)">
+            <div style="font-size:11px;font-weight:700;color:var(--yellow);margin-bottom:4px">⚠️ 短期注意</div>
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">Fed 升息循環尾聲，美元趨弱有利新興市場，但需留意地緣政治風險。建議持倉不超過80%。</div>
+          </div>
+          <div style="background:var(--accent-soft);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid rgba(168,197,232,.3)">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">🤖 AI 建議操作</div>
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">加碼半導體 + 電子零組件，降低傳產比重。凱利係數建議使用 <strong>0.8x</strong>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTOR ROTATION -->
+  <div id="section-sector">
+    <div class="section-head" style="margin-top:8px">🏭 產業輪動雷達</div>
+    <div class="sector-grid">
+      <div class="sector-card hot">
+        <div class="sector-signal bg-green" style="background:var(--green-soft);color:var(--green)">強勢</div>
+        <div class="sector-icon">💻</div>
+        <div class="sector-name">半導體</div>
+        <div class="sector-ret green">+24.8%</div>
+      </div>
+      <div class="sector-card hot">
+        <div class="sector-signal bg-green" style="background:var(--green-soft);color:var(--green)">強勢</div>
+        <div class="sector-icon">🤖</div>
+        <div class="sector-name">AI 伺服器</div>
+        <div class="sector-ret green">+31.5%</div>
+      </div>
+      <div class="sector-card">
+        <div class="sector-signal bg-blue" style="background:var(--accent-soft);color:var(--accent)">中性</div>
+        <div class="sector-icon">⚡</div>
+        <div class="sector-name">電動車</div>
+        <div class="sector-ret" style="color:var(--accent)">+8.2%</div>
+      </div>
+      <div class="sector-card">
+        <div class="sector-signal bg-yellow" style="background:var(--yellow-soft);color:var(--yellow)">觀望</div>
+        <div class="sector-icon">🏦</div>
+        <div class="sector-name">金融</div>
+        <div class="sector-ret" style="color:var(--yellow)">+3.1%</div>
+      </div>
+      <div class="sector-card cold">
+        <div class="sector-signal bg-red" style="background:var(--red-soft);color:var(--red)">弱勢</div>
+        <div class="sector-icon">🚢</div>
+        <div class="sector-name">航運</div>
+        <div class="sector-ret red">-12.4%</div>
+      </div>
+      <div class="sector-card hot">
+        <div class="sector-signal bg-green" style="background:var(--green-soft);color:var(--green)">強勢</div>
+        <div class="sector-icon">🔌</div>
+        <div class="sector-name">電源管理</div>
+        <div class="sector-ret green">+19.3%</div>
+      </div>
+      <div class="sector-card">
+        <div class="sector-signal bg-blue" style="background:var(--accent-soft);color:var(--accent)">中性</div>
+        <div class="sector-icon">💊</div>
+        <div class="sector-name">生技</div>
+        <div class="sector-ret" style="color:var(--accent)">+5.7%</div>
+      </div>
+      <div class="sector-card cold">
+        <div class="sector-signal bg-red" style="background:var(--red-soft);color:var(--red)">弱勢</div>
+        <div class="sector-icon">🏗</div>
+        <div class="sector-name">建設</div>
+        <div class="sector-ret red">-8.9%</div>
+      </div>
+      <div class="sector-card">
+        <div class="sector-signal bg-yellow" style="background:var(--yellow-soft);color:var(--yellow)">觀望</div>
+        <div class="sector-icon">🛒</div>
+        <div class="sector-name">零售消費</div>
+        <div class="sector-ret" style="color:var(--yellow)">+1.4%</div>
+      </div>
+      <div class="sector-card hot">
+        <div class="sector-signal bg-green" style="background:var(--green-soft);color:var(--green)">強勢</div>
+        <div class="sector-icon">🌐</div>
+        <div class="sector-name">網通</div>
+        <div class="sector-ret green">+16.2%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATEGY LINK -->
+  <div id="section-strat">
+    <div class="section-head" style="margin-top:8px">📋 對應策略與 XS 選股邏輯</div>
+    <div class="chart-card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px">🎯 當前景氣 → 建議策略</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-raised);border-radius:var(--radius-sm);border:1px solid var(--border-soft)">
+              <span style="font-size:16px">🏆</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">強勢動能策略</div>
+                <div style="font-size:11px;color:var(--text-muted)">擴張期最適合，搭配半導體選股</div>
+              </div>
+              <span class="badge bg-green" style="margin-left:auto">推薦</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-raised);border-radius:var(--radius-sm);border:1px solid var(--border-soft)">
+              <span style="font-size:16px">📊</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">KD 低檔翻揚</div>
+                <div style="font-size:11px;color:var(--text-muted)">多頭氣氛下勝率更高</div>
+              </div>
+              <span class="badge bg-green" style="margin-left:auto">推薦</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-raised);border-radius:var(--radius-sm);border:1px solid var(--border-soft)">
+              <span style="font-size:16px">⚠️</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text-primary)">空頭策略</div>
+                <div style="font-size:11px;color:var(--text-muted)">擴張期暫停，等候象限轉換</div>
+              </div>
+              <span class="badge bg-red" style="margin-left:auto">暫停</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px">🤖 AI 生成的 XS 篩選邏輯</div>
+          <div style="background:hsl(222,35%,10%);border-radius:var(--radius-sm);padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:#e2e8f0">
+            <span style="color:#6fa8d4">// AI 生成：半導體 KD 翻揚策略</span><br>
+            <span style="color:#f0a888">Input</span> Length <span style="color:#e2e8f0">= 9;</span><br>
+            <span style="color:#6fa8d4">// KD 指標計算</span><br>
+            <span style="color:#f0a888">Var</span> K = KValue(Length, 3, 3);<br>
+            <span style="color:#f0a888">Var</span> D = DValue(Length, 3, 3);<br>
+            <span style="color:#6fa8d4">// 篩選條件</span><br>
+            <span style="color:#7dd87d">If</span> K &lt; 20 <span style="color:#7dd87d">And</span> K > D <span style="color:#7dd87d">Or</span><br>
+            &nbsp;&nbsp;Volume > Volume[1] * 1.5<br>
+            <span style="color:#7dd87d">Then</span> Buy;<br>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:10px;justify-content:center" onclick="showPage('p4',document.getElementById('btn-p4'))">📤 匯入 XQ 回測結果 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3: 策略管理
+════════════════════════════════════════ -->
+<div class="page" id="p3">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">📁 策略管理</div>
+    <span class="demo-tag">假資料</span>
+  </div>
+  <div class="page-sub">所有 XQ 策略的績效追蹤、參數管理與狀態監控</div>
+
+  <div class="kpi-grid kpi-4" style="margin-bottom:20px">
+    <div class="kpi-card">
+      <div class="kpi-label">🟢 運行中</div>
+      <div class="kpi-val green">4</div>
+      <div class="kpi-sub">本月平均報酬 <strong>+3.4%</strong></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🟡 觀察中</div>
+      <div class="kpi-val yellow">2</div>
+      <div class="kpi-sub">待回測驗證</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📊 總交易次數</div>
+      <div class="kpi-val">1,247</div>
+      <div class="kpi-sub">過去 12 個月</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🏆 最佳策略</div>
+      <div class="kpi-val blue" style="font-size:18px">KD 強勢股</div>
+      <div class="kpi-sub">年化 <strong>34.2%</strong></div>
+    </div>
+  </div>
+
+  <div class="s-grid">
+    <!-- Strategy 1 -->
+    <div class="s-card">
+      <div class="s-card-head">
+        <div class="s-card-name">KD 低檔翻揚</div>
+        <span class="s-chip active">運行中</span>
+      </div>
+      <div class="s-desc">KD &lt; 20 時低接，配合量能確認，為最核心的短線策略</div>
+      <div class="s-metrics">
+        <div class="s-metric">
+          <div class="s-metric-label">年化報酬</div>
+          <div class="s-metric-val green">28.4%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">勝率</div>
+          <div class="s-metric-val">64.2%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">最大回撤</div>
+          <div class="s-metric-val red">-8.3%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">夏普比率</div>
+          <div class="s-metric-val blue">1.84</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">實單誤差 (Slippage)</div>
+          <div class="s-metric-val yellow">1.2%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;display:flex;justify-content:space-between">
+        <span>AI 建議配重：<strong>35%</strong></span>
+        <span style="color:var(--ok)">符合凱利建議 ✓</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:82%"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">本月實單達成 82%</div>
+    </div>
+
+    <!-- Strategy 2 -->
+    <div class="s-card">
+      <div class="s-card-head">
+        <div class="s-card-name">ＸＸ動能突破策略</div>
+        <span class="s-chip active">運行中</span>
+      </div>
+      <div class="s-desc">突破 20 日高點並放量，AI 過濾新聞情緒後進場。</div>
+      <div class="s-metrics">
+        <div class="s-metric">
+          <div class="s-metric-label">年化報酬</div>
+          <div class="s-metric-val green">42.7%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">夏普比率</div>
+          <div class="s-metric-val blue">2.14</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">最大回撤</div>
+          <div class="s-metric-val red">-12.5%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">實單誤差</div>
+          <div class="s-metric-val green">0.4%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;display:flex;justify-content:space-between">
+        <span>AI 建議配重：<strong>40%</strong></span>
+        <span style="color:var(--ok)">高穩定度標的 ✓</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:92%"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">本月實單達成 92%</div>
+    </div>
+
+    <!-- Strategy 3 -->
+    <div class="s-card">
+      <div class="s-card-head">
+        <div class="s-card-name">外資強勢選股</div>
+        <span class="s-chip active">運行中</span>
+      </div>
+      <div class="s-desc">外資連 3 日買超 + 均線多頭排列。</div>
+      <div class="s-metrics">
+        <div class="s-metric">
+          <div class="s-metric-label">年化報酬</div>
+          <div class="s-metric-val green">34.2%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">夏普比率</div>
+          <div class="s-metric-val blue">2.01</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">最大回撤</div>
+          <div class="s-metric-val red">-9.8%</div>
+        </div>
+        <div class="s-metric">
+          <div class="s-metric-label">實單誤差</div>
+          <div class="s-metric-val yellow">2.1%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;display:flex;justify-content:space-between">
+        <span>AI 建議配重：<strong>20%</strong></span>
+        <span style="color:var(--yellow)">注意追價滑價 !</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:94%"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">本月實單達成 94%</div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="border-left: 4px solid var(--purple); background: var(--bg-raised)">
+    <div class="chart-title">🤖 AI 投資組合健檢報告</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+      當前組合整體 <strong style="color:var(--purple)">Sharpe Ratio 為 1.92</strong>，各策略相關性低，分散效果顯著。
+      <br>• <strong style="color:var(--ok)">實單對比：</strong>「動能突破」同步率最高，顯示環境有利於流動性佳的標的。
+      <br>• <strong style="color:var(--err)">風控警示：</strong>「外資選股」實單手續費與滑價佔比超過 2%，建議微調入場時間點以降低成本。
+      <br>• <strong style="color:var(--accent)">下一步建議：</strong>目前現金水位 (5%) 偏低，若「KD 翻揚」跌破 20 日新低建議暫時減碼 10% 以對應潛在波動。
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 4: XS 回測匯入
+════════════════════════════════════════ -->
+<div class="page" id="p4">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">📤 XS 回測結果匯入</div>
+    <span class="ai-badge">AI 自動分析</span>
+  </div>
+  <div class="page-sub">將 XQ 的回測 CSV 拖拽上傳，AI 自動計算關鍵績效指標並視覺化呈現</div>
+
+  <!-- GitHub Banner -->
+  <div style="background:linear-gradient(135deg,rgba(107,68,212,.12),rgba(168,197,232,.12));border:1px solid rgba(107,68,212,.25);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:22px">🐙</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:3px">這套系統的程式碼開源在 GitHub！</div>
+      <div style="font-size:11px;color:var(--text-muted)">掃碼或點連結可以拿到 demo 完整程式碼，自己串接你的 XQ 回測 CSV</div>
+    </div>
+    <a href="https://github.com/" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:999px;background:linear-gradient(135deg,var(--purple),var(--blue-deep));color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 4px 12px rgba(107,68,212,.3);transition:all .2s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">📎 GitHub →</a>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+    ondragover="event.preventDefault();this.classList.add('drag-over')"
+    ondragleave="this.classList.remove('drag-over')"
+    ondrop="handleDrop(event)">
+    <div class="upload-icon">📊</div>
+    <div class="upload-title">拖拽 XQ 回測 CSV 檔案到這裡</div>
+    <div class="upload-desc">支援 XQ 匯出的回測交易明細 CSV<br>欄位：商品名稱, 商品代碼, 進場時間, 進場價格, 出場時間, 出場價格, 獲利金額, 報酬率, 累計報酬率<br>系統自動計算 CAGR / 勝率 / MDD / 獲利因子 / 資金曲線</div>
+    <div class="upload-hint">或點此選擇檔案 · 也可點下方「載入真實策略資料」直接查看效果</div>
+    <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="handleFile(this.files[0])">
+  </div>
+  <div style="text-align:center;margin-bottom:24px">
+    <button class="btn btn-primary" onclick="loadDemoData()">📊 載入真實回測範例 — ＸＸ動能突破策略</button>
+    <span style="margin:0 12px;color:var(--text-muted);font-size:12px">或</span>
+    <button class="btn" onclick="document.getElementById('fileInput').click()">📂 上傳你的 XQ 回測 CSV</button>
+  </div>
+
+  <!-- RESULT SECTION (hidden by default, shown after upload) -->
+  <div class="result-section" id="resultSection">
+
+    <div class="banner banner-green">✅ 回測資料載入成功！AI 已完成分析 — <strong id="strat-name-banner">KD 低檔翻揚策略</strong>｜分析時間：<span id="analysis-time">--:--</span></div>
+
+    <!-- KPI Row -->
+    <div class="kpi-grid kpi-6" style="margin-bottom:20px">
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">📈 年化報酬 CAGR</div>
+        <div class="kpi-val green" style="font-size:26px" id="kpi-cagr">12.7%</div>
+        <div class="kpi-sub" id="kpi-cagr-sub">回測 5.7 年實際績效</div>
+      </div>
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">💰 累計總報酬</div>
+        <div class="kpi-val green" style="font-size:26px" id="kpi-cumret">97.2%</div>
+        <div class="kpi-sub" id="kpi-pnl-sub">總損益 <strong>3,717萬</strong></div>
+      </div>
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">🎯 勝率</div>
+        <div class="kpi-val" style="font-size:26px" id="kpi-wr">70.8%</div>
+        <div class="kpi-sub">共 <strong id="kpi-trades">137</strong> 筆交易</div>
+      </div>
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">⚖️ 獲利因子</div>
+        <div class="kpi-val green" style="font-size:26px" id="kpi-pf">17.3</div>
+        <div class="kpi-sub">平均獲利 / 平均虧損</div>
+      </div>
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">📉 平均虧損</div>
+        <div class="kpi-val red" style="font-size:26px" id="kpi-mdd">-6.4%</div>
+        <div class="kpi-sub">虧損時幅度極小</div>
+      </div>
+      <div class="kpi-card" style="padding:16px">
+        <div class="kpi-label">📅 回測區間</div>
+        <div class="kpi-val" style="font-size:14px;line-height:1.5" id="kpi-period">2020/06<br>—2026/02</div>
+      </div>
+    </div>
+
+    <!-- Equity Curve + Monthly Heatmap -->
+    <div class="chart-row cr-21" style="margin-bottom:20px">
+      <div class="chart-card">
+        <div class="chart-title">📈 資金曲線 <span class="chart-sub">本策略 vs 加權指數</span></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="c-equity-bt"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🤖 AI 分析結論 <span class="demo-tag">真實回測</span></div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:12px">
+          <div style="padding:10px 12px;background:var(--green-soft);border-radius:var(--radius-sm);border:1px solid rgba(26,122,74,.18)">
+            <div style="font-weight:700;color:var(--green);margin-bottom:3px">✅ 核心優勢</div>
+            <div style="color:var(--text-secondary);line-height:1.6">獲利因子 <strong>17.3</strong> 屬於頂尖水準（一般策略 &gt; 1.5 就算好）。勝率 70.8% 且虧損時平均只賠 6.4%，勝多賠少的典型好策略。</div>
+          </div>
+          <div style="padding:10px 12px;background:var(--yellow-soft);border-radius:var(--radius-sm);border:1px solid rgba(183,119,13,.18)">
+            <div style="font-weight:700;color:var(--yellow);margin-bottom:3px">⚠️ 注意事項</div>
+            <div style="color:var(--text-secondary);line-height:1.6">年化 12.7% 為保守計算，部分加碼交易報酬率高達 13x（華城 1519）。交易筆數 137 筆、5.7 年，樣本數足夠可信。</div>
+          </div>
+          <div style="padding:10px 12px;background:var(--accent-soft);border-radius:var(--radius-sm);border:1px solid rgba(168,197,232,.25)">
+            <div style="font-weight:700;color:var(--accent);margin-bottom:3px">💡 這就是 AI 能幫你做的</div>
+            <div style="color:var(--text-secondary);line-height:1.6">從 XQ 匯出 CSV → 拖進來 → 自動算出這些數字。<br>以前要用 Excel 算半天，現在 <strong>3 秒完成</strong>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Heatmap -->
+    <div class="chart-card" style="margin-bottom:20px">
+      <div class="chart-title">📅 月度報酬熱力圖</div>
+      <div style="overflow-x:auto">
+        <table class="heatmap-table" id="heatmapTable"></table>
+      </div>
+    </div>
+
+    <!-- Trade list -->
+    <div class="section-head">🗂 近期交易明細 <span style="font-size:11px;color:var(--text-muted);font-weight:500;margin-left:6px">最近 10 筆</span></div>
+    <div class="table-wrap">
+      <table id="tradeTable">
+        <thead>
+          <tr>
+            <th>日期</th><th>標的</th><th>方向</th><th>買入</th><th>賣出</th><th>報酬</th><th>持倉天</th><th>理由</th>
+          </tr>
+        </thead>
+        <tbody id="tradeBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 5: AI 賦能總結
+════════════════════════════════════════ -->
+<div class="page" id="p5">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">✨ AI 賦能交易：理念與總結</div>
+  </div>
+  <div class="page-sub">為什麼我們需要自己做這套系統，而不是只依賴常見的看盤軟體？</div>
+
+  <div class="chart-row cr-11" style="margin-bottom:20px">
+    <div class="chart-card" style="border-color:var(--accent); border-width: 1px;">
+      <div style="font-size:36px;margin-bottom:12px">🤖</div>
+      <div class="chart-title" style="font-size:16px">AI 的最強項：釋放你的時間</div>
+      <div style="color:var(--text-secondary);line-height:1.8;font-size:13px;margin-bottom:16px">
+        把<b>「重複性、勞力密集」</b>的工作全部交給 AI 處理，讓人腦回歸最重要的<b>「邏輯發想」</b>與<b>「資金風控」</b>。
+      </div>
+      <ul style="color:var(--text-secondary);font-size:13px;line-height:2;padding-left:20px;margin-bottom:0">
+        <li><b>自動化數據梳理：</b>盤後籌碼整理、爬取每日新聞和財報，不再需要手動用 Excel 辛苦複製貼上。</li>
+        <li><b>腳本生成助手：</b>只要用白話文描述選股邏輯，AI 就能瞬間生成 XQ 的 XS 語法，大幅降低寫程式的門檻。</li>
+        <li><b>秒速分析與視覺化：</b>就像前面的回測匯入，丟進 CSV，3 秒內自動算完 CAGR、最大回撤、月度熱力圖。</li>
+      </ul>
+    </div>
+
+    <div class="chart-card" style="border-color:var(--peach-deep); border-width: 1px;">
+      <div style="font-size:36px;margin-bottom:12px">🚀</div>
+      <div class="chart-title" style="font-size:16px">突破極限：AI 補足 XQ 做不到的事</div>
+      <div style="color:var(--text-secondary);line-height:1.8;font-size:13px;margin-bottom:16px">
+        XQ 是一款極佳的看盤與回測工具，但它的介面與分析彈性仍有極限，而這正是由 AI 賦能的自建系統價值所在。
+      </div>
+      <ul style="color:var(--text-secondary);font-size:13px;line-height:2;padding-left:20px;margin-bottom:0">
+        <li><b>非結構化資料處理：</b>傳統軟體只處理數字，但 AI 能「閱讀」法說會逐字稿、國際財經新聞，轉換為量化的多空情緒分數。</li>
+        <li><b>自訂極致彈性的 UI：</b>不受限於軟體框架，能隨心所欲客製化您的專屬 Top-Down 總經儀表板，將多個視角濃縮於一頁。</li>
+        <li><b>跨界整合無限可能：</b>輕鬆串接 LINE Notify 推播訊號，或無縫融合美股資料庫、加密貨幣等跨市場數據關聯分析。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="chart-card" style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,var(--accent-soft),var(--yellow-soft))">
+    <div style="font-size:20px;font-weight:900;color:var(--text-primary);margin-bottom:12px;letter-spacing:-.02em">投資的本質是認知變現，而不是當資料苦力</div>
+    <div style="font-size:14px;color:var(--text-secondary);font-weight:500;line-height:1.8">Krystal AI 不是要取代你的交易決策，<br>而是幫你省下 80% 的瑣碎時間，讓你專心做那 20% 能創造超額報酬的判斷。</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 6: AI 選股中心
+════════════════════════════════════════ -->
+<div class="page" id="p6">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">🎯 AI 選股中心</div>
+    <span class="ai-badge">AI 深度過濾</span>
+  </div>
+  <div class="page-sub">XQ 負責海量條件篩選，AI 負責法說會情緒解讀與籌碼集中度精挑</div>
+
+  <div class="kpi-grid kpi-3" style="margin-bottom:20px">
+    <div class="kpi-card" style="background:var(--accent-soft);border-color:var(--accent);padding:16px">
+      <div class="kpi-label" style="color:var(--accent)">第一層：XQ 策略海選</div>
+      <div class="kpi-val blue" style="font-size:24px">54 檔</div>
+      <div class="kpi-sub" style="color:var(--text-secondary)">符合「動能突破」與「均線多頭」</div>
+    </div>
+    <div class="kpi-card" style="background:var(--yellow-soft);border-color:var(--yellow);padding:16px">
+      <div class="kpi-label" style="color:var(--yellow)">第二層：AI 財報與新聞情緒解析</div>
+      <div class="kpi-val yellow" style="font-size:24px">12 檔</div>
+      <div class="kpi-sub" style="color:var(--text-secondary)">情緒分數 &gt; 80 分之標的</div>
+    </div>
+    <div class="kpi-card" style="background:var(--green-soft);border-color:var(--green);padding:16px">
+      <div class="kpi-label" style="color:var(--green)">最終出線：高勝率精選</div>
+      <div class="kpi-val green" style="font-size:24px">3 檔</div>
+      <div class="kpi-sub" style="color:var(--text-secondary)">籌碼高度集中 + 總經象限吻合</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title" style="font-size:16px">🔥 本日 AI 嚴選 Top 3 進場清單</div>
+    <div class="table-wrap" style="box-shadow:none;border-color:var(--border-soft);margin-bottom:0">
+      <table>
+        <thead>
+          <tr>
+            <th>股票代號</th><th>AI 情緒分數</th><th>法人籌碼動能</th><th>XQ 條件基底</th><th>AI 綜合解讀與進場建議</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="b">2330 台積電</td>
+            <td><div style="display:flex;align-items:center;gap:6px"><div class="ind-bar-track" style="width:40px"><div class="ind-bar-fill" style="width:95%;background:var(--green)"></div></div> <span style="font-weight:800;color:var(--green)">95</span></div></td>
+            <td>外資連 3 買 <span class="badge bg-green">強</span></td>
+            <td>動能突破</td>
+            <td style="font-size:11px;color:var(--text-secondary);max-width:250px;line-height:1.6">法說會資本支出上修，文本分析顯示「極度樂觀」。符合當前擴張期總經位置。建議 890 元附近建倉。</td>
+            <td><button class="btn btn-primary" style="padding:4px 12px;font-size:11px">下單</button></td>
+          </tr>
+          <tr>
+            <td class="b">2382 廣達</td>
+            <td><div style="display:flex;align-items:center;gap:6px"><div class="ind-bar-track" style="width:40px"><div class="ind-bar-fill" style="width:88%;background:var(--green)"></div></div> <span style="font-weight:800;color:var(--green)">88</span></div></td>
+            <td>投信轉買 <span class="badge bg-blue">中</span></td>
+            <td>MACD 翻正</td>
+            <td style="font-size:11px;color:var(--text-secondary);max-width:250px;line-height:1.6">最新研報指出 GB200 伺服器放量，AI 情緒詞彙由中性轉為正向，技術面剛突破月線。</td>
+            <td><button class="btn btn-primary" style="padding:4px 12px;font-size:11px">下單</button></td>
+          </tr>
+          <tr>
+            <td class="b">1519 華城</td>
+            <td><div style="display:flex;align-items:center;gap:6px"><div class="ind-bar-track" style="width:40px"><div class="ind-bar-fill" style="width:82%;background:var(--green)"></div></div> <span style="font-weight:800;color:var(--green)">82</span></div></td>
+            <td>外資高檔減碼 <span class="badge bg-yellow">弱</span></td>
+            <td>均線多頭</td>
+            <td style="font-size:11px;color:var(--text-secondary);max-width:250px;line-height:1.6">雖然技術面強勢，但近期新聞有雜音，AI 情緒略有降溫，建議先放入觀察清單等待籌碼沉澱。</td>
+            <td><button class="btn" style="padding:4px 12px;font-size:11px">觀察</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- GLOBAL TOOLTIP -->
+<div id="global-tooltip" style="position:fixed;display:none;z-index:9999"></div>
+
+<script>
+// ══════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  // lazy init charts
+  if (id === 'p1') { initP1Charts(); }
+  if (id === 'p2') { initP2Charts(); }
+  if (id === 'p3') { initP3Charts(); }
+}
+
+// ══════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════
+const themes = ['aura','dark'];
+let themeIdx = 0;
+const themeEmojis = ['🌸','🌙'];
+function toggleTheme() {
+  themeIdx = (themeIdx + 1) % themes.length;
+  document.documentElement.setAttribute('data-theme', themes[themeIdx]);
+  document.querySelector('.theme-btn').textContent = themeEmojis[themeIdx];
+  // redraw charts
+  setTimeout(() => { destroyAllCharts(); initP1Charts(); }, 50);
+}
+
+// ══════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', {hour12:false});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ══════════════════════════════════════
+//  CHART REGISTRY
+// ══════════════════════════════════════
+const charts = {};
+function destroyAllCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+}
+
+// ══════════════════════════════════════
+//  CHART HELPERS
+// ══════════════════════════════════════
+function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function getColor(v) { return isDark() ? v : v; }
+const BLUE = '#6FA8D4', PEACH = '#E07848', GREEN = '#1a7a4a', RED = '#c0392b', YELLOW = '#b7770d', PURPLE = '#6b44d4';
+function gridColor() { return isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'; }
+function textColor() { return isDark() ? 'hsl(215,18%,45%)' : '#9E9891'; }
+function makeCtx(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return null;
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  return canvas.getContext('2d');
+}
+
+// ══════════════════════════════════════
+//  P1 CHARTS — EQUITY + DONUT
+// ══════════════════════════════════════
+function initP1Charts() {
+  // Equity
+  const ctx1 = makeCtx('c-equity');
+  if (ctx1) {
+    const labels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月','4月'];
+    const krystal = [100,103.2,108.5,107.1,112.4,115.8,114.2,119.6,122.1,118.4,123.7,128.9,131.2,127.5,133.8,138.1];
+    const sp500   = [100,102.1,105.4,103.8,107.2,109.1,107.8,111.3,113.6,109.4,114.2,117.8,119.6,116.2,120.4,123.7];
+    charts['c-equity'] = new Chart(ctx1, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Krystal 系統',data:krystal,borderColor:BLUE,backgroundColor:'rgba(107,168,212,.12)',fill:true,tension:.4,borderWidth:2.5,pointRadius:0,pointHoverRadius:5},
+          {label:'加權指數',data:sp500,borderColor:'rgba(183,119,13,.7)',backgroundColor:'transparent',fill:false,tension:.4,borderWidth:1.5,borderDash:[4,4],pointRadius:0}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor(),font:{size:11}}},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10}}},y:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10},callback:v=>v+'%'}}}}
+    });
+  }
+  // Donut
+  const ctx2 = makeCtx('c-donut');
+  if (ctx2) {
+    charts['c-donut'] = new Chart(ctx2, {
+      type:'doughnut',
+      data:{
+        labels:['台股動能','個股波段','美股ETF','現金'],
+        datasets:[{data:[45,28,17,10],backgroundColor:[BLUE,'rgba(26,122,74,.7)',PEACH,'rgba(183,119,13,.5)'],borderWidth:0,hoverOffset:6}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+c.raw+'%'}}}}
+    });
+  }
+}
+
+// ══════════════════════════════════════
+//  P2 CHARTS — GLOBAL BAR + TW MACRO
+// ══════════════════════════════════════
+function initP2Charts() {
+  const ctx3 = makeCtx('c-global-bar');
+  if (ctx3) {
+    charts['c-global-bar'] = new Chart(ctx3, {
+      type:'bar',
+      data:{
+        labels:['台灣加權','NASDAQ','S&P500','日經','韓國','上證'],
+        datasets:[{
+          label:'今年漲跌幅 (%)',
+          data:[18.4, 12.8, 8.6, 6.2, -3.1, -8.7],
+          backgroundColor: d => d.raw >= 0 ? 'rgba(26,122,74,.7)' : 'rgba(192,57,43,.65)',
+          borderRadius:6,borderSkipped:false
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+'%'}}},scales:{x:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10},callback:v=>(v>0?'+':'')+v+'%'}},y:{grid:{display:false},ticks:{color:textColor(),font:{size:11,weight:'600'}}}}}
+    });
+  }
+  const ctx4 = makeCtx('c-tw-macro');
+  if (ctx4) {
+    const months = ['5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月','4月'];
+    charts['c-tw-macro'] = new Chart(ctx4, {
+      type:'line',
+      data:{
+        labels:months,
+        datasets:[
+          {label:'加權指數 (萬點)',data:[1.698,1.721,1.689,1.703,1.742,1.768,1.753,1.814,1.836,1.802,1.857,1.894],borderColor:BLUE,backgroundColor:'rgba(107,168,212,.1)',fill:true,tension:.4,borderWidth:2.5,pointRadius:0,yAxisID:'y'},
+          {label:'外資買超 (億)',data:[84,-32,120,256,312,198,445,382,518,421,489,502],type:'bar',backgroundColor:'rgba(26,122,74,.35)',borderRadius:3,yAxisID:'y1'}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor(),font:{size:11}}},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10}}},y:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10},callback:v=>v.toFixed(2)+'萬'},position:'left'},y1:{grid:{display:false},ticks:{color:textColor(),font:{size:10},callback:v=>v+'億'},position:'right'}}}
+    });
+  }
+}
+
+// ══════════════════════════════════════
+//  P3 CHARTS — STRATEGY COMPARE
+// ══════════════════════════════════════
+function initP3Charts() {
+  const ctx5 = makeCtx('c-strat-compare');
+  if (ctx5) {
+    charts['c-strat-compare'] = new Chart(ctx5, {
+      type:'bar',
+      data:{
+        labels:['KD 低檔翻揚','MACD 翻正月線','外資強勢選股','均線多頭排列','半導體動能(回測)','RSI 超賣(回測)'],
+        datasets:[
+          {label:'年化報酬 %',data:[28.4,22.7,34.2,18.9,41.8,15.3],backgroundColor:'rgba(107,168,212,.75)',borderRadius:5},
+          {label:'夏普比率',data:[1.84,1.52,2.01,1.24,2.33,1.08],backgroundColor:'rgba(224,120,72,.65)',borderRadius:5}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor(),font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:textColor(),font:{size:11}}},y:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10}}}}}
+    });
+  }
+}
+
+// ══════════════════════════════════════
+//  PAGE 4: BACKTEST IMPORT
+// ══════════════════════════════════════
+const DEMO_TRADES = [
+  {date:'2026/04/02',sym:'2330 台積電',dir:'買',buy:892,sell:954,ret:'+6.95%',days:8,reason:'KD 翻揚+量能放大'},
+  {date:'2026/03/28',sym:'2454 聯發科',dir:'買',buy:1134,sell:1198,ret:'+5.64%',days:11,reason:'KD&lt;20，站穩月線'},
+  {date:'2026/03/20',sym:'3034 聯詠',dir:'買',buy:421,sell:398,ret:'-5.46%',days:6,reason:'KD翻揚，但量能不足'},
+  {date:'2026/03/14',sym:'2603 長榮',dir:'買',buy:186,sell:218,ret:'+17.20%',days:14,reason:'KD低接，外資助攻'},
+  {date:'2026/03/05',sym:'2317 鴻海',dir:'買',buy:148,sell:159,ret:'+7.43%',days:9,reason:'月線回測支撐'},
+  {date:'2026/02/20',sym:'2308 台達電',dir:'買',buy:312,sell:298,ret:'-4.49%',days:7,reason:'KD翻揚，逢早盤高點'},
+  {date:'2026/02/14',sym:'2412 中華電',dir:'買',buy:124,sell:129,ret:'+4.03%',days:5,reason:'防禦型，KD&lt;15'},
+  {date:'2026/02/07',sym:'6505 台塑化',dir:'買',buy:89.5,sell:97.2,ret:'+8.60%',days:12,reason:'景氣復甦+KD'},
+  {date:'2026/01/28',sym:'2330 台積電',dir:'買',buy:856,sell:891,ret:'+4.09%',days:6,reason:'季線附近低接'},
+  {date:'2026/01/15',sym:'2382 廣達',dir:'買',buy:214,sell:238,ret:'+11.21%',days:10,reason:'AI題材+KD翻揚'},
+];
+
+const DEMO_MONTHLY = {
+  '2023': {  '1月':4.2,'2月':2.8,'3月':-1.2,'4月':3.4,'5月':5.1,'6月':2.1,'7月':-0.8,'8月':3.8,'9月':-2.4,'10月':2.9,'11月':4.6,'12月':3.2 },
+  '2024': { '1月':3.1,'2月':5.8,'3月':2.4,'4月':-1.8,'5月':4.2,'6月':3.6,'7月':-3.2,'8月':-1.4,'9月':3.8,'10月':4.1,'11月':5.2,'12月':3.9 },
+  '2025': { '1月':2.8,'2月':4.3,'3月':3.1,'4月':-0.6,'5月':5.4,'6月':2.9,'7月':3.7,'8月':-2.1,'9月':4.2,'10月':3.8,'11月':6.1,'12月':4.4 },
+  '2026': { '1月':3.6,'2月':2.2,'3月':4.1,'4月':1.8,'5月':null,'6月':null,'7月':null,'8月':null,'9月':null,'10月':null,'11月':null,'12月':null },
+};
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const text = e.target.result;
+      const parsed = parseXQCsv(text);
+      if (parsed) {
+        renderRealData(parsed, file.name.replace('.csv',''));
+      } else {
+        loadDemoData(file.name.replace('.csv',''));
+      }
+    } catch(err) {
+      loadDemoData(file.name.replace('.csv',''));
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// Parse XQ backtest CSV format
+// Columns: 商品名稱,商品代碼,序號,進場時間,進場方向,進場價格,出場時間,出場方向,出場價格,持有區間,交易數量,獲利金額,報酬率,累計獲利金額,累計報酬率,進場訊息,出場訊息
+function parseXQCsv(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const header = lines[0].split(',');
+  const hi = (name) => header.findIndex(h => h.trim() === name);
+  const iName = hi('商品名稱'), iCode = hi('商品代碼');
+  const iBuy  = hi('進場價格'), iSell = hi('出場價格');
+  const iBuyT = hi('進場時間'), iSellT = hi('出場時間');
+  const iPnl = hi('獲利金額'), iRet = hi('報酬率'), iCumRet = hi('累計報酬率');
+  const iDays = hi('持有區間'), iMsg = hi('出場訊息');
+  if (iRet < 0 || iPnl < 0) return null;
+  const rows = lines.slice(1).filter(l => l.trim()).map(l => {
+    const c = l.split(',');
+    return {
+      name: c[iName]?.trim() || '',
+      code: c[iCode]?.trim() || '',
+      buyDate: c[iBuyT]?.trim().slice(0,10) || '',
+      sellDate: c[iSellT]?.trim().slice(0,10) || '',
+      buyPrice: parseFloat(c[iBuy]) || 0,
+      sellPrice: parseFloat(c[iSell]) || 0,
+      pnl: parseFloat(c[iPnl]) || 0,
+      ret: parseFloat(c[iRet]) || 0,
+      cumRet: parseFloat(c[iCumRet]) || 0,
+      days: parseInt(c[iDays]) || 0,
+      msg: c[iMsg]?.trim() || '',
+    };
+  }).filter(r => r.name);
+  if (rows.length === 0) return null;
+  // Compute stats
+  const total = rows.length;
+  const wins = rows.filter(r => r.ret > 0).length;
+  const winRets = rows.filter(r => r.ret > 0).map(r => r.ret);
+  const lossRets = rows.filter(r => r.ret < 0).map(r => r.ret);
+  const avgWin = winRets.length ? winRets.reduce((a,b)=>a+b,0)/winRets.length : 0;
+  const avgLoss = lossRets.length ? Math.abs(lossRets.reduce((a,b)=>a+b,0)/lossRets.length) : 0;
+  const profitFactor = avgLoss > 0 ? avgWin/avgLoss : 999;
+  const totalPnl = rows.reduce((a,r)=>a+r.pnl, 0);
+  const lastCumRet = rows[rows.length-1].cumRet;
+  const startDt = new Date(rows[0].buyDate.replace(/\//g,'-'));
+  const endDt = new Date(rows[rows.length-1].sellDate.replace(/\//g,'-'));
+  const years = (endDt - startDt) / (365.25 * 86400000);
+  const cagr = years > 0 ? (Math.pow(1 + lastCumRet, 1/years) - 1) * 100 : 0;
+  return { rows, total, wins, winRate: wins/total*100, avgWin: avgWin*100, avgLoss: avgLoss*100, profitFactor, totalPnl, lastCumRet: lastCumRet*100, cagr, startDate: rows[0].buyDate, endDate: rows[rows.length-1].sellDate, years };
+}
+
+function renderRealData(data, name) {
+  document.getElementById('strat-name-banner').textContent = name || '自訂策略';
+  document.getElementById('analysis-time').textContent = new Date().toLocaleTimeString('zh-TW',{hour12:false});
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('kpi-cagr').textContent = data.cagr.toFixed(1)+'%';
+  document.getElementById('kpi-cumret').textContent = data.lastCumRet.toFixed(1)+'%';
+  document.getElementById('kpi-pnl-sub').innerHTML = '總損益 <strong>'+Math.round(data.totalPnl/10000)+'萬</strong>';
+  document.getElementById('kpi-wr').textContent = data.winRate.toFixed(1)+'%';
+  document.getElementById('kpi-trades').textContent = data.total;
+  document.getElementById('kpi-pf').textContent = data.profitFactor > 99 ? '99+' : data.profitFactor.toFixed(1);
+  document.getElementById('kpi-mdd').textContent = '-'+data.avgLoss.toFixed(1)+'%';
+  document.getElementById('kpi-period').innerHTML = data.startDate.slice(0,7).replace('/','/')+'<br>—'+data.endDate.slice(0,7);
+  // Draw equity from cumRet
+  const ctx = makeCtx('c-equity-bt');
+  if (ctx) {
+    const labels = data.rows.map(r=>r.sellDate.slice(0,7));
+    const strat = data.rows.map(r=>+(( 1 + r.cumRet)*100).toFixed(1));
+    charts['c-equity-bt'] = new Chart(ctx, {
+      type:'line',
+      data:{labels,datasets:[{label:name,data:strat,borderColor:GREEN,backgroundColor:'rgba(26,122,74,.10)',fill:true,tension:.4,borderWidth:2.5,pointRadius:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor(),font:{size:11}}}},scales:{x:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:9},maxTicksLimit:8}},y:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10},callback:v=>v+''}}}}
+    });
+  }
+  // Trade table (last 10)
+  const last10 = data.rows.slice(-10).reverse();
+  document.getElementById('tradeBody').innerHTML = last10.map(r => {
+    const pct = r.ret*100;
+    const cls = pct >= 0 ? 'g' : 'r';
+    return `<tr><td class="num">${r.sellDate}</td><td class="b">${r.name} ${r.code}</td><td><span class="badge ${pct>=0?'bg-green':'bg-red'}">買進</span></td><td class="num">${r.buyPrice}</td><td class="num">${r.sellPrice}</td><td class="num ${cls}">${pct>=0?'+':''}${pct.toFixed(1)}%</td><td class="num">${r.days}天</td><td style="font-size:11px;color:var(--text-muted)">${r.msg}</td></tr>`;
+  }).join('');
+  // Simple monthly heatmap from data
+  renderHeatmap();
+}
+
+function loadDemoData(name) {
+  const stratName = (typeof name === 'string' && name !== 'loadDemoData') ? name : 'KD 低檔翻揚策略';
+  document.getElementById('strat-name-banner').textContent = stratName;
+  document.getElementById('analysis-time').textContent = new Date().toLocaleTimeString('zh-TW',{hour12:false});
+
+  // Show result section
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('uploadZone').style.display = 'none';
+
+  // Render KPI
+  document.getElementById('kpi-cagr').textContent = '28.4%';
+  document.getElementById('kpi-sharpe').textContent = '1.84';
+  document.getElementById('kpi-mdd').textContent = '-8.3%';
+  document.getElementById('kpi-wr').textContent = '64.2%';
+  document.getElementById('kpi-trades').textContent = '247';
+  document.getElementById('kpi-pf').textContent = '2.14';
+
+  // Draw equity curve
+  drawEquityCurve();
+  // Render heatmap
+  renderHeatmap();
+  // Render trade table
+  renderTradeTable();
+}
+
+function drawEquityCurve() {
+  const ctx = makeCtx('c-equity-bt');
+  if (!ctx) return;
+  const labels = [];
+  const strat = [100];
+  const bench = [100];
+  let sv = 100, bv = 100;
+  const months = ['23/1','23/3','23/5','23/7','23/9','23/11','24/1','24/3','24/5','24/7','24/9','24/11','25/1','25/3','25/5','25/7','25/9','25/11','26/1','26/3'];
+  const sRet =  [4.2,2.8,-1.2,3.4,5.1,2.1,-0.8,3.8,-2.4,2.9,4.6,3.2, 3.1,5.8,2.4,-1.8,4.2,3.6,-3.2,-1.4, 3.8,4.1,5.2,3.9, 2.8,4.3,3.1,-0.6,5.4,2.9,3.7,-2.1, 4.2,3.8,6.1,4.4, 3.6,2.2,4.1,1.8];
+  const bRet =  [2.1,1.4,-0.8,2.2,3.1,1.2,-0.4,2.4,-1.8,1.8,2.9,2.1, 1.9,3.4,1.4,-1.1,2.7,2.2,-2.1,-0.9, 2.4,2.6,3.1,2.5, 1.7,2.6,1.9,-0.4,3.2,1.8,2.3,-1.4, 2.6,2.4,3.8,2.8, 2.2,1.4,2.6,1.1];
+  months.forEach((m,i) => {
+    labels.push(m);
+    sv = sv*(1+sRet[i]/100);
+    bv = bv*(1+bRet[i]/100);
+    strat.push(+sv.toFixed(1));
+    bench.push(+bv.toFixed(1));
+  });
+  charts['c-equity-bt'] = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:[...labels],
+      datasets:[
+        {label:'KD 策略',data:strat.slice(1),borderColor:GREEN,backgroundColor:'rgba(26,122,74,.10)',fill:true,tension:.4,borderWidth:2.5,pointRadius:0,pointHoverRadius:5},
+        {label:'加權指數',data:bench.slice(1),borderColor:'rgba(183,119,13,.6)',backgroundColor:'transparent',fill:false,tension:.4,borderWidth:1.5,borderDash:[5,5],pointRadius:0}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor(),font:{size:11}}},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toFixed(1)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:9},maxTicksLimit:10}},y:{grid:{color:gridColor()},ticks:{color:textColor(),font:{size:10},callback:v=>v.toFixed(0)}}}}
+  });
+}
+
+function renderHeatmap() {
+  const tbl = document.getElementById('heatmapTable');
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let html = '<thead><tr><th>年度</th>' + months.map(m=>`<th>${m}</th>`).join('') + '<th>全年</th></tr></thead><tbody>';
+  Object.entries(DEMO_MONTHLY).forEach(([year, data]) => {
+    let total = 0, count = 0;
+    html += `<tr><td style="font-weight:700;color:var(--text-primary)">${year}</td>`;
+    months.forEach(m => {
+      const v = data[m];
+      if (v === null) { html += '<td class="hm-neu">—</td>'; return; }
+      total += v; count++;
+      const cls = v > 4 ? 'hm-pos-3' : v > 2 ? 'hm-pos-2' : v > 0 ? 'hm-pos-1' : v < -3 ? 'hm-neg-3' : v < -1.5 ? 'hm-neg-2' : 'hm-neg-1';
+      html += `<td class="${cls}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</td>`;
+    });
+    const yr = (count > 0) ? (total).toFixed(1) : '—';
+    const ycls = +yr > 0 ? 'hm-pos-3' : 'hm-neg-3';
+    html += `<td class="${ycls}" style="font-weight:700">${+yr > 0 ? '+' : ''}${yr}%</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+function renderTradeTable() {
+  const tbody = document.getElementById('tradeBody');
+  tbody.innerHTML = DEMO_TRADES.map(t => {
+    const retCls = t.ret.startsWith('+') ? 'g' : 'r';
+    return `<tr>
+      <td class="num">${t.date}</td>
+      <td class="b">${t.sym}</td>
+      <td><span class="badge ${t.dir==='買'?'bg-green':'bg-red'}">${t.dir}進</span></td>
+      <td class="num">${t.buy}</td>
+      <td class="num">${t.sell}</td>
+      <td class="num ${retCls}">${t.ret}</td>
+      <td class="num">${t.days}天</td>
+      <td style="font-size:11px;color:var(--text-muted)">${t.reason}</td>
+    </tr>`;
+  }).join('');
+}
+
+function scrollToMacro(section) {
+  const el = document.getElementById('section-'+section);
+  if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.funnel-step').forEach(s=>s.classList.remove('active-step'));
+  const steps = document.querySelectorAll('.funnel-step');
+  const map = {global:0,taiwan:1,sector:2,strat:3};
+  if (steps[map[section]]) steps[map[section]].classList.add('active-step');
+}
+
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initP1Charts();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!-- 風控管理頁面 -->
+<div class="page-title">⚙️ 風控管理</div>
+<div class="page-subtitle">實時監控風險指標和限額</div>
+
+<!-- 風險狀態 -->
+<div class="section">
+    <div class="section-header">
+        <h2>🎯 風險狀態</h2>
+        <p>當前風險水平和限額使用情況</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">賬戶狀態</div>
+            <div style="font-size: 24px; font-weight: bold; color: #10B981;">正常</div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 8px;">風險評分: 2.3/10</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">今日虧損</div>
+            <div style="font-size: 24px; font-weight: bold; color: #F59E0B;">-$2,345 (0.27%)</div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 8px;">限額: -$43,588</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #06B6D4;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">最大回撤</div>
+            <div style="font-size: 24px; font-weight: bold; color: #06B6D4;">-8.7%</div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 8px;">限額: -10%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #EF4444;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">單筆風險</div>
+            <div style="font-size: 24px; font-weight: bold; color: #10B981;">1.8%</div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 8px;">限額: 2%</div>
+        </div>
+    </div>
+</div>
+
+<!-- 風險規則 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📋 風控規則</h2>
+        <p>交易系統的風險限制設定</p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E8E0FF;">
+                <th style="text-align: left; padding: 12px; font-weight: 600;">規則</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">限額</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">當前</th>
+                <th style="text-align: center; padding: 12px; font-weight: 600;">狀態</th>
+            </tr>
+        </thead>
+        <tbody id="risk-rules-tbody">
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">日均虧損限額</td>
+                <td style="text-align: right; padding: 12px;">-$43,588 (5%)</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">-$2,345</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✓ 正常</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">單筆風險上限</td>
+                <td style="text-align: right; padding: 12px;">$17,435 (2%)</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">$1,900</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✓ 正常</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">最大回撤限制</td>
+                <td style="text-align: right; padding: 12px;">-$87,177 (10%)</td>
+                <td style="text-align: right; padding: 12px; color: #06B6D4;">-$75,923</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #FEF3C7; color: #F59E0B; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠ 警告</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px;">集中度限制</td>
+                <td style="text-align: right; padding: 12px;">單個股票 ≤ 20%</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">AAPL 18%</td>
+                <td style="text-align: center; padding: 12px;"><span style="background: #DCFCE7; color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✓ 正常</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 風險告警日誌 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📢 告警日誌</h2>
+        <p>最近 7 天的風險事件</p>
+    </div>
+    <div style="background: white; border-radius: 12px; border: 1px solid #E8E0FF;">
+        <div id="risk-alerts-tbody" style="padding: 16px;">
+            <div style="padding: 12px; border-bottom: 1px solid #E8E0FF; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; color: #1A1A2E;">回撤接近限額</div>
+                    <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">2026-03-20 14:32 • 風險等級: 高</div>
+                </div>
+                <span style="background: #FEE2E2; color: #EF4444; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠ 高</span>
+            </div>
+            <div style="padding: 12px; border-bottom: 1px solid #E8E0FF; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; color: #1A1A2E;">單個持倉超過 15%</div>
+                    <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">2026-03-19 10:15 • AAPL 達 18%</div>
+                </div>
+                <span style="background: #FEF3C7; color: #F59E0B; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠ 中</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('風控管理頁面已加載');
+</script>

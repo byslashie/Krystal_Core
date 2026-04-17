@@ -1,0 +1,24 @@
+{
+  "history": [
+    {"month": "2025-04", "quadrant": "recovery",   "code": 2},
+    {"month": "2025-05", "quadrant": "recovery",   "code": 2},
+    {"month": "2025-06", "quadrant": "expansion",  "code": 3},
+    {"month": "2025-07", "quadrant": "expansion",  "code": 3},
+    {"month": "2025-08", "quadrant": "expansion",  "code": 3},
+    {"month": "2025-09", "quadrant": "slowdown",   "code": 2},
+    {"month": "2025-10", "quadrant": "slowdown",   "code": 2},
+    {"month": "2025-11", "quadrant": "slowdown",   "code": 2},
+    {"month": "2025-12", "quadrant": "recovery",   "code": 2},
+    {"month": "2026-01", "quadrant": "recovery",   "code": 2},
+    {"month": "2026-02", "quadrant": "slowdown",   "code": 2},
+    {"month": "2026-03", "quadrant": "slowdown",   "code": 2}
+  ],
+  "_note": "code: 1=recession, 2=slowdown/recovery, 3=expansion, 4=overheating. Auto-updated monthly by /api/econ/12month-history",
+  "_quadrant_map": {
+    "recession": 1,
+    "recovery": 2,
+    "slowdown": 2,
+    "expansion": 3,
+    "overheating": 4
+  }
+}

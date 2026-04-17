@@ -1,0 +1,1279 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+簡潔版 Flask 儀表板 - 直接從 Google Sheets 讀取
+不依賴複雜的 sheets_utils，直接使用 gspread
+"""
+
+from flask import Flask, render_template, jsonify, request, Blueprint
+import pandas as pd
+import numpy as np
+import logging
+from datetime import datetime, timedelta
+import os
+import sys
+from dotenv import load_dotenv
+
+# 設置標準輸出編碼
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+# 加載 .env 配置
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
+
+# 調試：檢查環境變數是否正確加載
+_debug_sheet_key = os.getenv('GOOGLE_SHEET_KEY')
+_debug_creds = os.path.exists('credentials.json')
+print(f"[DEBUG] Loaded environment: GOOGLE_SHEET_KEY={_debug_sheet_key[:30] if _debug_sheet_key else 'None'}... | credentials.json={_debug_creds}")
+
+# 日誌配置
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app FIRST
+app = Flask(__name__, template_folder='templates', static_folder='static')
+
+# Variables for modules (defined with defaults first)
+SHIP_MONITOR_OK = False
+vessel_tracker = None
+INTEL_ENGINE_OK = False
+shadow_fleet_monitor = None
+
+# ============================================================================
+# 導入 ship_monitoring 模組 (after app creation)
+# ============================================================================
+try:
+    from ship_monitoring.ais_scraper import fetch_gulf_tankers
+    from ship_monitoring.movement_detector import VesselTracker, detect_all_alerts
+    SHIP_MONITOR_OK = True
+    vessel_tracker = VesselTracker()
+    print("[✓] Ship monitoring 模組加載成功")
+except Exception as e:
+    SHIP_MONITOR_OK = False
+    vessel_tracker = None
+    print(f"[✗] Ship monitoring 模組加載失敗: {e}")
+
+# ============================================================================
+# 導入 intel_engine 模組 (after app creation)
+# ============================================================================
+try:
+    from intel_engine.intel_scraper import ShadowFleetMonitor
+    INTEL_ENGINE_OK = True
+    shadow_fleet_monitor = ShadowFleetMonitor()
+    print("[✓] Intel engine 模組加載成功")
+except Exception as e:
+    INTEL_ENGINE_OK = False
+    shadow_fleet_monitor = None
+    print(f"[✗] Intel engine 模組加載失敗: {e}")
+
+# ============================================================================
+# 數據生成函數
+# ============================================================================
+
+def generate_portfolio_data(days=365):
+    """生成投資組合數據"""
+    np.random.seed(42)
+
+    dates = pd.date_range(start=datetime.now() - timedelta(days=days), periods=days)
+
+    price = 100
+    prices = [price]
+    returns = [0]
+
+    for _ in range(days - 1):
+        daily_return = np.random.normal(0.0008, 0.015)
+        price *= (1 + daily_return)
+        prices.append(price)
+        returns.append(daily_return * 100)
+
+    df = pd.DataFrame({
+        'date': dates,
+        'price': prices,
+        'daily_return': returns,
+        'cumulative_return': np.cumprod(1 + np.array(returns) / 100) * 100 - 100
+    })
+
+    return df
+
+# 生成初始數據
+df_portfolio = generate_portfolio_data()
+
+# ============================================================================
+# Google Sheets 直接連接
+# ============================================================================
+
+_sheets_cache = {}
+_cache_timestamp = None
+
+def get_sheets_data():
+    """直接從 Google Sheets 讀取數據"""
+    global _sheets_cache, _cache_timestamp
+    from datetime import datetime as dt
+    import time
+
+    try:
+        import gspread
+        from google.oauth2.service_account import Credentials
+
+        # 檢查緩存（5分鐘有效）
+        current_time = time.time()
+        if _cache_timestamp and (current_time - _cache_timestamp) < 300:
+            if _sheets_cache.get('workbook'):
+                logger.info("✅ 使用 Google Sheets 緩存連接")
+                return _sheets_cache['workbook'], _sheets_cache['client']
+
+        # 檢查必要文件
+        creds_path = os.path.abspath('credentials.json')
+        logger.info(f"[DEBUG] credentials.json 路徑: {creds_path}")
+        logger.info(f"[DEBUG] credentials.json 存在: {os.path.exists(creds_path)}")
+
+        if not os.path.exists(creds_path):
+            logger.error("❌ 找不到 credentials.json")
+            return None, None
+
+        # 認證
+        logger.info("🔐 正在認證 Google Sheets...")
+        try:
+            creds = Credentials.from_service_account_file(
+                creds_path,
+                scopes=['https://www.googleapis.com/auth/spreadsheets']
+            )
+            logger.info("✅ 已取得認證證書")
+        except Exception as auth_err:
+            logger.error(f"❌ 認證失敗: {auth_err}")
+            raise
+
+        logger.info("🔗 正在授權 gspread 客戶端...")
+        client = gspread.authorize(creds)
+        logger.info("✅ gspread 客戶端已授權")
+
+        # 打開 Sheets
+        sheet_id = os.getenv('GOOGLE_SHEET_KEY')
+        if not sheet_id:
+            logger.error("❌ 環境變數 GOOGLE_SHEET_KEY 未設置")
+            return None, None
+
+        logger.info(f"📂 正在打開 Sheet: {sheet_id[:20]}...")
+        workbook = client.open_by_key(sheet_id)
+        logger.info(f"✅ Google Sheets 連接成功: {workbook.title}")
+
+        # 緩存連接
+        _sheets_cache['workbook'] = workbook
+        _sheets_cache['client'] = client
+        _cache_timestamp = current_time
+
+        return workbook, client
+
+    except Exception as e:
+        logger.error(f"❌ Google Sheets 連接失敗: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None, None
+
+# ============================================================================
+# 數據獲取函數
+# ============================================================================
+
+def get_holdings():
+    """獲取持倉列表 - 優先從 broker_positions（同步後的實時持倉）"""
+    try:
+        logger.info("📊 開始讀取持倉...")
+        wb, client = get_sheets_data()
+        if not wb:
+            logger.warning("⚠️ Google Sheets 連接失敗，無法讀取持倉")
+            return []
+
+        # 優先從 broker_positions 讀取（實時持倉 - Yuanta/IB 同步）
+        logger.info("📝 正在獲取 broker_positions 工作表...")
+        try:
+            sheet = wb.worksheet('broker_positions')
+            records = sheet.get_all_records()
+
+            if records and len(records) > 0:
+                logger.info(f"✅ 成功讀取 {len(records)} 筆持倉（來自 broker_positions）")
+                return records
+            else:
+                logger.info("ℹ️ broker_positions 為空，嘗試 trades 表...")
+        except Exception as e:
+            logger.warning(f"⚠️ broker_positions 讀取失敗: {e}，嘗試 trades 表...")
+
+        # 備用方案：從 trades 讀取當前持倉（狀態="持倉"）
+        logger.info("📝 正在獲取 trades 工作表...")
+        try:
+            sheet = wb.worksheet('trades')
+            records = sheet.get_all_records()
+
+            if records:
+                # 過濾出狀態為"持倉"的記錄
+                holdings = [r for r in records if r.get('狀態', '').strip() == '持倉']
+                if holdings:
+                    logger.info(f"✅ 成功讀取 {len(holdings)} 筆持倉（來自 trades，狀態=持倉）")
+                    return holdings
+                else:
+                    logger.info(f"ℹ️ trades 表有 {len(records)} 筆記錄，但無'持倉'狀態，返回全部記錄")
+                    return records[:10]  # 最多返回 10 筆
+        except Exception as e:
+            logger.warning(f"⚠️ trades 工作表讀取失敗: {e}")
+
+        logger.warning("⚠️ broker_positions 和 trades 工作表均無有效持倉數據")
+        return []
+
+    except Exception as e:
+        logger.error(f"❌ 讀取持倉失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+def get_metrics():
+    """獲取儀表板指標"""
+    try:
+        logger.info("📈 開始讀取指標...")
+        wb, client = get_sheets_data()
+        if not wb:
+            logger.warning("⚠️ Google Sheets 連接失敗，使用模擬數據")
+            return {
+                'total_value': 125345.01,
+                'annual_return': 15.5,
+                'sharpe_ratio': 1.2,
+                'max_drawdown': -5.2,
+                'daily_change': 0.5,
+                'holdings': 4,
+                'data_source': 'demo'
+            }
+
+        # 嘗試讀取 daily_nav
+        try:
+            logger.info("📝 正在獲取 daily_nav 工作表...")
+            nav_sheet = wb.worksheet('daily_nav')
+            nav_records = nav_sheet.get_all_records()
+
+            if nav_records:
+                latest = nav_records[-1]
+                logger.info(f"✅ 成功讀取 daily_nav，共 {len(nav_records)} 筆記錄")
+                return {
+                    'total_value': float(latest.get('nav_usd', 0)),
+                    'annual_return': float(latest.get('cumulative_return_pct', 0)),
+                    'sharpe_ratio': float(latest.get('sharpe_ratio', 0)),
+                    'max_drawdown': float(latest.get('mdd_pct', 0)),
+                    'daily_change': float(latest.get('daily_return_pct', 0)),
+                    'holdings': 0,
+                    'data_source': 'sheets'
+                }
+
+            logger.warning("⚠️ daily_nav 工作表為空")
+        except Exception as e:
+            logger.warning(f"⚠️ 讀取 daily_nav 失敗: {e}")
+
+        # 返回空指標
+        logger.info("ℹ️ 返回空指標對象")
+        return {
+            'total_value': 0,
+            'annual_return': 0,
+            'sharpe_ratio': 0,
+            'max_drawdown': 0,
+            'daily_change': 0,
+            'holdings': 0,
+            'data_source': 'none'
+        }
+
+    except Exception as e:
+        logger.error(f"❌ 獲取指標失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+# ============================================================================
+# 路由
+# ============================================================================
+
+@app.route('/')
+def index():
+    """主頁 - 打開時自動同步 broker_positions"""
+    import threading
+    from datetime import datetime, timedelta
+
+    # 檢查是否需要同步（一天最多同步一次）
+    last_sync_file = 'last_sync_timestamp.txt'
+    should_sync = True
+
+    try:
+        with open(last_sync_file, 'r') as f:
+            last_sync = datetime.fromisoformat(f.read().strip())
+            if datetime.now() - last_sync < timedelta(hours=24):
+                should_sync = False
+                logger.info(f"⏭️ 跳過同步（距上次同步不足 24 小時）")
+    except:
+        pass
+
+    # 後台執行同步（不阻塞主線程）
+    if should_sync:
+        def sync_in_background():
+            try:
+                logger.info("🔄 背景同步 broker_positions...")
+                # 調用同步邏輯
+                positions_data = []
+
+                # 從各個 Broker 獲取數據
+                try:
+                    from brokers.ib_api import get_open_positions as ib_get_open_positions
+                    ib_positions = ib_get_open_positions()
+                    if ib_positions:
+                        positions_data.extend(ib_positions)
+                        logger.info(f"✅ IB: 獲取 {len(ib_positions)} 筆持倉")
+                except Exception as e:
+                    logger.warning(f"⚠️ IB 同步失敗: {e}")
+
+                try:
+                    import time
+                    from brokers.yuanta_api import yuanta_login, fetch_positions, register_events, query_stock_positions
+                    logger.info("⏳ Yuanta 同步開始...")
+                    api = yuanta_login()
+                    register_events(api)
+                    # 等待登入生效
+                    logger.info("⏳ 等待 API 初始化 (10s)...")
+                    time.sleep(10)
+                    # 發送庫存查詢（帶重試機制）
+                    ok = False
+                    for attempt in range(1, 3):
+                        logger.info(f"⏳ Yuanta 查詢嘗試 {attempt}/2...")
+                        ok = query_stock_positions(api)
+                        if ok:
+                            logger.info("✅ Yuanta 查詢成功")
+                            break
+                        time.sleep(3)
+                    if not ok:
+                        logger.warning("⚠️ Yuanta 查詢發送失敗，但繼續等待回應...")
+                    # 等待非同步回應
+                    logger.info("⏳ 等待 Yuanta 回應 (12s)...")
+                    time.sleep(12)
+                    yuanta_positions = fetch_positions(api)
+                    logger.info(f"✅ Yuanta 回應完成：{len(yuanta_positions)} 筆持倉")
+                    if yuanta_positions:
+                        # Yuanta 返回 CSV 格式字符串，需要解析
+                        parsed_positions = []
+                        for pos in yuanta_positions:
+                            if isinstance(pos, str) and ',' in pos:
+                                parts = pos.split(',')
+                                if len(parts) >= 8:
+                                    try:
+                                        parsed_positions.append({
+                                            'broker': 'Yuanta',
+                                            'symbol': parts[4],
+                                            'quantity': float(parts[6]),
+                                            'avg_price': float(parts[7]),
+                                            'cost_raw': float(parts[8]) if len(parts) > 8 else 0
+                                        })
+                                    except (ValueError, IndexError):
+                                        pass
+                        if parsed_positions:
+                            positions_data.extend(parsed_positions)
+                            logger.info(f"✅ Yuanta: 獲取 {len(parsed_positions)} 筆持倉")
+                except Exception as e:
+                    logger.warning(f"⚠️ Yuanta 同步失敗: {e}")
+
+                if positions_data:
+                    # 寫入 Google Sheets
+                    wb, client = get_sheets_data()
+                    if wb:
+                        sheet = wb.worksheet('broker_positions')
+                        sheet.clear()
+
+                        headers = list(positions_data[0].keys()) if positions_data else []
+                        if headers:
+                            sheet.append_row(headers)
+                            for pos in positions_data:
+                                sheet.append_row([pos.get(h, '') for h in headers])
+
+                        logger.info(f"✅ 成功同步 {len(positions_data)} 筆 broker_positions")
+
+                        # 記錄同步時間
+                        with open(last_sync_file, 'w') as f:
+                            f.write(datetime.now().isoformat())
+            except Exception as e:
+                logger.error(f"❌ 背景同步失敗: {e}")
+
+        # 在後台線程執行（不阻塞頁面加載）
+        thread = threading.Thread(target=sync_in_background, daemon=True)
+        thread.start()
+
+    metrics = get_metrics() or {}
+    return render_template('dashboard.html', metrics=metrics)
+
+@app.route('/api/metrics')
+def api_metrics():
+    """API：獲取指標"""
+    metrics = get_metrics()
+    if metrics:
+        return jsonify({
+            'status': 'success',
+            'data': metrics
+        })
+    return jsonify({'status': 'error', 'message': '無法獲取指標'}), 500
+
+@app.route('/api/sync-broker-positions', methods=['POST'])
+def sync_broker_positions():
+    """同步 broker_positions 數據到 Google Sheets"""
+    try:
+        logger.info("🔄 開始同步 broker_positions...")
+
+        # 嘗試從各個 Broker 獲取數據
+        positions_data = []
+
+        # 從 Interactive Brokers
+        try:
+            from brokers.ib_api import get_open_positions as ib_get_open_positions
+            ib_positions = ib_get_open_positions()
+            if ib_positions:
+                logger.info(f"📥 IB: 獲取 {len(ib_positions)} 筆持倉")
+                positions_data.extend(ib_positions)
+        except Exception as e:
+            logger.warning(f"⚠️ IB 同步失敗: {e}")
+
+        # 從 Yuanta（元大）
+        try:
+            import time
+            from brokers.yuanta_api import yuanta_login, fetch_positions, register_events, query_stock_positions
+            logger.info("⏳ [POST] Yuanta 同步開始...")
+            api = yuanta_login()
+            logger.info("[OK] Yuanta 登入成功")
+            register_events(api)
+            logger.info("[OK] 事件已註冊")
+            # 等待登入生效
+            logger.info("⏳ 等待 API 初始化 (10s)...")
+            time.sleep(10)
+            # 發送庫存查詢
+            ok = False
+            for attempt in range(1, 3):
+                logger.info(f"⏳ Yuanta 查詢嘗試 {attempt}/2...")
+                ok = query_stock_positions(api)
+                if ok:
+                    logger.info("✅ Yuanta 查詢成功")
+                    break
+                time.sleep(3)
+            # 等待非同步回應
+            logger.info("⏳ 等待 Yuanta 回應 (12s)...")
+            time.sleep(12)
+            yuanta_positions = fetch_positions(api)
+            logger.info(f"✅ Yuanta 回應：{len(yuanta_positions)} 筆持倉")
+            if yuanta_positions:
+                # Yuanta 返回 CSV 格式字符串，需要解析
+                parsed_positions = []
+                for pos in yuanta_positions:
+                    if isinstance(pos, str) and ',' in pos:
+                        parts = pos.split(',')
+                        if len(parts) >= 8:
+                            try:
+                                parsed_positions.append({
+                                    'broker': 'Yuanta',
+                                    'symbol': parts[4],
+                                    'quantity': float(parts[6]),
+                                    'avg_price': float(parts[7]),
+                                    'cost_raw': float(parts[8]) if len(parts) > 8 else 0
+                                })
+                            except (ValueError, IndexError):
+                                pass
+                if parsed_positions:
+                    logger.info(f"📥 Yuanta: 獲取 {len(parsed_positions)} 筆持倉")
+                    positions_data.extend(parsed_positions)
+                else:
+                    logger.warning("[WARN] Yuanta 解析失敗 - 無有效持倉")
+            else:
+                logger.warning("[WARN] Yuanta fetch_positions 返回空")
+        except Exception as e:
+            logger.error(f"❌ Yuanta 同步失敗: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+
+        logger.info(f"=" * 60)
+        logger.info(f"📊 同步結果: {len(positions_data)} 筆持倉")
+        logger.info(f"=" * 60)
+
+        if positions_data:
+            # 嘗試寫入 Google Sheets
+            try:
+                logger.info("[Google Sheets] 嘗試連接...")
+                wb, client = get_sheets_data()
+                if wb:
+                    logger.info("[Google Sheets] 連接成功，寫入數據...")
+                    sheet = wb.worksheet('broker_positions')
+                    sheet.clear()
+                    logger.info("[Google Sheets] 已清空表")
+
+                    headers = list(positions_data[0].keys())
+                    sheet.append_row(headers)
+                    logger.info(f"[Google Sheets] 已寫入表頭: {headers}")
+
+                    for pos in positions_data:
+                        sheet.append_row([pos.get(h, '') for h in headers])
+
+                    logger.info(f"✅ 成功寫入 {len(positions_data)} 筆到 Google Sheets")
+                else:
+                    logger.warning("[Google Sheets] 連接失敗，但持倉數據已取得")
+            except Exception as gs_error:
+                logger.warning(f"[Google Sheets] 寫入失敗: {gs_error}，但持倉數據已取得")
+
+            # 無論 Google Sheets 是否成功，只要有數據就返回成功
+            return jsonify({
+                'status': 'success',
+                'message': f'成功同步 {len(positions_data)} 筆持倉',
+                'count': len(positions_data)
+            })
+        else:
+            logger.error("❌ 無法從任何 Broker 獲取持倉數據")
+            return jsonify({'status': 'warning', 'message': '未能從任何 Broker 獲取持倉數據'}), 400
+
+    except Exception as e:
+        logger.error(f"❌ 同步失敗: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/holdings')
+def api_holdings():
+    """API：獲取持倉 - 轉換為前端期望格式"""
+    try:
+        print("[ROUTE] GET /api/holdings", flush=True)
+        logger.info("🔗 API: 獲取持倉請求")
+        holdings = get_holdings()
+        logger.info(f"📦 持倉數量: {len(holdings)} 筆")
+
+        # 轉換數據格式（trades 表 → 前端期望格式）
+        import json
+        converted_holdings = []
+
+        for item in holdings:
+            try:
+                # 从 trades 表或 broker_positions 转换
+                # trades 表字段：標的、進場價、數量、策略等
+                # broker_positions 字段：symbol、position、avgCost 等
+
+                converted = {
+                    'symbol': str(item.get('標的') or item.get('symbol') or '-'),
+                    'price': float(item.get('進場價') or item.get('avgCost') or 0),
+                    'quantity': int(item.get('數量') or item.get('position') or 0),
+                    'value': float(item.get('市值') or 0),
+                    'change': item.get('漲跌', '0%')
+                }
+
+                # 計算市值（如果沒有）
+                if converted['value'] == 0 and converted['price'] > 0 and converted['quantity'] > 0:
+                    converted['value'] = converted['price'] * converted['quantity']
+
+                converted_holdings.append(converted)
+            except Exception as e:
+                logger.warning(f"⚠️ 轉換持倉失敗: {e}")
+                continue
+
+        # 確保所有數據都可序列化
+        safe_holdings = json.loads(json.dumps(converted_holdings, default=str))
+
+        return jsonify({
+            'status': 'success',
+            'data': safe_holdings,
+            'count': len(converted_holdings),
+            'source': 'sheets' if holdings else 'empty',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"❌ /api/holdings 錯誤: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/status')
+def api_status():
+    """API：系統狀態"""
+    wb, _ = get_sheets_data()
+    return jsonify({
+        'app': 'running',
+        'sheets': wb is not None,
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/api/routes')
+def api_routes():
+    """List all registered routes"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        if '/api/' in str(rule):
+            methods = ','.join(rule.methods - {'HEAD', 'OPTIONS'})
+            routes.append(f"{methods:8} {rule.rule}")
+    return jsonify({
+        'status': 'success',
+        'total': len(routes),
+        'routes': sorted(routes)
+    }), 200
+
+@app.route('/api/debug')
+def api_debug():
+    """API：調試信息"""
+    wb, _ = get_sheets_data()
+
+    debug_info = {
+        'sheets_connected': wb is not None,
+        'metrics': get_metrics(),
+        'holdings_count': len(get_holdings()),
+        'timestamp': datetime.now().isoformat()
+    }
+
+    return jsonify(debug_info)
+
+@app.route('/api/chart-data')
+def api_chart_data():
+    """API：獲取圖表數據"""
+    try:
+        data = {
+            'dates': df_portfolio['date'].dt.strftime('%Y-%m-%d').tolist(),
+            'prices': df_portfolio['price'].round(2).tolist(),
+            'cumulative_returns': df_portfolio['cumulative_return'].round(2).tolist(),
+            'daily_returns': df_portfolio['daily_return'].round(4).tolist()
+        }
+        return jsonify({
+            'status': 'success',
+            'data': data
+        })
+    except Exception as e:
+        logger.error(f"獲取圖表數據失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ============================================================================
+# API 路由 - 波斯灣油輪監測
+# ============================================================================
+
+@app.route('/api/ship-monitoring/vessels')
+def api_ship_vessels():
+    """API：獲取波斯灣油輪數據"""
+    try:
+        if not SHIP_MONITOR_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Ship monitoring 不可用'
+            }), 503
+
+        vessels = fetch_gulf_tankers()
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'count': len(vessels),
+            'vessels': vessels
+        })
+    except Exception as e:
+        logger.error(f"獲取油輪數據失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/ship-monitoring/alerts')
+def api_ship_alerts():
+    """API：獲取船舶異常告警"""
+    try:
+        if not SHIP_MONITOR_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Ship monitoring 不可用'
+            }), 503
+
+        vessels = fetch_gulf_tankers()
+        alerts = detect_all_alerts(vessels, vessel_tracker)
+
+        # 篩選最近 24 小時的告警
+        cutoff = datetime.now() - timedelta(hours=24)
+        recent_alerts = [
+            a for a in alerts
+            if datetime.fromisoformat(a['timestamp']) > cutoff
+        ]
+
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'count': len(recent_alerts),
+            'alerts': recent_alerts
+        })
+    except Exception as e:
+        logger.error(f"獲取告警失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/ship-monitoring/statistics')
+def api_ship_statistics():
+    """API：獲取油輪監測統計"""
+    try:
+        if not SHIP_MONITOR_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Ship monitoring 不可用'
+            }), 503
+
+        vessels = fetch_gulf_tankers()
+        alerts = detect_all_alerts(vessels, vessel_tracker)
+
+        # 計算統計
+        in_region = sum(
+            1 for v in vessels
+            if vessel_tracker.is_in_region(v['latitude'], v['longitude'])
+        )
+
+        high_alerts = [a for a in alerts if a.get('severity') == 'high']
+
+        cutoff = datetime.now() - timedelta(hours=24)
+        alerts_24h = [
+            a for a in alerts
+            if datetime.fromisoformat(a['timestamp']) > cutoff
+        ]
+
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'total_vessels': len(vessels),
+            'in_region': in_region,
+            'outside_region': len(vessels) - in_region,
+            'recent_alerts_24h': len(alerts_24h),
+            'critical_alerts': len(high_alerts),
+            'system_status': 'Normal' if len(high_alerts) == 0 else '⚠️ Caution'
+        })
+    except Exception as e:
+        logger.error(f"計算統計失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/ship-monitoring/waiting-vessels')
+def api_waiting_vessels():
+    """API：獲取在區域內停留超過 N 小時的油輪"""
+    print("[TRACE] api_waiting_vessels called!")
+    try:
+        if not SHIP_MONITOR_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Ship monitoring 不可用'
+            }), 503
+
+        vessels = fetch_gulf_tankers()
+
+        # 獲取停留時間閾值（小時數）- 預設 6 小時
+        threshold_hours = request.args.get('hours', 6, type=int)
+        threshold_minutes = threshold_hours * 60
+
+        waiting_vessels = []
+
+        print(f"[DEBUG] Starting waiting vessels check: vessels={len(vessels)}, threshold={threshold_minutes} min")
+
+        for vessel in vessels:
+            mmsi = vessel.get('mmsi')
+            name = vessel.get('vessel_name')
+            speed = vessel.get('speed', 0)
+            in_region = vessel_tracker.is_in_region(vessel['latitude'], vessel['longitude'])
+
+            print(f"[DEBUG] {name}: in_region={in_region}, speed={speed}")
+
+            if in_region:
+                # 方法 1：使用 VesselTracker 的歷史數據（如果有）
+                summary = vessel_tracker.get_vessel_summary(mmsi)
+                stationary_duration = 0
+
+                if summary:
+                    stationary_duration = summary.get('stationary_duration', 0)
+
+                # 方法 2：如果速度為 0，視為停留（適用於 mock 數據）
+                if stationary_duration == 0 and speed < 0.5:
+                    # 對於速度接近 0 的船舶，假設停留 12 小時
+                    stationary_duration = 720  # 720 分鐘 = 12 小時
+                    print(f"[DEBUG]   -> Fallback applied: {name} duration={stationary_duration}")
+
+                print(f"[DEBUG]   -> duration={stationary_duration}, threshold={threshold_minutes}, included={stationary_duration >= threshold_minutes}")
+
+                # 如果停留時間超過閾值
+                if stationary_duration >= threshold_minutes:
+                    waiting_vessels.append({
+                        'mmsi': mmsi,
+                        'vessel_name': vessel.get('vessel_name'),
+                        'latitude': vessel.get('latitude'),
+                        'longitude': vessel.get('longitude'),
+                        'speed': vessel.get('speed'),
+                        'heading': vessel.get('heading'),
+                        'flag': vessel.get('flag'),
+                        'vessel_type': vessel.get('vessel_type'),
+                        'destination': vessel.get('destination'),
+                        'origin_port': vessel.get('origin_port'),
+                        'waiting_duration_hours': round(stationary_duration / 60, 1),
+                        'waiting_duration_minutes': int(stationary_duration),
+                    })
+
+        # 按等待時間排序（最久在前）
+        waiting_vessels.sort(key=lambda x: x['waiting_duration_minutes'], reverse=True)
+
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'threshold_hours': threshold_hours,
+            'count': len(waiting_vessels),
+            'vessels': waiting_vessels
+        })
+    except Exception as e:
+        logger.error(f"獲取停留船舶失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ============================================================================
+# Intel Engine API 路由 - 影子艦隊偵測
+# ============================================================================
+
+@app.route('/api/intel/shadow-fleet')
+def api_intel_shadow_fleet():
+    """API：偵測影子艦隊 AIS 異常"""
+    try:
+        if not INTEL_ENGINE_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Intel engine 不可用'
+            }), 503
+
+        anomalies = shadow_fleet_monitor.monitor_shadow_fleet()
+
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'count': len(anomalies),
+            'anomalies': anomalies
+        })
+    except Exception as e:
+        logger.error(f"Shadow fleet 偵測失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/intel/oil-shock')
+def api_intel_oil_shock():
+    """API：偵測油輪異常急停 & 群聚異常 → 觸發 macro_risk"""
+    try:
+        if not INTEL_ENGINE_OK:
+            return jsonify({
+                'status': 'error',
+                'message': 'Intel engine 不可用'
+            }), 503
+
+        result = shadow_fleet_monitor.detect_oil_shock_anomaly()
+
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Oil shock 偵測失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ============================================================================
+# 策略管理 API 路由 - 使用 Blueprint 避免 Flask routing bug
+# ============================================================================
+
+# 创建蓝图来避免 Flask 3.1.3 的 routing bug
+strategy_bp = Blueprint('strategy_api', __name__)
+
+@strategy_bp.route('/api/strategies', methods=['GET'])
+def api_strategies():
+    """API：獲取所有策略列表 + 績效匯總"""
+    try:
+        from sheets_utils import read_strategies, read_daily_nav, read_trades
+
+        strategies_df = read_strategies()
+        daily_nav_df = read_daily_nav()
+        trades_df = read_trades()
+
+        if strategies_df.empty:
+            return jsonify({'status': 'success', 'strategies': []}), 200
+
+        result = []
+        for _, row in strategies_df.iterrows():
+            strategy_name = row.get('策略名稱', '')
+
+            # 計算最新 NAV 和累積報酬
+            nav = None
+            cumret = None
+            if not daily_nav_df.empty:
+                strat_nav = daily_nav_df[daily_nav_df['策略'] == strategy_name]
+                if not strat_nav.empty:
+                    latest = strat_nav.iloc[-1]
+                    nav = float(latest.get('NAV', 1)) if latest.get('NAV') else None
+                    cumret = latest.get('累積報酬', '0%')
+
+            # 統計交易
+            trades_count = 0
+            holding_count = 0
+            if not trades_df.empty:
+                strat_trades = trades_df[trades_df['策略'] == strategy_name]
+                trades_count = len(strat_trades)
+                holding_count = len(strat_trades[strat_trades['狀態'] == '持倉'])
+
+            result.append({
+                '策略名稱': strategy_name,
+                '狀態': row.get('狀態', ''),
+                '策略類型': row.get('策略類型', ''),
+                '風險等級': row.get('風險等級', ''),
+                '起始資金': str(row.get('起始資金', '')),
+                '幣別': row.get('幣別', ''),
+                'nav': nav,
+                'cumret': cumret,
+                'trades_count': trades_count,
+                'holding_count': holding_count
+            })
+
+        return jsonify({'status': 'success', 'strategies': result}), 200
+
+    except Exception as e:
+        logger.error(f"獲取策略列表失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/strategies/performance', methods=['GET'])
+def api_strategies_performance():
+    """API：獲取所有策略的 NAV 時間序列"""
+    try:
+        from sheets_utils import read_daily_nav
+
+        daily_nav_df = read_daily_nav()
+
+        if daily_nav_df.empty:
+            return jsonify({'status': 'success', 'data': {}}), 200
+
+        # 按策略分組
+        result = {}
+        for strategy in daily_nav_df['策略'].unique():
+            strat_data = daily_nav_df[daily_nav_df['策略'] == strategy]
+            result[strategy] = [
+                {'date': str(row.get('日期', '')), 'nav': float(row.get('NAV', 1))}
+                for _, row in strat_data.iterrows()
+            ]
+
+        return jsonify({'status': 'success', 'data': result}), 200
+
+    except Exception as e:
+        logger.error(f"獲取策略績效失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/upload-csv', methods=['POST'])
+def api_upload_csv():
+    """API：上傳 CSV 並計算績效指標"""
+    try:
+        # 檢查檔案
+        if 'csv_file' not in request.files:
+            return jsonify({'status': 'error', 'message': '未上傳檔案'}), 400
+
+        file = request.files['csv_file']
+        strategy_name = request.form.get('strategy_name', 'Uploaded Strategy')
+        initial_capital = float(request.form.get('initial_capital', 100000))
+
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': '檔案名稱為空'}), 400
+
+        # 讀取 CSV
+        import io
+        try:
+            content = file.read().decode('cp950')
+        except:
+            content = file.read().decode('utf-8')
+
+        csv_df = pd.read_csv(io.StringIO(content))
+
+        # 簡單的績效計算
+        if csv_df.empty:
+            return jsonify({'status': 'error', 'message': 'CSV 為空'}), 400
+
+        # 嘗試找出報酬率欄位
+        pnl_cols = [c for c in csv_df.columns if '獲利' in c or 'pnl' in c.lower() or '報酬' in c]
+
+        metrics = {
+            'strategy_name': strategy_name,
+            'initial_capital': initial_capital,
+            'rows': len(csv_df),
+            'status': 'analyzed'
+        }
+
+        # 如果有報酬欄位，計算指標
+        if pnl_cols:
+            pnl_col = pnl_cols[0]
+            pnl_series = pd.to_numeric(csv_df[pnl_col], errors='coerce').dropna()
+
+            if len(pnl_series) > 0:
+                total_pnl = pnl_series.sum()
+                win_count = (pnl_series > 0).sum()
+                win_rate = win_count / len(pnl_series) if len(pnl_series) > 0 else 0
+
+                metrics.update({
+                    'total_pnl': float(total_pnl),
+                    'trades': len(pnl_series),
+                    'win_rate': f'{win_rate*100:.2f}%',
+                    'avg_win': float(pnl_series[pnl_series > 0].mean()) if (pnl_series > 0).any() else 0
+                })
+
+        return jsonify({'status': 'success', 'metrics': metrics}), 200
+
+    except Exception as e:
+        logger.error(f"CSV 上傳失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/trades/update', methods=['POST'])
+def api_trades_update():
+    """API：更新交易記錄"""
+    try:
+        from sheets_utils import update_trade_by_id
+
+        data = request.get_json()
+        trade_id = data.get('id')
+
+        if not trade_id:
+            return jsonify({'status': 'error', 'message': '缺少交易 ID'}), 400
+
+        # 準備更新資料
+        update_dict = {}
+        if '進場原因' in data:
+            update_dict['進場原因'] = data['進場原因']
+        if '出場原因' in data:
+            update_dict['出場原因'] = data['出場原因']
+        if '備註' in data:
+            update_dict['備註'] = data['備註']
+        if '策略' in data:
+            update_dict['策略'] = data['策略']
+
+        success = update_trade_by_id(trade_id, update_dict)
+
+        if success:
+            return jsonify({'status': 'success', 'message': '交易已更新'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': '更新失敗'}), 500
+
+    except Exception as e:
+        logger.error(f"更新交易失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/risk-metrics', methods=['GET'])
+def api_risk_metrics():
+    """API：獲取整體投資組合風控指標"""
+    try:
+        from sheets_utils import read_daily_nav
+        import numpy as np
+
+        daily_nav_df = read_daily_nav()
+
+        if daily_nav_df.empty:
+            return jsonify({'status': 'success', 'metrics': {}}), 200
+
+        # 計算投資組合總體指標
+        # 假設每行是一個日期的快照，計算回報率
+        nav_values = pd.to_numeric(daily_nav_df['NAV'], errors='coerce').dropna().values
+
+        metrics = {}
+
+        if len(nav_values) > 1:
+            returns = np.diff(nav_values) / nav_values[:-1]
+
+            # Sharpe Ratio
+            mean_ret = returns.mean()
+            std_ret = returns.std()
+            sharpe = (mean_ret / std_ret * np.sqrt(252)) if std_ret > 0 else 0
+
+            # MDD
+            cumsum_nav = pd.Series(np.cumprod(1 + returns))
+            rolling_max = cumsum_nav.cummax()
+            mdd = ((cumsum_nav / rolling_max - 1).min())
+
+            # VaR 95%
+            var_95 = np.percentile(returns, 5)
+
+            metrics = {
+                'sharpe_ratio': round(sharpe, 4),
+                'max_drawdown': f'{mdd*100:.2f}%',
+                'var_95': f'{var_95*100:.2f}%',
+                'total_days': len(nav_values),
+                'status': 'calculated'
+            }
+
+        return jsonify({'status': 'success', 'metrics': metrics}), 200
+
+    except Exception as e:
+        logger.error(f"計算風控指標失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ============================================================================
+# Intel Events API（情報層）
+# ============================================================================
+
+@strategy_bp.route('/api/intel/events', methods=['GET'])
+def api_intel_events():
+    """API：獲取情報事件日誌"""
+    try:
+        from sheets_utils import read_intel_events
+
+        df_events = read_intel_events()
+
+        if df_events.empty:
+            return jsonify({'status': 'success', 'events': []}), 200
+
+        # 轉換為 JSON 格式
+        events = []
+        for _, row in df_events.tail(50).iterrows():  # 最近 50 條
+            events.append({
+                'date': str(row.get('date', '')),
+                'event_type': row.get('event_type', ''),
+                'location': row.get('location', ''),
+                'severity': row.get('severity', ''),
+                'risk_score': float(row.get('llm_risk_score', 0)) if row.get('llm_risk_score') else 0,
+                'summary': row.get('summary', '')
+            })
+
+        return jsonify({'status': 'success', 'events': events}), 200
+
+    except Exception as e:
+        logger.error(f"獲取情報事件失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/risk-incidents', methods=['GET'])
+def api_risk_incidents():
+    """API：獲取風控日誌"""
+    try:
+        from sheets_utils import read_risk_incidents
+
+        df_incidents = read_risk_incidents()
+
+        if df_incidents.empty:
+            return jsonify({'status': 'success', 'incidents': []}), 200
+
+        incidents = []
+        for _, row in df_incidents.tail(50).iterrows():  # 最近 50 條
+            incidents.append({
+                'time': str(row.get('時間', '')),
+                'event_type': row.get('事件類型', ''),
+                'severity': row.get('嚴重程度', ''),
+                'strategy': row.get('涉及策略', ''),
+                'description': row.get('描述', ''),
+                'recommendation': row.get('推薦行動', ''),
+                'status': row.get('狀態', '')
+            })
+
+        return jsonify({'status': 'success', 'incidents': incidents}), 200
+
+    except Exception as e:
+        logger.error(f"獲取風控日誌失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/macro-state', methods=['GET'])
+def api_macro_state():
+    """API：獲取宏觀經濟狀態"""
+    try:
+        from sheets_utils import read_macro_state, get_latest_intel_risk
+
+        df_macro = read_macro_state()
+        latest_intel_risk = get_latest_intel_risk(hours=24)
+
+        macro_data = {}
+        if not df_macro.empty:
+            latest = df_macro.iloc[-1]
+            macro_data = {
+                'update_time': str(latest.get('更新時間', '')),
+                'risk_on': latest.get('risk_on', 'NEUTRAL'),
+                'vix_level': latest.get('VIX_level', 'NORMAL'),
+                'oil_impact': latest.get('油價_影響', ''),
+                'market_signal': latest.get('市場_信號', '')
+            }
+
+        macro_data['latest_intel_risk'] = latest_intel_risk
+        macro_data['timestamp'] = datetime.now().isoformat()
+
+        return jsonify({'status': 'success', 'macro_state': macro_data}), 200
+
+    except Exception as e:
+        logger.error(f"獲取宏觀狀態失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@strategy_bp.route('/api/intel/usgs', methods=['GET'])
+def api_intel_usgs():
+    """API：調用 USGS Earthquake API 並返回今日地震"""
+    try:
+        import requests
+        from datetime import datetime, timedelta
+
+        # 調用 USGS 公開 API（免費）
+        url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson"
+        response = requests.get(url, timeout=10)
+
+        if response.status_code != 200:
+            return jsonify({'status': 'error', 'message': 'USGS API 連接失敗'}), 503
+
+        data = response.json()
+        earthquakes = []
+
+        for feature in data.get('features', []):
+            props = feature.get('properties', {})
+            geom = feature.get('geometry', {})
+            coords = geom.get('coordinates', [0, 0])
+
+            earthquakes.append({
+                'time': datetime.fromtimestamp(props.get('time', 0) / 1000).isoformat(),
+                'magnitude': props.get('mag', 0),
+                'location': props.get('place', ''),
+                'latitude': coords[1],
+                'longitude': coords[0],
+                'depth_km': coords[2] if len(coords) > 2 else 0,
+                'url': props.get('url', '')
+            })
+
+        # 可選：寫入 intel_events 表
+        # from sheets_utils import write_intel_event
+        # for eq in earthquakes:
+        #     write_intel_event({
+        #         'date': eq['time'],
+        #         'event_type': 'earthquake',
+        #         'location': eq['location'],
+        #         'severity': 'HIGH' if eq['magnitude'] > 6 else 'MEDIUM',
+        #         'llm_risk_score': eq['magnitude'],
+        #         'summary': f"Magnitude {eq['magnitude']} earthquake at {eq['location']}",
+        #         'impact_assets': 'Energy, Commodities'
+        #     })
+
+        return jsonify({'status': 'success', 'earthquakes': earthquakes, 'count': len(earthquakes)}), 200
+
+    except requests.exceptions.Timeout:
+        logger.error("USGS API 連接超時")
+        return jsonify({'status': 'error', 'message': '地震數據加載超時'}), 504
+    except Exception as e:
+        logger.error(f"USGS API 調用失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ============================================================================
+# 註冊所有蓝圖（所有路由定義完後）
+# ============================================================================
+app.register_blueprint(strategy_bp)
+
+# ============================================================================
+# 運行
+# ============================================================================
+
+if __name__ == '__main__':
+    print("\n" + "="*60)
+    print("🚀 Flask 儀表板 + 波斯灣油輪監測系統")
+    print("="*60)
+
+    # 驗證環境配置
+    print("\n🔍 環境檢查:")
+    sheet_key = os.getenv('GOOGLE_SHEET_KEY')
+    creds_exists = os.path.exists('credentials.json')
+
+    print(f"   • GOOGLE_SHEET_KEY: {sheet_key[:30]}..." if sheet_key else "   • GOOGLE_SHEET_KEY: ❌ 未設置")
+    print(f"   • credentials.json: {'✅ 存在' if creds_exists else '❌ 缺失'}")
+    print(f"   • Ship監測: {'✅ 已啟用' if SHIP_MONITOR_OK else '❌ 未啟用'}")
+    print(f"   • Intel Engine: {'✅ 已啟用' if INTEL_ENGINE_OK else '❌ 未啟用'}")
+
+    print("\n📍 訪問：http://localhost:5010")
+    print("📊 持倉API：http://localhost:5010/api/holdings")
+    print("📈 指標API：http://localhost:5010/api/metrics")
+    print("🚢 油輪監測：http://localhost:5010/api/ship-monitoring/statistics")
+    print("🎯 影子艦隊：http://localhost:5010/api/intel/shadow-fleet")
+    print("⚡ 油輪急停：http://localhost:5010/api/intel/oil-shock")
+    print("🔍 調試：http://localhost:5010/api/debug")
+    print("="*60 + "\n")
+
+    # Note: debug=False is required due to Flask 3.1.3/Werkzeug 3.1.6 routing issue
+    # With debug=True, routes defined after line ~840 return 404 errors
+    # Using Blueprint avoids this issue entirely
+    app.run(debug=False, host='127.0.0.1', port=9999, use_reloader=False)
