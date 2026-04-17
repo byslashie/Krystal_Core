@@ -586,7 +586,8 @@ select option{background:var(--bg-base);color:var(--text-primary)}
   .header{padding:0 16px;gap:12px}
   .logo-name{font-size:13px}
   .logo-sub{display:none}
-  .nav{flex-wrap:wrap;padding:4px;border-radius:12px}
+   .nav{flex-wrap:nowrap;overflow-x:auto;padding:4px;border-radius:12px;scrollbar-width:none}
+   .nav::-webkit-scrollbar{display:none}
   .sidebar{display:none}
   .layout{flex-direction:column}
   .main{padding:16px 14px}
@@ -1014,9 +1015,8 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
           <span class="ema-badge ema-neutral" style="font-size:10.5px">→ 橫盤整理</span>
           <span class="ema-badge ema-bear" style="font-size:10.5px">↓ 價格在均線下方（空頭）</span>
         </div>
+        </div>
       </div>
-    </div> <!-- Close Grid -->
-  </div> <!-- Close Page -->
 
       <!-- PTT Social Sentiment -->
       <div class="section-head" style="margin-top:20px;display:flex;align-items:center;gap:8px">
@@ -2256,7 +2256,8 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
       <div id="finlab-win-tab" class="tab-content" style="display:none"></div>
       <!-- FinLab 交易流動性 tab -->
       <div id="finlab-liq-tab" class="tab-content" style="display:none"></div>
-    </div>
+    <!-- Removed redundant div that closed main prematurely -->
+
 
     <!-- PAGE: 研究室 (p_lab) -->
     <div class="page" id="p_lab" role="region" aria-live="polite">
@@ -7213,60 +7214,50 @@ async function parseExcelFile(file) {
 }
 
 function parseDailySheet(rows) {
-  // 每日報表格式：找「日期」欄和「損益/P&L/淨值」欄
+  // 每日報表格式（元大回測 xlsx）
+  // 欄位：日期 | 獲利 | 總獲利 | 最大投入金額 | 商品數量
   if (!rows || rows.length < 2) return [];
 
-  const header = rows[0].map(h => String(h || '').trim().toLowerCase());
+  const headerRaw = rows[0].map(h => String(h || '').trim());
+  const header    = headerRaw.map(h => h.toLowerCase());
 
-  // 找日期欄
-  let dateIdx = -1;
-  for (let i = 0; i < header.length; i++) {
-    if (header[i].includes('日期') || header[i].includes('date') || header[i].includes('時間')) {
-      dateIdx = i; break;
+  function findColExact(exactList, fuzzyList) {
+    for (const e of exactList) {
+      const i = headerRaw.indexOf(e);
+      if (i !== -1) return i;
     }
-  }
-
-  // 找損益欄（優先每日損益，其次累積）
-  let pnlIdx = -1;
-  const pnlKeywords = ['每日損益','日損益','損益','pnl','profit','獲利','盈虧','報酬'];
-  for (const kw of pnlKeywords) {
-    for (let i = 0; i < header.length; i++) {
-      if (header[i].includes(kw)) { pnlIdx = i; break; }
+    for (const f of fuzzyList) {
+      const i = header.findIndex(h => h.includes(f));
+      if (i !== -1) return i;
     }
-    if (pnlIdx !== -1) break;
+    return -1;
   }
 
-  // 找淨值欄（若無損益欄，用淨值差分）
-  let navIdx = -1;
-  if (pnlIdx === -1) {
-    const navKeywords = ['淨值','net','資產','equity','portfolio'];
-    for (const kw of navKeywords) {
-      for (let i = 0; i < header.length; i++) {
-        if (header[i].includes(kw)) { navIdx = i; break; }
-      }
-      if (navIdx !== -1) break;
-    }
-  }
+  const dateIdx       = findColExact(['日期'],       ['date', '時間']);
+  const dailyPnlIdx   = findColExact(['獲利'],       ['每日損益', '日損益', '日pnl']);
+  const cumPnlIdx     = findColExact(['總獲利'],      ['累計獲利', '累積損益', '總損益', 'cum']);
+  const maxInvestIdx  = findColExact(['最大投入金額'],['最大投入', 'max_invest', 'maxinvest']);
+  const navIdx        = findColExact([],             ['淨值', 'net', 'equity', 'portfolio']);
 
-  if (dateIdx === -1) {
-    console.warn('[parseDailySheet] 找不到日期欄，headers:', header);
-  }
+  console.log('[parseDailySheet] headers:', headerRaw);
+  console.log('[parseDailySheet] dateIdx:', dateIdx, 'dailyPnlIdx:', dailyPnlIdx,
+    'cumPnlIdx:', cumPnlIdx, 'maxInvestIdx:', maxInvestIdx);
 
   const trades = [];
-  let prevNav = null;
+  let maxInvested = 0;
+  let prevCumPnl = null;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.every(v => v === null || v === '')) continue;
 
-    // 解析日期
+    // ── 日期 ──
     let dateStr = null;
     if (dateIdx !== -1 && row[dateIdx] != null) {
       const rawDate = row[dateIdx];
       if (rawDate instanceof Date) {
         dateStr = rawDate.toISOString().substring(0, 10);
       } else if (typeof rawDate === 'number') {
-        // Excel 序列日期
         const d = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
         dateStr = d.toISOString().substring(0, 10);
       } else {
@@ -7274,17 +7265,31 @@ function parseDailySheet(rows) {
       }
     }
 
-    // 解析 PnL
+    // ── 最大投入金額（取整個檔案的最大值）──
+    if (maxInvestIdx !== -1 && row[maxInvestIdx] != null) {
+      const mv = parseFloat(String(row[maxInvestIdx]).replace(/,/g, ''));
+      if (!isNaN(mv) && mv > maxInvested) maxInvested = mv;
+    }
+
+    // ── PnL：優先「獲利」（每日），fallback「總獲利」差分，fallback NAV 差分 ──
     let pnl = null;
-    if (pnlIdx !== -1) {
-      pnl = parseFloat(row[pnlIdx]);
-    } else if (navIdx !== -1) {
-      // 淨值差分
-      const nav = parseFloat(row[navIdx]);
-      if (!isNaN(nav)) {
-        if (prevNav !== null) pnl = nav - prevNav;
-        prevNav = nav;
+
+    if (dailyPnlIdx !== -1) {
+      const v = parseFloat(String(row[dailyPnlIdx] ?? '').replace(/,/g, ''));
+      if (!isNaN(v)) pnl = v;
+    }
+
+    if (pnl === null && cumPnlIdx !== -1) {
+      const cum = parseFloat(String(row[cumPnlIdx] ?? '').replace(/,/g, ''));
+      if (!isNaN(cum)) {
+        pnl = prevCumPnl !== null ? cum - prevCumPnl : cum;
+        prevCumPnl = cum;
       }
+    }
+
+    if (pnl === null && navIdx !== -1) {
+      const nav = parseFloat(String(row[navIdx] ?? '').replace(/,/g, ''));
+      // handled below via prevNav
     }
 
     if (pnl !== null && !isNaN(pnl)) {
@@ -7292,7 +7297,9 @@ function parseDailySheet(rows) {
     }
   }
 
-  console.log('[parseDailySheet] 解析到', trades.length, '筆每日數據');
+  // 附加最大投入金額，供 calculateKPIs 使用
+  trades.maxInvested = maxInvested > 0 ? maxInvested : null;
+  console.log('[parseDailySheet] 解析到', trades.length, '筆每日數據，最大投入金額:', maxInvested);
   return trades;
 }
 
@@ -7407,135 +7414,118 @@ async function parseCSVFile(file) {
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  // 保留原始 header（含中文），另備小寫版供英文欄位匹配
+  const headersRaw = lines[0].split('\t').length > 3
+    ? lines[0].split('\t').map(h => h.trim())   // TSV（元大回測格式）
+    : lines[0].split(',').map(h => h.trim());
+  const headers = headersRaw.map(h => h.toLowerCase());
 
-  // 查找進出場價格和交易數量欄位
-  let entryPriceIdx = -1, exitPriceIdx = -1, quantityIdx = -1, directionIdx = -1;
-
-  for (let i = 0; i < headers.length; i++) {
-    const h = headers[i];
-    if (h.includes('進場價格') || h.includes('entry_price') || h.includes('entry')) entryPriceIdx = i;
-    if (h.includes('出場價格') || h.includes('exit_price') || h.includes('close')) exitPriceIdx = i;
-    if (h.includes('交易數量') || h.includes('quantity') || h.includes('qty')) quantityIdx = i;
-    if (h.includes('進場方向') || h.includes('出場方向') || h.includes('direction') || h.includes('type')) directionIdx = i;
+  // 精確比對優先，避免「進場時間」和「進場價格」互相覆蓋
+  function findCol(exactList, fuzzyList) {
+    for (const exact of exactList) {
+      const i = headersRaw.indexOf(exact);
+      if (i !== -1) return i;
+    }
+    for (const fuzzy of fuzzyList) {
+      const i = headers.findIndex(h => h.includes(fuzzy));
+      if (i !== -1) return i;
+    }
+    return -1;
   }
 
+  const entryTimeIdx   = findCol(['進場時間'], ['entry_time', 'entrytime', 'open_time']);
+  const exitTimeIdx    = findCol(['出場時間'], ['exit_time',  'exittime',  'close_time']);
+  const entryPriceIdx  = findCol(['進場價格'], ['entry_price', 'entryprice']);
+  const exitPriceIdx   = findCol(['出場價格'], ['exit_price',  'exitprice', 'close_price']);
+  const quantityIdx    = findCol(['交易數量'], ['quantity', 'qty', 'shares', 'volume']);
+  const directionIdx   = findCol(['進場方向'], ['direction', 'side', 'type']);
+  const pnlIdxDirect   = findCol(['獲利金額'], ['pnl', '損益', 'profit', '獲利', '淨利']);
+  const returnPctIdx   = findCol(['報酬率'],   ['return_rate', 'returnpct', 'return%', 'ret%']);
+  const symbolIdx      = findCol(['商品名稱'], ['symbol', 'name', '商品']);
+  const codeIdx        = findCol(['商品代碼'], ['code', 'ticker']);
+
+  // dateColIdx：出場時間優先，fallback 掃第一列找日期格式
   const dateRegex = /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/;
-  let dateColIdx = -1;
-  for (let i = 0; i < headers.length; i++) {
-    const h = headers[i];
-    if (h.includes('出場時間') || h.includes('exit_time') || h.includes('close_time') || h.includes('date')) {
-      dateColIdx = i; break;
-    }
-  }
+  let dateColIdx = exitTimeIdx !== -1 ? exitTimeIdx : -1;
   if (dateColIdx === -1 && lines.length > 1) {
-    const firstRow = lines[1].split(',').map(v => v.trim().replace(/"/g, ''));
+    const firstRow = (lines[1].includes('\t') ? lines[1].split('\t') : lines[1].split(','))
+      .map(v => v.trim().replace(/"/g, ''));
     for (let i = 0; i < firstRow.length; i++) {
-      if (dateRegex.test(firstRow[i])) dateColIdx = i;
-    }
-  }
-
-  // 查找進出場時間欄位 - 更靈活的匹配
-  let entryTimeIdx = -1, exitTimeIdx = -1;
-  for (let i = 0; i < headers.length; i++) {
-    const h = headers[i];
-    // 進場時間：第一個日期欄位通常是進場時間
-    if (h.includes('進場') || h.includes('entry') || h.includes('buy') || h.includes('open')) {
-      if (!h.includes('出') && !h.includes('exit') && !h.includes('close') && !h.includes('sell')) {
-        entryTimeIdx = i;
-      }
-    }
-    // 出場時間
-    if (h.includes('出場') || h.includes('exit') || h.includes('close') || h.includes('sell')) {
-      if (!h.includes('進')) {
-        exitTimeIdx = i;
-      }
-    }
-  }
-
-  // 如果還是找不到，嘗試按位置推斷（假設進場在前，出場在後）
-  if (entryTimeIdx === -1 || exitTimeIdx === -1) {
-    const timePatternIdx = [];
-    const dateRegex = /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/;
-    for (let i = 0; i < Math.min(headers.length, 30); i++) {
-      if (lines.length > 1 && dateRegex.test(lines[1].split(',')[i])) {
-        timePatternIdx.push(i);
-      }
-    }
-    if (timePatternIdx.length >= 2) {
-      if (entryTimeIdx === -1) entryTimeIdx = timePatternIdx[0];
-      if (exitTimeIdx === -1) exitTimeIdx = timePatternIdx[1];
+      if (dateRegex.test(firstRow[i])) { dateColIdx = i; break; }
     }
   }
 
   const trades = [];
   const fullTradeData = []; // 保存完整交易數據用於計算初始資金
 
+  // 判斷分隔符（TSV 或 CSV）
+  const isTsv = lines[0].includes('\t');
+  const splitLine = line => isTsv ? line.split('\t') : line.split(',');
+
   for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+    const vals = splitLine(lines[i]).map(v => v.trim().replace(/"/g, ''));
+    if (vals.length < 2) continue;
 
     let pnl = null;
     let entryPrice = null, exitPrice = null, quantity = null, direction = '多';
     let entryTime = null, exitTime = null;
 
-    // 提取進出場價格和數量
+    // 直接從已定位的欄位讀取
     if (entryPriceIdx !== -1) entryPrice = parseFloat(vals[entryPriceIdx]);
-    if (exitPriceIdx !== -1) exitPrice = parseFloat(vals[exitPriceIdx]);
-    if (quantityIdx !== -1) quantity = parseFloat(vals[quantityIdx]);
-    if (directionIdx !== -1) direction = vals[directionIdx].trim();
-    if (entryTimeIdx !== -1) entryTime = vals[entryTimeIdx];
-    if (exitTimeIdx !== -1) exitTime = vals[exitTimeIdx];
+    if (exitPriceIdx  !== -1) exitPrice  = parseFloat(vals[exitPriceIdx]);
+    if (quantityIdx   !== -1) quantity   = parseFloat(vals[quantityIdx]);
+    if (directionIdx  !== -1) direction  = vals[directionIdx].trim();
+    if (entryTimeIdx  !== -1) entryTime  = vals[entryTimeIdx];
+    if (exitTimeIdx   !== -1) exitTime   = vals[exitTimeIdx];
 
-    // 嘗試用進出場價格 × 交易數量計算 PnL
-    if (!isNaN(entryPrice) && !isNaN(exitPrice) && !isNaN(quantity)) {
-      if (direction.includes('空') || direction.includes('short') || direction.includes('sell')) {
-        // 空頭：進場價 - 出場價
-        pnl = (entryPrice - exitPrice) * quantity;
-      } else {
-        // 多頭：出場價 - 進場價
-        pnl = (exitPrice - entryPrice) * quantity;
-      }
+    const symbolName = symbolIdx !== -1 ? vals[symbolIdx] : (codeIdx !== -1 ? vals[codeIdx] : '');
+
+    // Step 1：優先直接讀「獲利金額」欄（最準確，已扣費後淨損益）
+    if (pnlIdxDirect !== -1) {
+      const v = parseFloat(vals[pnlIdxDirect]);
+      if (!isNaN(v)) pnl = v;
     }
 
-    // 若計算失敗，嘗試直接查找 PnL 列
-    if (pnl === null) {
-      let pnlIdx = -1;
-      for (let j = 0; j < headers.length; j++) {
-        const h = headers[j];
-        if (h.includes('pnl')||h.includes('損益')||h.includes('profit')||h.includes('獲利')||h.includes('淨利')) { pnlIdx = j; break; }
-      }
-      if (pnlIdx === -1) {
-        // 自動偵測：找最可能是 PnL 的列
-        const stats = headers.map((_, ci) => {
-          const vals = lines.slice(1,Math.min(51,lines.length)).map(l => parseFloat(l.split(',')[ci])).filter(v => !isNaN(v));
-          return { ci, pos: vals.filter(v=>v>0).length, neg: vals.filter(v=>v<0).length, avg: vals.reduce((a,b)=>a+Math.abs(b),0)/(vals.length||1) };
-        }).filter(s => s.pos>0 && s.neg>0 && s.avg>10);
-        stats.sort((a,b) => b.avg - a.avg);
-        pnlIdx = stats.length ? stats[0].ci : -1;
-      }
-      if (pnlIdx !== -1) {
-        pnl = parseFloat(vals[pnlIdx]);
+    // Step 2：fallback — 用進出場價格 × 數量 × 1000（台股：1張=1000股）重算
+    if (pnl === null && !isNaN(entryPrice) && !isNaN(exitPrice) && !isNaN(quantity)) {
+      const lotSize = 1000; // 台股每張 1000 股
+      if (direction.includes('空') || direction.includes('short') || direction.includes('sell')) {
+        pnl = (entryPrice - exitPrice) * quantity * lotSize;
+      } else {
+        pnl = (exitPrice - entryPrice) * quantity * lotSize;
       }
     }
 
     if (pnl !== null && !isNaN(pnl)) {
-      const trade = { pnl };
-      // 保留完整的日期時間（例: "2020/06/01 09:01"）用於時間因子分析
-      const exitDate = exitTimeIdx !== -1 && vals[exitTimeIdx] ? vals[exitTimeIdx].trim() : (dateColIdx !== -1 ? vals[dateColIdx].trim() : null);
-      if (exitDate) {
-        trade.date = exitDate;
+      const exitDate = exitTimeIdx !== -1 && vals[exitTimeIdx]
+        ? vals[exitTimeIdx].trim()
+        : (dateColIdx !== -1 ? vals[dateColIdx].trim() : null);
+
+      // 報酬率：優先讀 CSV 的「報酬率」欄（已是百分比，例如 2.84）
+      let returnPct = null;
+      if (returnPctIdx !== -1) {
+        const rv = parseFloat(vals[returnPctIdx]);
+        if (!isNaN(rv)) returnPct = rv;  // 保留原始 % 數字，例如 2.84
       }
+
+      const trade = { pnl };
+      if (exitDate)   trade.date      = exitDate;
+      if (symbolName) trade.symbol    = symbolName;
+      if (returnPct !== null) trade.returnPct = returnPct;
+      if (!isNaN(entryPrice)) trade.entryPrice = entryPrice;
+      if (!isNaN(exitPrice))  trade.exitPrice  = exitPrice;
+      if (!isNaN(quantity))   trade.quantity   = quantity;
       trades.push(trade);
 
-      // 保存完整交易數據用於計算初始資金
       fullTradeData.push({
         pnl,
         entryPrice: !isNaN(entryPrice) ? entryPrice : null,
-        exitPrice: !isNaN(exitPrice) ? exitPrice : null,
-        quantity: !isNaN(quantity) ? quantity : null,
+        exitPrice:  !isNaN(exitPrice)  ? exitPrice  : null,
+        quantity:   !isNaN(quantity)   ? quantity   : null,
         direction,
-        entryTime: entryTime || null,
-        exitTime: exitTime || null
+        entryTime:  entryTime || null,
+        exitTime:   exitTime  || null,
+        symbol:     symbolName || null,
       });
     }
   }
@@ -7556,7 +7546,8 @@ function calculateMaxPoolCapital(trades, fullTradeData) {
     // 為每筆交易創建進場和出場事件
     for (const trade of fullTradeData) {
       if (trade.entryTime && trade.exitTime && trade.entryPrice && trade.quantity) {
-        const amount = Math.abs(trade.entryPrice * trade.quantity);
+        const lotSize = 1000; // 台股每張 1000 股
+        const amount = Math.abs(trade.entryPrice * trade.quantity * lotSize);
 
         // 將時間字符串轉換為可比較的格式
         const entryTime = new Date(trade.entryTime.replace(/\//g, '-')).getTime();
@@ -7631,33 +7622,41 @@ async function analyzeStrategy() {
       if (fi === 0) {
         const capitalMode = document.querySelector('input[name="capital-mode"]:checked').value;
         if (capitalMode === 'auto') {
-          // 優先用進出場時間計算最大同時持有金額
-          const fullTradeData = trades.fullData || [];
-          let maxPool = calculateMaxPoolCapital(trades, fullTradeData);
-
-          // 如果自動計算失敗或太小，檢查是否有明確的進場金額列
-          if (!maxPool || maxPool < 1000000) {
-            // 嘗試從交易中推算最大持倉（進場價格 × 數量的最大值）
-            const amounts = fullTradeData
-              .filter(t => t.entryPrice && t.quantity)
-              .map(t => Math.abs(t.entryPrice * t.quantity));
-
-            if (amounts.length > 0) {
-              // 簡單方案：用最大單筆交易的金額作為參考
-              const maxSingleAmount = Math.max(...amounts);
-              // 假設最大同時持有是最大單筆的 50 倍（多個交易同時進行）
-              maxPool = maxSingleAmount * 10 || null;
-            }
-          }
-
-          if (maxPool) {
-            initialCapital = maxPool;
-            document.getElementById('auto-capital-display').textContent = `$${maxPool.toLocaleString('en-US', {maximumFractionDigits:0})}`;
+          // xlsx 每日報表：有 maxInvested → IC 固定 1,000,000（元大回測預設）
+          if (trades.maxInvested > 0) {
+            initialCapital = 1_000_000;
+            document.getElementById('auto-capital-display').textContent =
+              `IC $1,000,000 ／ 最大投入 $${trades.maxInvested.toLocaleString('en-US', {maximumFractionDigits:0})}`;
           } else {
-            // fallback：無完整交易數據，用最大 |pnl| * 50
-            const maxAbsPnl = Math.max(...trades.map(t => Math.abs(t.pnl)));
-            initialCapital = maxAbsPnl * 50 || 100000;
-            document.getElementById('auto-capital-display').textContent = `$${initialCapital.toLocaleString('en-US', {maximumFractionDigits:0})} (估算)`;
+            // CSV：優先用進出場時間計算最大同時持有金額
+            const fullTradeData = trades.fullData || [];
+            let maxPool = calculateMaxPoolCapital(trades, fullTradeData);
+
+            if (!maxPool || maxPool < 1000000) {
+              const amounts = fullTradeData
+                .filter(t => t.entryPrice && t.quantity)
+                .map(t => Math.abs(t.entryPrice * t.quantity));
+              if (amounts.length > 0) {
+                maxPool = Math.max(...amounts) * 10 || null;
+              }
+            }
+
+            if (maxPool) {
+              initialCapital = maxPool;
+              document.getElementById('auto-capital-display').textContent = `$${maxPool.toLocaleString('en-US', {maximumFractionDigits:0})}`;
+            } else {
+              // 無法自動推算，要求手動輸入
+              document.querySelector('input[name="capital-mode"][value="custom"]').checked = true;
+              toggleCapitalMode();
+              const totalAbsPnl = trades.reduce((s, t) => s + Math.abs(t.pnl), 0);
+              const suggestedCapital = Math.round(totalAbsPnl * 20 / 1000000) * 1000000 || 1000000;
+              document.getElementById('initial-capital').value = suggestedCapital;
+              initialCapital = suggestedCapital;
+              document.getElementById('btn-analyze').disabled = false;
+              document.getElementById('btn-analyze').textContent = '🔍 分析（計算 KPI）';
+              alert(`⚠️ CSV 中沒有進場價格／數量欄位，無法自動計算初始資金。\n\n請在「自定義」欄位輸入您的實際初始資金後再按「分析」。\n\n粗估建議：$${suggestedCapital.toLocaleString()}（請自行調整為實際金額）`);
+              return;
+            }
           }
         } else {
           initialCapital = parseFloat(document.getElementById('initial-capital').value) || 100000;
@@ -7665,8 +7664,10 @@ async function analyzeStrategy() {
       }
 
       const name = files.length === 1 ? strategyName : file.name.replace(/\.[^.]+$/, '');
-      const kpis = calculateKPIs(trades, initialCapital);
-      multiStrategyResults.push({ name, trades, kpis });
+      // xlsx 每日報表有最大投入金額，用它當 MDD 分母；否則用 initialCapital
+      const maxInvested = trades.maxInvested || null;
+      const kpis = calculateKPIs(trades, initialCapital, maxInvested);
+      multiStrategyResults.push({ name, trades, kpis, maxInvested });
     }
 
     if (!multiStrategyResults.length) {
@@ -7802,7 +7803,7 @@ function drawKPIChart(kpis) {
   });
 }
 
-function calculateKPIs(trades, initialCapital) {
+function calculateKPIs(trades, initialCapital, maxInvested) {
   const navCurve = [initialCapital];
   let currentNav = initialCapital;
   let profitableTrades = 0;
@@ -7826,9 +7827,9 @@ function calculateKPIs(trades, initialCapital) {
       lossCount++;
     }
 
-    // 計算交易報酬率
-    if (prevNav > 0) {
-      returns.push((currentNav - prevNav) / prevNav);
+    // 計算交易報酬率（用初始資金為分母，避免小資金放大效應）
+    if (initialCapital > 0) {
+      returns.push(pnl / initialCapital);
     }
   }
 
@@ -7837,11 +7838,11 @@ function calculateKPIs(trades, initialCapital) {
 
   // 用實際日期區間計算年數（fallback 用交易筆數 / 252）
   let years = 0.01;
-  const sortedTrades = [...trades].filter(t => t.exitDate || t.entryDate)
-    .sort((a,b) => new Date(a.exitDate||a.entryDate) - new Date(b.exitDate||b.entryDate));
+  const sortedTrades = [...trades].filter(t => t.date || t.exitDate || t.entryDate)
+    .sort((a,b) => new Date(a.date||a.exitDate||a.entryDate) - new Date(b.date||b.exitDate||b.entryDate));
   if (sortedTrades.length >= 2) {
-    const t0 = new Date(sortedTrades[0].exitDate || sortedTrades[0].entryDate);
-    const t1 = new Date(sortedTrades[sortedTrades.length-1].exitDate || sortedTrades[sortedTrades.length-1].entryDate);
+    const t0 = new Date(sortedTrades[0].date || sortedTrades[0].exitDate || sortedTrades[0].entryDate);
+    const t1 = new Date(sortedTrades[sortedTrades.length-1].date || sortedTrades[sortedTrades.length-1].exitDate || sortedTrades[sortedTrades.length-1].entryDate);
     const daysDiff = (t1 - t0) / (1000 * 60 * 60 * 24);
     years = Math.max(daysDiff / 365, 0.01);
   } else {
@@ -7856,31 +7857,79 @@ function calculateKPIs(trades, initialCapital) {
   const stdDev = Math.sqrt(variance);
   const volatility = stdDev * Math.sqrt(252);
 
-  const sharpe = volatility > 0 ? (meanRet * 252) / (stdDev * Math.sqrt(252)) : 0;
+  // 無風險利率：台股 2%，換算為每筆交易基準（年化 / 252）
+  const riskFreeAnnual = 0.02;
+  const riskFreePerTrade = riskFreeAnnual / 252;
+  const annualizedReturn = meanRet * 252;
+  const annualizedStd = stdDev * Math.sqrt(252);
+  const sharpe = annualizedStd > 0 ? (annualizedReturn - riskFreeAnnual) / annualizedStd : 0;
 
-  // MDD - 最大區間虧損金額 / 初始資金
-  let maxProfit = navCurve[0];  // 最高淨值
-  let maxDrawdownAmount = 0;     // 最大虧損金額
+  // MDD：NAV curve 從 initialCapital 開始，分母永遠是正的 peak NAV
+  // MDD 計算：
+  //   xlsx 每日報表 → 分母 = maxInvested（最大投入金額，對齊 Python 規範）
+  //   CSV 交易記錄  → 分母 = peak NAV（含本金）
+  const navForMdd = [initialCapital];
+  for (const t of trades) navForMdd.push(navForMdd[navForMdd.length - 1] + (t.pnl || 0));
 
-  for (let nav of navCurve) {
-    if (nav > maxProfit) {
-      maxProfit = nav;
+  let mdd = 0;
+  let mddAmt = 0;
+  let mddPeakDate = null;
+  let mddTroughDate = null;
+  let mddRecoveryDate = null;
+  let mddPeakVal = initialCapital;
+  let mddTroughVal = initialCapital;
+
+  if (navForMdd.length > 1) {
+    let peakNav = navForMdd[0];
+    let troughIdx = 0;
+    let minDd = 0;
+
+    for (let i = 1; i < navForMdd.length; i++) {
+      if (navForMdd[i] > peakNav) peakNav = navForMdd[i];
+
+      // 分母：有 maxInvested 用它（元大 xlsx），否則用 peakNav
+      const denominator = maxInvested > 0 ? maxInvested : peakNav;
+      const ddPct = denominator > 0 ? (navForMdd[i] - peakNav) / denominator : 0;
+      if (ddPct < minDd) {
+        minDd = ddPct;
+        troughIdx = i;
+      }
     }
-    const drawdownAmount = maxProfit - nav;  // 從最高點的虧損金額
-    if (drawdownAmount > maxDrawdownAmount) {
-      maxDrawdownAmount = drawdownAmount;
+
+    mdd = minDd;
+
+    // 谷值前的真實峰值
+    let actualPeakNav = navForMdd[0];
+    let actualPeakIdx = 0;
+    for (let i = 1; i <= troughIdx; i++) {
+      if (navForMdd[i] > actualPeakNav) {
+        actualPeakNav = navForMdd[i];
+        actualPeakIdx = i;
+      }
+    }
+    mddAmt        = navForMdd[troughIdx] - actualPeakNav;
+    mddPeakVal    = actualPeakNav;
+    mddTroughVal  = navForMdd[troughIdx];
+    mddPeakDate   = actualPeakIdx > 0 ? (trades[actualPeakIdx - 1]?.date || null) : null;
+    mddTroughDate = troughIdx     > 0 ? (trades[troughIdx - 1]?.date     || null) : null;
+
+    // 恢復日期：谷值後 NAV 首次 ≥ 峰值
+    for (let i = troughIdx + 1; i < navForMdd.length; i++) {
+      if (navForMdd[i] >= actualPeakNav) {
+        mddRecoveryDate = trades[i - 1]?.date || null;
+        break;
+      }
     }
   }
 
-  const mdd = maxProfit > 0 ? -maxDrawdownAmount / maxProfit : 0;  // 從高點跌幅（負數）
   const calmar = mdd < 0 ? cagr / Math.abs(mdd) : 0;
 
-  // Sortino
-  const downReturns = returns.filter(r => r < 0);
+  // Sortino：下行標準差分母用全部交易數 N（依規範）
+  const downReturns = returns.filter(r => r < riskFreePerTrade);
   const downVariance = downReturns.length > 0 ?
-    downReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / returns.length : 0;
+    downReturns.reduce((sum, r) => sum + Math.pow(r - riskFreePerTrade, 2), 0) / returns.length : 0;
   const downStdDev = Math.sqrt(downVariance);
-  const sortino = downStdDev > 0 ? (meanRet * 252) / (downStdDev * Math.sqrt(252)) : 0;
+  const sortino = downStdDev > 0 ? (annualizedReturn - riskFreeAnnual) / (downStdDev * Math.sqrt(252)) : 0;
 
   // Win Rate
   const winRate = trades.length > 0 ? profitableTrades / trades.length : 0;
@@ -7934,9 +7983,11 @@ function calculateKPIs(trades, initialCapital) {
     (returns.length * Math.pow(stdDev, 4))) - 3 : 0;
 
   return {
-    cagr, volatility, sharpe, mdd, calmar, sortino, winRate, profitableTrades,
+    cagr, volatility, sharpe, mdd, mddAmt, mddPeakDate, mddTroughDate, mddRecoveryDate,
+    mddPeakVal, mddTroughVal,
+    calmar, sortino, winRate, profitableTrades,
     lossCount,
-    kelly: Math.max(0, Math.min(kelly, 1)), // Kelly 值限制在 0-1
+    kelly: Math.max(0, Math.min(kelly, 1)),
     ev, avgWin, avgLoss, profitFactor, netProfit, avgWinPct, avgLossPct,
     var95, cvar95, skewness, kurtosis, tailRight, tailLeft
   };
@@ -9551,7 +9602,11 @@ async function uploadStrategyCSV() {
       exit_price:  +(t.exitPrice  || t.exit_price  || 0),
       qty:         +(t.quantity   || t.qty          || 1),
       profit:      +(t.pnl        || 0),
-      return_rate: +(t.returnPct  || (initCap > 0 ? t.pnl / initCap : 0)) / 100,
+      // returnPct 來自 CSV「報酬率」欄（已是 %，例如 2.84）
+      // sampleRows 渲染時會再 *100，所以這裡存成小數（÷100）
+      return_rate: t.returnPct != null
+        ? t.returnPct / 100
+        : (initCap > 0 ? t.pnl / initCap : 0),
     }));
     const preview = {
       total_trades:   trades.length,
@@ -9572,9 +9627,9 @@ async function uploadStrategyCSV() {
     // 產生月度 NAV 供 displayCharts 使用
     const navByMonth = {};
     let cumPnl = 0;
-    [...trades].sort((a,b)=>new Date(a.exitDate||a.entryDate)-new Date(b.exitDate||b.entryDate))
+    [...trades].sort((a,b)=>new Date(a.date||a.exitDate||a.entryDate)-new Date(b.date||b.exitDate||b.entryDate))
       .forEach(t => {
-        const dt = t.exitDate || t.entryDate || '';
+        const dt = t.date || t.exitDate || t.entryDate || '';
         const ym = dt.slice(0,7);
         if (ym) { cumPnl += t.pnl; navByMonth[ym] = (navByMonth[ym]||0) + t.pnl; }
       });
