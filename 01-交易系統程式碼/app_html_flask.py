@@ -2841,6 +2841,81 @@ def api_save_strategy_version():
         logger.error(f"保存策略版本失敗: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/api/strategy-center/library')
+def api_strategy_library():
+    """策略中心 - 獲取所有已上架策略版本"""
+    try:
+        from sheets_utils import read_strategy_performance
+
+        # 讀取策略版本數據
+        df = read_strategy_performance()
+        if df is None or df.empty:
+            return jsonify({'status': 'success', 'data': []})
+
+        # 轉換為 JSON 格式
+        strategies = []
+        for _, row in df.iterrows():
+            # 計算五維評分（與前端 _slScore5() 一致）
+            cagr = float(row.get('cagr_pct', 0)) if row.get('cagr_pct') is not None else 0
+            mdd = float(row.get('mdd_pct', 0)) if row.get('mdd_pct') is not None else 0
+            sharpe = float(row.get('sharpe', 0)) if row.get('sharpe') is not None else 0
+            win_rate = float(row.get('win_rate_pct', 0)) if row.get('win_rate_pct') is not None else 0
+            ev = float(row.get('ev_pct', 0)) if row.get('ev_pct') is not None else 0
+            trades = float(row.get('trades', 0)) if row.get('trades') is not None else 0
+
+            # 五維評分
+            profitability = min(max((cagr / 30) * 100, 0), 100)
+            risk_mgmt = min(max((1 - abs(mdd) / 30) * 100, 0), 100)
+            risk_reward = min(max((sharpe / 3) * 100, 0), 100)
+            win_expect = min(max((win_rate / 80) * 100 * 0.6 + (ev / 5) * 100 * 0.4, 0), 100)
+            liquidity = min(max((trades / 150) * 100, 0), 100)
+
+            # 綜合評分（加權平均）
+            weights = [0.25, 0.20, 0.20, 0.20, 0.15]
+            composite_score = (
+                profitability * weights[0] +
+                risk_mgmt * weights[1] +
+                risk_reward * weights[2] +
+                win_expect * weights[3] +
+                liquidity * weights[4]
+            )
+
+            # 推斷狀態（根據上傳日期或交易數量）
+            status = '上架中'  # 預設狀態
+
+            # 組建策略卡數據（匹配 MOCK_LIBRARY 結構）
+            strategy = {
+                'name': row.get('strategy_name', '未命名策略'),
+                'strategy_name': row.get('strategy_name', '未命名策略'),
+                'status': status,
+                'type': '',  # 無法從數據推斷，前端可顯示空
+                'broker': '',  # 無法從數據推斷
+                'currency': 'TWD',  # 預設台幣
+                'version': row.get('version', 'v1.0'),
+                'cagr_pct': cagr,
+                'sharpe': sharpe,
+                'sortino': float(row.get('sortino', 0)) if row.get('sortino') is not None else 0,
+                'mdd_pct': mdd,
+                'calmar': float(row.get('calmar', 0)) if row.get('calmar') is not None else 0,
+                'win_rate_pct': win_rate,
+                'trades': trades,
+                'kelly_half': float(row.get('kelly_half', 0)) if row.get('kelly_half') is not None else 0,
+                'ev_pct': ev,
+                'score': round(composite_score, 1),
+                'regime_fit': {},  # 無法從數據推斷
+                'notes': f"版本 {row.get('version', 'v1.0')} - {row.get('run_date', '未知日期')} 上傳"
+            }
+            strategies.append(strategy)
+
+        return jsonify({
+            'status': 'success',
+            'data': strategies
+        })
+
+    except Exception as e:
+        logger.error(f"獲取策略庫失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/health')
 def api_health():
     return jsonify({'status': 'ok', 'time': datetime.now().isoformat()})

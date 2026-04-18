@@ -665,6 +665,13 @@ def read_portfolio_daily() -> pd.DataFrame:
 # strategy_performance 版本管理
 # ======================
 
+def read_strategy_performance() -> pd.DataFrame:
+    """讀取 strategy_performance 版本記錄"""
+    def _read():
+        sheet = get_sheet("strategy_performance")
+        return _worksheet_to_df(sheet) if sheet else pd.DataFrame()
+    return _read_with_fallback("strategy_performance", _read)
+
 def append_strategy_version(version_dict: Dict[str, Any]) -> bool:
     """添加策略版本到 strategy_performance"""
     try:
