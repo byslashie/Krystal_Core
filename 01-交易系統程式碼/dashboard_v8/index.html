@@ -4062,25 +4062,39 @@ async function loadBrokerPositions() {
         return `${sign}NT$${display}`;
       };
 
-      // 計算初始資本（用於百分比計算）
-      const initialCapital = parseFloat(document.getElementById('initial-capital')?.value || 100000);
+      // 計算實際投入資金（成本基礎）
+      const calcCostBasis = (positions) => {
+        return positions.reduce((sum, p) => {
+          const avgCost = parseFloat(p.avgCost || 0);
+          const qty = Math.abs(parseFloat(p.position || 0));
+          return sum + (avgCost * qty);
+        }, 0);
+      };
+
+      // 各券商實際投入成本（台幣）
+      const ibCostTWD = calcCostBasis(ibPos) * USD_TWD; // USD → TWD
+      const schwabCostTWD = calcCostBasis(schwabPos) * USD_TWD; // USD → TWD
+      const ytCostTWD = calcCostBasis(yuanta); // 已是台幣
 
       // 計算未實現損益（全部轉為台幣）
       const rawIbPnL = sumPnL(ibPos) * USD_TWD; // USD → TWD
       const rawSchwabPnL = sumPnL(schwabPos) * USD_TWD; // USD → TWD
       const rawYtPnL = yuantaPnL; // 已是台幣
 
+      // 計算百分比（使用實際投入資金）
+      const calcPct = (pnl, costBasis) => costBasis > 0 ? (pnl / costBasis * 100).toFixed(2) : '0.00';
+
       // 顯示未實現損益 + 百分比
       setEl('p1-ib-upnl', formatPnL(rawIbPnL, 'TWD'), rawIbPnL>=0?'green':'red');
-      document.getElementById('p1-ib-upnl-pct').textContent = `${(rawIbPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-ib-upnl-pct').textContent = `${calcPct(rawIbPnL, ibCostTWD)}%`;
       document.getElementById('p1-ib-upnl-pct').className = `mini-stat-pct ${rawIbPnL>=0?'green':'red'}`;
 
       setEl('p1-yt-upnl', formatPnL(rawYtPnL, 'TWD'), rawYtPnL>=0?'green':'red');
-      document.getElementById('p1-yt-upnl-pct').textContent = `${(rawYtPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-yt-upnl-pct').textContent = `${calcPct(rawYtPnL, ytCostTWD)}%`;
       document.getElementById('p1-yt-upnl-pct').className = `mini-stat-pct ${rawYtPnL>=0?'green':'red'}`;
 
       setEl('p1-schwab-upnl', formatPnL(rawSchwabPnL, 'TWD'), rawSchwabPnL>=0?'green':'red');
-      document.getElementById('p1-schwab-upnl-pct').textContent = `${(rawSchwabPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-schwab-upnl-pct').textContent = `${calcPct(rawSchwabPnL, schwabCostTWD)}%`;
       document.getElementById('p1-schwab-upnl-pct').className = `mini-stat-pct ${rawSchwabPnL>=0?'green':'red'}`;
 
       // 從 API 獲取已實現損益（從 trades 表）
@@ -4097,15 +4111,15 @@ async function loadBrokerPositions() {
               const schwabRealized = ((d.schwab_realized || [])[lastIdx] || 0) * USD_TWD; // USD → TWD
 
               setEl('p1-ib-rpnl', formatPnL(ibRealized, 'TWD'), ibRealized>=0?'green':'red');
-              document.getElementById('p1-ib-rpnl-pct').textContent = `${(ibRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-ib-rpnl-pct').textContent = `${calcPct(ibRealized, ibCostTWD)}%`;
               document.getElementById('p1-ib-rpnl-pct').className = `mini-stat-pct ${ibRealized>=0?'green':'red'}`;
 
               setEl('p1-yt-rpnl', formatPnL(ytRealized, 'TWD'), ytRealized>=0?'green':'red');
-              document.getElementById('p1-yt-rpnl-pct').textContent = `${(ytRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-yt-rpnl-pct').textContent = `${calcPct(ytRealized, ytCostTWD)}%`;
               document.getElementById('p1-yt-rpnl-pct').className = `mini-stat-pct ${ytRealized>=0?'green':'red'}`;
 
               setEl('p1-schwab-rpnl', formatPnL(schwabRealized, 'TWD'), schwabRealized>=0?'green':'red');
-              document.getElementById('p1-schwab-rpnl-pct').textContent = `${(schwabRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-schwab-rpnl-pct').textContent = `${calcPct(schwabRealized, schwabCostTWD)}%`;
               document.getElementById('p1-schwab-rpnl-pct').className = `mini-stat-pct ${schwabRealized>=0?'green':'red'}`;
             }
           }
