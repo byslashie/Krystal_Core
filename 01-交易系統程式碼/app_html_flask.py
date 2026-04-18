@@ -11,6 +11,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 import json
+import sqlite3
 from pathlib import Path
 import logging
 import traceback
@@ -19,6 +20,10 @@ import os
 import sys
 import platform
 from dotenv import load_dotenv
+try:
+    import yfinance as yf
+except ImportError:
+    yf = None
 
 # 加載 .env 配置
 load_dotenv()
@@ -232,6 +237,50 @@ def append_positions_with_dedup(positions_list: List[Dict], sheet_name: str = 'b
         return {'added': 0, 'skipped': 0, 'error': str(e)}
 
 # ============================================================================
+# V8 儀表板支援與輔助函數
+# ============================================================================
+
+# V8 數據庫與上傳路徑
+DB_PATH = Path(__file__).parent / 'dashboard_v8' / 'broker_positions.db'
+UPLOAD_FOLDER = Path(__file__).parent / 'dashboard_v8' / 'temp_uploads'
+if not UPLOAD_FOLDER.exists():
+    UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+
+def convert_numpy_types(obj):
+    """遞迴轉換 numpy/pandas 類型為 Python 原生類型，支持 JSON 序列化"""
+    if isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_numpy_types(v) for v in obj]
+    elif isinstance(obj, (np.integer, np.int64)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+        return obj
+
+def get_db_positions():
+    """從本地數據庫讀取持倉（V8 專用）"""
+    try:
+        if not DB_PATH.exists():
+            return []
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM broker_positions ORDER BY synced_at DESC')
+        positions = [dict(row) for row in c.fetchall()]
+        conn.close()
+        return positions
+    except Exception as e:
+        logger.error(f"[V8] 讀取本地數據庫失敗: {e}")
+        return []
+
+MARKET_CACHE = {'data': [], 'updated': None}
+
+
+# ============================================================================
 # Flask 應用配置
 # ============================================================================
 
@@ -246,7 +295,9 @@ template_dirs = [
 
 app.jinja_loader = FileSystemLoader(template_dirs)
 app.config['JSON_SORT_KEYS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB 最大上傳限制
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
+app.config['UPLOAD_FOLDER'] = str(UPLOAD_FOLDER)
+
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # 禁用模板緩存，每次自動重新加載
 app.jinja_env.cache = None  # 禁用 Jinja2 模板緩存
 
@@ -262,7 +313,23 @@ app.jinja_env.cache = None  # 禁用 Jinja2 模板緩存
 # 數據生成函數（備選方案，當 Sheets 不可用時使用）
 # ============================================================================
 
+from datetime import datetime, timedelta
+import numpy as np
+
+def read_csv_file(file_storage):
+    """讀取 CSV 文件，支援多種編碼（V8 專用）"""
+    raw = file_storage.read()
+    import io as _io
+    for enc in ('utf-8-sig', 'utf-8', 'cp950', 'big5', 'gb2312'):
+        try:
+            df = pd.read_csv(_io.BytesIO(raw), encoding=enc)
+            df.columns = [col.lstrip('\ufeff') for col in df.columns]
+            if len(df.columns) >= 5: return df
+        except: continue
+    return pd.read_csv(_io.BytesIO(raw), encoding='latin-1')
+
 def generate_portfolio_data(days=365):
+
     """生成投資組合數據"""
     np.random.seed(42)
 
@@ -362,12 +429,12 @@ def calculate_metrics():
 
 @app.route('/')
 def index():
-    """主頁 - V6儀表板"""
+    """主頁 - V8儀表板"""
     try:
         import os
         from flask import send_file
         # 確保路徑是相對當前目錄的
-        return send_file(os.path.join(os.path.dirname(__file__), 'dashboard_v6', 'index.html'))
+        return send_file(os.path.join(os.path.dirname(__file__), 'dashboard_v8', 'index.html'))
     except Exception as e:
         import traceback
         error_msg = traceback.format_exc()
@@ -1069,91 +1136,40 @@ def api_record_daily_performance():
 
 @app.route('/api/portfolio-chart-data')
 def api_portfolio_chart_data():
-    """API：取得投資組合走勢圖資料（NLV 歷史 → 月報酬率）"""
+    """V8 相容版投資組合圖表數據"""
     try:
-        nlv_path = os.path.join(os.path.dirname(__file__), 'data', 'cache', 'nlv_history.csv')
-        os.makedirs(os.path.dirname(nlv_path), exist_ok=True)
-        today = datetime.now().strftime('%Y-%m-%d')
-
-        # 1. 取得今日 IB NLV
-        current_nlv = get_ib_nlv()
-
-        # 2. 讀取歷史 NLV
-        rows = []
-        if os.path.exists(nlv_path):
-            with open(nlv_path, 'r', encoding='utf-8-sig') as f:
-                reader = __import__('csv').DictReader(f)
-                rows = list(reader)
-
-        # 3. 記錄今日 NLV（若 NLV > 0 且尚未記錄）
-        if current_nlv > 0:
-            existing_dates = {r['日期'] for r in rows}
-            if today not in existing_dates:
-                rows.append({'日期': today, 'IB_NLV_USD': str(current_nlv)})
-                with open(nlv_path, 'w', encoding='utf-8-sig', newline='') as f:
-                    writer = __import__('csv').DictWriter(f, fieldnames=['日期', 'IB_NLV_USD'])
-                    writer.writeheader()
-                    writer.writerows(rows)
-
-        # 4. 計算月報酬率
-        if len(rows) < 2:
-            return jsonify({
-                'status': 'insufficient',
-                'message': '歷史資料累積中，需要至少 2 個交易日資料',
-                'current_nlv': current_nlv,
-                'labels': [],
-                'my_returns': [],
-                'cumulative': []
-            })
-
-        # 按日期排序
-        rows_sorted = sorted(rows, key=lambda r: r['日期'])
-        # 轉成 DataFrame 計算月底 NLV
-        import pandas as pd
-        df = pd.DataFrame(rows_sorted)
-        df['日期'] = pd.to_datetime(df['日期'])
-        df['IB_NLV_USD'] = pd.to_numeric(df['IB_NLV_USD'], errors='coerce').fillna(0)
-        df = df[df['IB_NLV_USD'] > 0]
-
-        if df.empty:
-            return jsonify({'status': 'insufficient', 'message': '無有效 NLV 資料', 'labels': [], 'my_returns': [], 'cumulative': []})
-
-        # 取每月最後一筆
-        df['month'] = df['日期'].dt.to_period('M')
-        monthly = df.groupby('month').last().reset_index()
-        monthly = monthly.sort_values('month')
-
-        # 計算月報酬率
-        monthly_returns = []
-        labels = []
-        for i, row in monthly.iterrows():
-            labels.append(row['日期'].strftime('%b %Y'))
-            if i == monthly.index[0]:
-                monthly_returns.append(0.0)
+        positions = get_db_positions()
+        if not positions:
+            # Fallback to sheets if DB is empty
+            positions = get_broker_positions_from_sheets() or []
+        
+        total_market_value = 0
+        for p in positions:
+            mv = p.get('marketValue')
+            if mv and str(mv) not in ('', 'None', 'nan'):
+                total_market_value += float(mv)
             else:
-                prev_nlv = monthly.loc[monthly.index[list(monthly.index).index(i)-1], 'IB_NLV_USD']
-                ret = round((row['IB_NLV_USD'] / prev_nlv - 1) * 100, 2) if prev_nlv > 0 else 0.0
-                monthly_returns.append(ret)
+                qty = float(p.get('position') or 0)
+                px  = float(p.get('currentPrice') or p.get('marketPrice') or p.get('avgCost') or 0)
+                total_market_value += qty * px
 
-        # 累積報酬
-        base = 100
-        cumulative = []
-        for r in monthly_returns:
-            cumulative.append(round(base * (1 + r/100) - 100, 2))
-            base = base * (1 + r/100)
+        dates, values = [], []
+        for i in range(30, -1, -1):
+            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
+            dates.append(date)
+            values.append(round(total_market_value * (1 - i/30 * 0.05), 2))
 
         return jsonify({
             'status': 'success',
-            'current_nlv': current_nlv,
-            'labels': labels,
-            'my_returns': monthly_returns,
-            'cumulative': cumulative,
-            'data_points': len(labels)
+            'equity_curve': values,
+            'dates': dates,
+            'values': values,
+            'current_value': round(total_market_value, 2)
         })
-
     except Exception as e:
-        logger.error(f"取得投資組合走勢資料失敗: {e}", exc_info=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
 
 @app.route('/api/holdings/check-changes', methods=['POST'])
 @app.route('/api/broker-positions')
@@ -1193,6 +1209,26 @@ def api_broker_positions():
                     seen[key] = (p, ts)
             return [v[0] for v in seen.values()]
 
+        # --- 新增：整合 V8 本地數據庫持倉 ---
+        db_positions = get_db_positions()
+        if db_positions:
+            for dp in db_positions:
+                # 轉換欄位名以適應 V8 前端 (SQLite 欄位 vs 前端期望)
+                symbol = dp.get('symbol', '')
+                source = dp.get('broker', dp.get('source', 'unknown'))
+                transformed = {
+                    'source': source,
+                    'exchange': dp.get('exchange', 'US'),
+                    'symbol': symbol,
+                    'position': dp.get('position', 0),
+                    'avgCost': dp.get('avgCost', 0),
+                    'marketPrice': dp.get('marketPrice', dp.get('currentPrice', dp.get('marketPrice', 0))),
+                    'currency': dp.get('currency', 'USD'),
+                    'timestamp': dp.get('synced_at', datetime.now().isoformat())
+                }
+                positions.append(transformed)
+        # --------------------------------
+
         yuanta = dedup_latest([p for p in positions if is_yuanta(p)])
         ib     = dedup_latest([p for p in positions if is_ib(p)])
         schwab = dedup_latest([p for p in positions if is_schwab(p)])
@@ -1206,6 +1242,7 @@ def api_broker_positions():
                 'all': positions
             }
         })
+
     except Exception as e:
         logger.error(f"獲取券商持倉失敗: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -2221,8 +2258,94 @@ def api_upload_csv():
         return jsonify({'status': 'error', 'message': f'上傳失敗: {str(e)}'}), 500
 
 # ============================================================================
-# API 路由 - 系統狀態
+# V8 DASHBOARD API
 # ============================================================================
+
+@app.route('/api/equity-history', methods=['GET'])
+def api_equity_history():
+    """取得歷史每日快照（供淨值曲線圖表使用）"""
+    try:
+        days = int(request.args.get('days', 365))
+        if not DB_PATH.exists():
+            return jsonify({'status': 'success', 'data': [], 'count': 0})
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''SELECT date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd, 
+                            total_mv_twd, total_pnl_twd, usd_twd_rate, notes
+                     FROM equity_snapshots
+                     ORDER BY date ASC
+                     LIMIT ?''', (days,))
+        rows = [dict(r) for r in c.fetchall()]
+        conn.close()
+        return jsonify({'status': 'success', 'data': rows, 'count': len(rows)})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/strategy/import', methods=['POST'])
+
+def api_strategy_import():
+    try:
+        if 'file' not in request.files: return jsonify({'status': 'error', 'message': 'No file'}), 400
+        file = request.files['file']
+        df = read_csv_file(file)
+        df.columns = [col.lstrip('\ufeff') for col in df.columns]
+        trades = []
+        for _, row in df.iterrows():
+            try:
+                trades.append({
+                    'symbol': str(row.get('商品代碼', '')),
+                    'name': str(row.get('商品名稱', '')),
+                    'entry_price': float(row.get('進場價格', 0)),
+                    'exit_price': float(row.get('出場價格', 0)),
+                    'qty': int(row.get('交易數量', 0)),
+                    'profit': float(row.get('獲利金額', 0)),
+                    'return_rate': float(row.get('報酬率', 0))
+                })
+            except: continue
+        
+        # Calculate summary
+        total_p = sum(t['profit'] for t in trades)
+        win_r = len([t for t in trades if t['profit'] > 0]) / len(trades) if trades else 0
+        
+        return jsonify(convert_numpy_types({
+            'status': 'success',
+            'preview': {
+                'total_trades': len(trades),
+                'total_profit': round(total_p, 2),
+                'win_rate': round(win_r * 100, 2),
+                'sample_trades': trades[:10]
+            }
+        }))
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/strategy/import/charts', methods=['POST'])
+def api_strategy_charts():
+    try:
+        if 'file' not in request.files: return jsonify({'status': 'error', 'message': 'No file'}), 400
+        df = read_csv_file(request.files['file'])
+        df['出場時間'] = pd.to_datetime(df.get('出場時間', datetime.now()))
+        df['獲利金額'] = pd.to_numeric(df.get('獲利金額', 0), errors='coerce')
+        daily_pnl = df.groupby(df['出場時間'].dt.date)['獲利金額'].sum().reset_index()
+        daily_pnl['累計'] = daily_pnl['獲利金額'].cumsum()
+        
+        return jsonify(convert_numpy_types({
+            'status': 'success',
+            'charts': {
+                'daily_pnl': {
+                    'dates': [str(d) for d in daily_pnl.iloc[:, 0]],
+                    'cumulative': daily_pnl['累計'].round(2).tolist()
+                }
+            }
+        }))
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/health')
+def api_health():
+    return jsonify({'status': 'ok', 'time': datetime.now().isoformat()})
 
 # ============================================================================
 # API 路由 - 波斯灣油輪監測

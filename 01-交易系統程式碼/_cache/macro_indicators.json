@@ -34,26 +34,26 @@
       "analysis": "無法取得實質利率數據。"
     },
     "vix": {
-      "value": "23.9",
-      "label": "23.9 → 恐慌",
-      "signal": "23.9 — 輕微恐慌",
-      "signal_color": "var(--yellow)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--text-muted)",
       "source": "Yahoo Finance: ^VIX",
-      "analysis": "當前 23.9，市場不確定性上升，進入輕度警戒。投資人開始對沖風險，期權保護需求增加。建議檢視持倉集中度，高 Beta 部位可適度減少。"
+      "analysis": "無法取得 VIX 數據。"
     },
     "usd_twd": {
-      "value": "31.98",
-      "label": "31.98 TWD/USD",
-      "signal": "31.98 — 台幣偏強",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: TWD=X",
-      "analysis": "當前 31.98，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
+      "analysis": "無法取得台幣匯率數據。"
     },
     "jp_usdjpy": {
-      "value": "159.6",
-      "label": "159.6 JPY/USD",
-      "signal": "159.6 — 日圓偏弱",
-      "signal_color": "var(--yellow)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--green)",
       "source": "Yahoo Finance: JPY=X"
     },
     "jp_cpi": {
@@ -71,10 +71,10 @@
       "source": "FRED: IRSTCB01JPM156N"
     },
     "eu_eurusd": {
-      "value": "1.1522",
-      "label": "1.1522 EUR/USD",
-      "signal": "1.1522 — 歐元偏強",
-      "signal_color": "var(--green)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: EURUSD=X"
     },
     "eu_cpi": {
@@ -92,9 +92,9 @@
       "source": "FRED: ECBMLFR (ECB主要再融資利率)"
     },
     "cn_usdcny": {
-      "value": "6.8819",
-      "label": "6.8819 CNY/USD",
-      "signal": "6.8819 — 人民幣穩定",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X"
     },
@@ -106,10 +106,10 @@
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1511",
-      "label": "1511 KRW/USD",
-      "signal": "1511 — 韓元偏弱",
-      "signal_color": "var(--yellow)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--green)",
       "source": "Yahoo Finance: KRW=X"
     },
     "kr_cpi": {
@@ -121,79 +121,79 @@
     },
     "ism_pmi": {
       "value": "49.0",
-      "label": "49.0",
+      "label": "49.0 → 收縮",
       "signal": "49.0 — 製造業輕微收縮",
       "signal_color": "var(--yellow)",
-      "source": "Google Sheets: macro_manual (2026-02)",
+      "source": "手動更新 (2026-02)",
       "is_manual": true
     },
     "tw_pmi": {
       "value": "51.8",
-      "label": "51.8",
+      "label": "51.8 → 擴張",
       "signal": "51.8 — 連續擴張",
       "signal_color": "var(--green)",
-      "source": "Google Sheets: macro_manual (2026-03)",
+      "source": "手動更新 (2026-03)",
       "is_manual": true
     },
     "tw_light": {
       "value": "🔴 紅燈",
-      "label": "🔴 紅燈",
+      "label": "39分 → 紅燈",
       "signal": "39分 — 景氣熱絡",
       "signal_color": "var(--red)",
-      "source": "Google Sheets: macro_manual (2026-03)",
+      "source": "手動更新 (2026-03)",
       "is_manual": true
     },
     "tw_rate": {
       "value": "2.00%",
-      "label": "2.00%",
+      "label": "2.00% → 維持不變",
       "signal": "2.00% — 央行維持利率",
       "signal_color": "var(--yellow)",
-      "source": "Google Sheets: macro_manual (2025-12)",
+      "source": "手動更新 (2025-12)",
       "is_manual": true
     },
     "jp_tankan": {
       "value": "14",
-      "label": "14",
+      "label": "14 → 正面",
       "signal": "14 — 製造業樂觀",
       "signal_color": "var(--green)",
-      "source": "Google Sheets: macro_manual (2025-Q4)",
+      "source": "手動更新 (2025-Q4)",
       "is_manual": true
     },
     "eu_pmi": {
       "value": "48.9",
-      "label": "48.9",
+      "label": "48.9 → 收縮",
       "signal": "48.9 — 製造業仍收縮",
       "signal_color": "var(--red)",
-      "source": "Google Sheets: macro_manual (2026-03)",
+      "source": "手動更新 (2026-03)",
       "is_manual": true
     },
     "cn_pmi": {
       "value": "50.2",
-      "label": "50.2",
+      "label": "50.2 → 擴張",
       "signal": "50.2 — 官方 PMI 持穩",
       "signal_color": "var(--green)",
-      "source": "Google Sheets: macro_manual (2026-03)",
+      "source": "手動更新 (2026-03)",
       "is_manual": true
     },
     "cn_rate": {
       "value": "3.10%",
-      "label": "3.10%",
+      "label": "3.10% → 寬鬆",
       "signal": "3.10% — PBoC 維持",
       "signal_color": "var(--yellow)",
-      "source": "Google Sheets: macro_manual (2026-02)",
+      "source": "手動更新 (2026-02)",
       "is_manual": true
     },
     "kr_export": {
       "value": "+5.3%",
-      "label": "+5.3%",
+      "label": "+5.3% → 成長",
       "signal": "+5.3% YoY — 出口回溫",
       "signal_color": "var(--green)",
-      "source": "Google Sheets: macro_manual (2026-03)",
+      "source": "手動更新 (2026-03)",
       "is_manual": true
     }
   },
   "errors": [
-    "FRED 初始化失敗: No module named 'fredapi'"
+    "FRED_API_KEY 未設定，跳過 FRED 指標"
   ],
-  "cached_at": "2026-04-05T12:14:17.557653"
+  "cached_at": "2026-04-18T11:53:16.385623"
 }

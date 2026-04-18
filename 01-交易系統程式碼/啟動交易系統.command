@@ -5,7 +5,7 @@
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_PYTHON="$PROJECT_DIR/.venv_macib64/bin/python"
 APP_FILE="$PROJECT_DIR/app_html_flask.py"
-PORT=5501
+PORT=8889
 LOG_FILE="$PROJECT_DIR/logs/startup.log"
 
 echo "=========================================="
