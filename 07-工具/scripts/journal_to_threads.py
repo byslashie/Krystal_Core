@@ -40,7 +40,7 @@ class JournalToThreads:
         # 設定路徑
         self.project_root = Path(__file__).parent.parent.parent
         self.journal_dir = self.project_root / "04-個人特質與規劃" / "日記"
-        self.output_dir = self.project_root / "04-個人特質與規劃" / "11-自媒體專區" / "Threads" / "drafts"
+        self.output_dir = self.project_root / "11-自媒體專區" / "Threads" / "drafts"
 
         # 確認目錄存在
         self.output_dir.mkdir(parents=True, exist_ok=True)

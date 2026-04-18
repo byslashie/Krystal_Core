@@ -63,7 +63,7 @@ python 07-工具/scripts/journal_to_threads.py --batch weekly
 
 腳本會生成檔案在：
 ```
-04-個人特質與規劃/11-自媒體專區/Threads/drafts/YYYY-MM-DD_threads_drafts.md
+11-自媒體專區/Threads/drafts/YYYY-MM-DD_threads_drafts.md
 ```
 
 打開檔案，你會看到：
