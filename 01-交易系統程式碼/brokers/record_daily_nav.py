@@ -200,6 +200,12 @@ def main() -> None:
     print(f"  合計  市值={y_mv+i_mv:.0f}  未實現={y_pnl+i_pnl:.0f}")
     print("完成")
 
+    try:
+        from modules.notifier import notify_daily_nav
+        notify_daily_nav(today_str, y_mv, y_pnl, i_mv, i_pnl)
+    except Exception as e:
+        print(f"[notifier] {e}")
+
 
 if __name__ == "__main__":
     main()

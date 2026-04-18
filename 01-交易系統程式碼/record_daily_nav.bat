@@ -3,14 +3,14 @@
 :: 使用 64-bit Python
 
 set PROJECT_ROOT=h:\我的雲端硬碟\Krystal_完整系統\01-交易系統程式碼
-set PYTHON64=python
+set PYTHON64=C:\Users\jrenw\AppData\Local\Programs\Python\Python311\python.exe
 set NAV_SCRIPT=%PROJECT_ROOT%\brokers\record_daily_nav.py
 set LOG_DIR=%PROJECT_ROOT%\logs
 
+cd /d "%PROJECT_ROOT%"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set dt=%%a
-set TIMESTAMP=%dt:~0,8%_%dt:~8,6%
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set TIMESTAMP=%%i
 set LOGFILE=%LOG_DIR%\daily_nav_%TIMESTAMP%.log
 
 echo [%date% %time%] 開始記錄每日市值... >> "%LOGFILE%"

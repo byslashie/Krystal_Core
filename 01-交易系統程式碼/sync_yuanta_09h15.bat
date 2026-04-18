@@ -4,17 +4,25 @@
 
 set PROJECT_ROOT=h:\我的雲端硬碟\Krystal_完整系統\01-交易系統程式碼
 set PYTHON32=%PROJECT_ROOT%\.venv_yuanta32_new\Scripts\python.exe
-set PYTHON64=python
+set PYTHON64=C:\Users\jrenw\AppData\Local\Programs\Python\Python311\python.exe
 set SYNC_SCRIPT=%PROJECT_ROOT%\brokers\sync_yuanta_positions.py
 set UPLOAD_SCRIPT=%PROJECT_ROOT%\brokers\upload_yuanta_to_sheets.py
 set LOG_DIR=%PROJECT_ROOT%\logs
 
+:: 切換工作目錄
+cd /d "%PROJECT_ROOT%"
+
 :: 建立 logs 目錄
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-:: 產生時間戳
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set dt=%%a
-set TIMESTAMP=%dt:~0,8%_%dt:~8,6%
+:: 確認 64-bit Python 存在
+if not exist "%PYTHON64%" (
+    echo [ERROR] 找不到 64-bit Python：%PYTHON64%
+    exit /b 1
+)
+
+:: 產生時間戳（用 PowerShell 取，比 wmic 穩定）
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set TIMESTAMP=%%i
 set LOGFILE=%LOG_DIR%\yuanta_sync_%TIMESTAMP%.log
 
 echo [%date% %time%] 開始元大庫存同步... >> "%LOGFILE%"
@@ -53,8 +61,9 @@ if %EXITCODE2% == 0 (
     echo [%date% %time%] 全部完成 (RC=0) >> "%LOGFILE%"
     echo [%date% %time%] 同步完成
 ) else (
-    echo [%date% %time%] [Step2] 上傳失敗 RC=%EXITCODE2%（庫存 JSON 已存） >> "%LOGFILE%"
-    echo [%date% %time%] 庫存已存 JSON，上傳失敗 RC=%EXITCODE2%
+    echo [%date% %time%] [Step2] 上傳失敗 RC=%EXITCODE2% >> "%LOGFILE%"
+    echo [%date% %time%] 上傳失敗 RC=%EXITCODE2%
+    "%PYTHON64%" -c "import sys; sys.path.insert(0,'%PROJECT_ROOT%'); from modules.notifier import notify_sync_event; notify_sync_event('元大 Step2 上傳失敗', 'RC=%EXITCODE2%  請查看 log', ok=False)" 2>>"%LOGFILE%"
 )
 
 exit /b %EXITCODE2%

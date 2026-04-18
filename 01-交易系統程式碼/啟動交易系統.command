@@ -3,7 +3,14 @@
 # 雙擊此檔案即可啟動
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VENV_PYTHON="$PROJECT_DIR/.venv_macib64/bin/python"
+# 嘗試使用多個虛擬環境位置
+if [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
+    VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"
+elif [ -f "$PROJECT_DIR/.venv_macib64/bin/python" ]; then
+    VENV_PYTHON="$PROJECT_DIR/.venv_macib64/bin/python"
+else
+    VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"  # 預設值
+fi
 APP_FILE="$PROJECT_DIR/app_html_flask.py"
 PORT=8889
 LOG_FILE="$PROJECT_DIR/logs/startup.log"

@@ -416,6 +416,40 @@ def append_broker_snapshot(snapshot_dict: Dict[str, Any]) -> bool:
         return False
 
 
+def read_broker_positions() -> pd.DataFrame:
+    """
+    從 Google Sheets 讀取 broker_positions（當元大同步失敗時的備份）
+    """
+    try:
+        if DISABLE_SHEETS:
+            logger.warning("⚠️ DISABLE_SHEETS=1，跳過 Google Sheets 讀取")
+            return pd.DataFrame()
+
+        sheet = get_sheet("broker_positions")
+        if sheet is None:
+            logger.warning("⚠️ 找不到 broker_positions sheet")
+            return pd.DataFrame()
+
+        data = sheet.get_all_values()
+        if not data or len(data) < 1:
+            logger.warning("⚠️ broker_positions sheet 為空")
+            return pd.DataFrame()
+
+        # 第一行是 header
+        header = data[0]
+        rows = data[1:]
+
+        df = pd.DataFrame(rows, columns=header)
+        logger.info(f"✅ 從 Google Sheets 讀取 broker_positions：{len(df)} 筆")
+        return df
+    except FileNotFoundError:
+        logger.warning("⚠️ 找不到 credentials.json，無法從 Google Sheets 讀取")
+        return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"❌ 讀取 broker_positions 失敗：{e}")
+        return pd.DataFrame()
+
+
 def overwrite_broker_positions(positions_list: List[Dict[str, Any]]) -> bool:
     """
     根據最新數據覆寫 broker_positions sheet

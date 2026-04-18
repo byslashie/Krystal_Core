@@ -138,6 +138,25 @@ def notify_error(module: str, message: str) -> bool:
 
 
 # ──────────────────────────────────────────────
+# 排程事件通知（Step 1 完成、排程失敗等）
+# ──────────────────────────────────────────────
+
+def notify_sync_event(event: str, detail: str = "", ok: bool = True) -> bool:
+    """
+    排程同步事件通知
+    event: 事件名稱，如 'Step1 snapshot 完成', '排程失敗'
+    detail: 附加資訊
+    ok: True=成功(✅), False=失敗(❌)
+    """
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    emoji = "✅" if ok else "❌"
+    lines = [f"{emoji} **{event}** `{ts}`"]
+    if detail:
+        lines.append(f"```\n{detail}\n```")
+    return _send({"content": "\n".join(lines)})
+
+
+# ──────────────────────────────────────────────
 # 風控告警通知
 # ──────────────────────────────────────────────
 
