@@ -659,3 +659,30 @@ def read_portfolio_daily() -> pd.DataFrame:
         sheet = get_sheet("portfolio_daily")
         return _worksheet_to_df(sheet) if sheet else pd.DataFrame()
     return _read_with_fallback("portfolio_daily", _read)
+
+
+# ======================
+# strategy_performance 版本管理
+# ======================
+
+def append_strategy_version(version_dict: Dict[str, Any]) -> bool:
+    """添加策略版本到 strategy_performance"""
+    try:
+        sheet = get_sheet("strategy_performance")
+        if sheet is None:
+            logger.warning("⚠️ Sheets disabled → skip append_strategy_version")
+            return True
+
+        cols = [
+            "strategy_id", "strategy_name", "version", "run_date", "start_date", "end_date",
+            "cagr_pct", "sharpe", "sortino", "mdd_pct", "calmar", "win_rate_pct",
+            "trades", "avg_profit_pct", "avg_loss_pct", "ev_pct", "kelly_half", "kelly_full",
+            "file_name", "uploaded_at"
+        ]
+        row = [version_dict.get(c, "") for c in cols]
+        sheet.append_row(row, value_input_option="USER_ENTERED")
+        logger.info(f"✅ 策略版本已保存: {version_dict.get('strategy_name')} {version_dict.get('version')}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ 保存策略版本失敗：{e}")
+        return False

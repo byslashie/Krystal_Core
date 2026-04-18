@@ -2792,6 +2792,55 @@ def api_strategy_charts():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/api/strategy/save-version', methods=['POST'])
+def api_save_strategy_version():
+    """保存策略版本到 strategy_performance 表"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No JSON data'}), 400
+
+        # 準備版本數據
+        version_dict = {
+            'strategy_id': data.get('strategy_name', '').replace(' ', '_')[:20],  # 簡單的 ID
+            'strategy_name': data.get('strategy_name', ''),
+            'version': data.get('version', 'v1.0'),
+            'run_date': data.get('run_date', datetime.now().strftime('%Y-%m-%d')),
+            'start_date': data.get('start_date', ''),
+            'end_date': data.get('end_date', ''),
+            'cagr_pct': float(data.get('cagr_pct', 0)),
+            'sharpe': float(data.get('sharpe', 0)),
+            'sortino': float(data.get('sortino', 0)),
+            'mdd_pct': float(data.get('mdd_pct', 0)),
+            'calmar': float(data.get('calmar', 0)),
+            'win_rate_pct': float(data.get('win_rate_pct', 0)),
+            'trades': int(data.get('trades', 0)),
+            'avg_profit_pct': float(data.get('avg_profit_pct', 0)),
+            'avg_loss_pct': float(data.get('avg_loss_pct', 0)),
+            'ev_pct': float(data.get('ev_pct', 0)),
+            'kelly_half': float(data.get('kelly_half', 0)),
+            'kelly_full': float(data.get('kelly_half', 0)) * 2,  # Kelly full = Kelly half * 2
+            'file_name': '',
+            'uploaded_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        # 調用 sheets_utils 保存版本
+        from sheets_utils import append_strategy_version
+        success = append_strategy_version(version_dict)
+
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': f"策略版本已保存: {version_dict['strategy_name']} {version_dict['version']}",
+                'version': version_dict
+            })
+        else:
+            return jsonify({'status': 'error', 'message': '保存到 Sheets 失敗'}), 500
+
+    except Exception as e:
+        logger.error(f"保存策略版本失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/health')
 def api_health():
     return jsonify({'status': 'ok', 'time': datetime.now().isoformat()})

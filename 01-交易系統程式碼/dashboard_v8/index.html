@@ -3003,6 +3003,27 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
           <div id="sv-loading" style="text-align:center;padding:30px;color:var(--text-secondary);">⏳ 載入中...</div>
           <div id="sv-empty" style="display:none;text-align:center;padding:40px;color:var(--text-secondary);">📭 尚無策略版本記錄，請先在「上傳 & 分析」tab 完成策略分析並存檔</div>
 
+          <!-- 新版本保存區 -->
+          <div id="sv-save-section" style="display:none;background:var(--bg-raised);padding:16px;border-radius:10px;border-left:4px solid var(--accent);margin-bottom:20px;">
+            <div class="chart-title" style="font-size:13px;margin-bottom:12px;">📝 保存新版本</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
+              <div>
+                <label style="font-size:11px;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">策略名稱</label>
+                <input id="sv-strategy-name-input" type="text" placeholder="策略名稱" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:12px;" readonly />
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">版本號</label>
+                <input id="sv-version-input" type="text" placeholder="例：v1.0" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:12px;" />
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">初始資金</label>
+                <input id="sv-capital-display" type="text" placeholder="100000" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:12px;" readonly />
+              </div>
+              <button onclick="saveStrategyVersion()" style="padding:8px 16px;background:linear-gradient(135deg,var(--blue-deep),var(--peach-deep));color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:12px;">💾 保存版本</button>
+            </div>
+            <div id="sv-save-status" style="margin-top:8px;font-size:11px;color:var(--text-secondary);"></div>
+          </div>
+
           <!-- 版本篩選 -->
           <div id="sv-filter" style="display:none;margin-bottom:16px;">
             <label style="font-size:12px;color:var(--text-secondary);font-weight:600;">篩選策略：</label>
@@ -8544,6 +8565,97 @@ function goToReviewTab() {
   switchLabTab({target: {classList: {contains: () => false}}, preventDefault: () => {}}, 'sc-versions-tab');
 }
 
+async function saveStrategyVersion() {
+  if (!currentStrategyAnalysis) {
+    alert('⚠️ 請先完成策略分析');
+    return;
+  }
+
+  const versionInput = document.getElementById('sv-version-input');
+  const version = (versionInput?.value || '').trim();
+
+  if (!version) {
+    alert('⚠️ 請輸入版本號（例：v1.0）');
+    versionInput?.focus();
+    return;
+  }
+
+  const statusEl = document.getElementById('sv-save-status');
+  const btn = event.target;
+  btn.disabled = true;
+  if (statusEl) statusEl.textContent = '⏳ 保存中...';
+
+  try {
+    const { strategy_name, kpis, trades, initialCapital } = currentStrategyAnalysis;
+
+    // 計算日期範圍
+    let start_date = null, end_date = null;
+    if (trades && trades.length > 0) {
+      const dates = trades
+        .filter(t => t.date || t.exitDate || t.entryDate)
+        .map(t => new Date(t.date || t.exitDate || t.entryDate))
+        .filter(d => !isNaN(d.getTime()))
+        .sort((a, b) => a - b);
+      if (dates.length > 0) {
+        start_date = dates[0].toISOString().split('T')[0];
+        end_date = dates[dates.length - 1].toISOString().split('T')[0];
+      }
+    }
+
+    const payload = {
+      strategy_name: strategy_name,
+      version: version,
+      cagr_pct: kpis.cagr ? (kpis.cagr * 100) : 0,
+      sharpe: kpis.sharpe || 0,
+      sortino: kpis.sortino || 0,
+      mdd_pct: kpis.mdd ? (kpis.mdd * 100) : 0,
+      calmar: kpis.calmar || 0,
+      win_rate_pct: kpis.winRate ? (kpis.winRate * 100) : 0,
+      trades: trades ? trades.length : 0,
+      avg_profit_pct: kpis.avgProfit ? (kpis.avgProfit / initialCapital * 100) : 0,
+      avg_loss_pct: kpis.avgLoss ? (-kpis.avgLoss / initialCapital * 100) : 0,
+      ev_pct: kpis.ev ? (kpis.ev * 100) : 0,
+      kelly_half: kpis.kelly ? (kpis.kelly * 100) : 0,
+      start_date: start_date || new Date().toISOString().split('T')[0],
+      end_date: end_date || new Date().toISOString().split('T')[0],
+      run_date: new Date().toISOString().split('T')[0],
+      initial_capital: initialCapital || 100000
+    };
+
+    const resp = await fetch(`${API_BASE}/api/strategy/save-version`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await resp.json();
+
+    if (result.status === 'success' || result.success) {
+      if (statusEl) {
+        statusEl.innerHTML = `✅ 版本已保存！版本號：<strong>${version}</strong>`;
+        statusEl.style.color = 'var(--ok)';
+      }
+      versionInput.value = '';
+
+      // 重新載入版本列表
+      setTimeout(() => {
+        const versionFilter = document.getElementById('sv-strategy-filter');
+        if (versionFilter) loadStrategyVersions();
+      }, 1000);
+    } else {
+      throw new Error(result.message || '保存失敗');
+    }
+  } catch (e) {
+    if (statusEl) {
+      statusEl.innerHTML = `❌ 保存失敗：${e.message}`;
+      statusEl.style.color = 'var(--err)';
+    }
+    console.error('保存版本失敗:', e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 async function confirmStrategyImport() {
   if (!currentStrategyAnalysis) {
     alert('❌ 缺少策略分析數據');
@@ -9666,6 +9778,9 @@ async function uploadStrategyCSV() {
         total_trades: trades.length,
       }
     };
+
+    // 重置蒙地卡羅結果（新上傳時清空舊的模擬）
+    mcResults = null;
 
     // ── 6. 呼叫後端 FinLab 分析 ─────────────────────────────────
     statusEl.innerHTML = '⏳ 後端分析中...';
@@ -12212,6 +12327,19 @@ async function loadStrategyVersions() {
   const filter = document.getElementById('sv-filter');
   const tableWrap = document.getElementById('sv-table-wrap');
   const compare = document.getElementById('sv-compare');
+  const saveSection = document.getElementById('sv-save-section');
+
+  // 初始化版本保存區
+  if (currentStrategyAnalysis && currentStrategyAnalysis.strategy_name) {
+    if (saveSection) saveSection.style.display = 'block';
+    const nameInput = document.getElementById('sv-strategy-name-input');
+    const capitalDisplay = document.getElementById('sv-capital-display');
+    if (nameInput) nameInput.value = currentStrategyAnalysis.strategy_name;
+    if (capitalDisplay) capitalDisplay.value = (currentStrategyAnalysis.initialCapital || 100000).toLocaleString();
+  } else {
+    if (saveSection) saveSection.style.display = 'none';
+  }
+
   if (loading) loading.style.display = 'block';
   if (empty) empty.style.display = 'none';
   if (filter) filter.style.display = 'none';
