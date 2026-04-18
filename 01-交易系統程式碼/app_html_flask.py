@@ -788,37 +788,43 @@ def get_stock_price(symbol: str, market: str) -> Optional[float]:
     return None
 
 def calculate_daily_performance() -> Dict[str, float]:
-    """計算今日未實現 + 已實現損益（分開 IB/USD 與 Yuanta/TWD）"""
+    """計算今日未實現 + 已實現損益（分開 IB/USD、Yuanta/TWD、Schwab/USD）"""
     try:
-        # 1. 從 broker_positions 計算未實現損益（分開幣種）
+        # 1. 從 broker_positions 計算未實現損益（分開券商和幣種）
         positions = get_broker_positions_from_sheets()
         ib_unrealized = 0.0
         yuanta_unrealized = 0.0
+        schwab_unrealized = 0.0
 
         for pos in (positions or []):
             symbol = pos.get('symbol', '')
             exchange = pos.get('exchange', '')
             qty = float(pos.get('position', 0))
             avg_cost = float(pos.get('avgCost', 0))
-            broker = pos.get('券商', pos.get('broker', '')).upper()
+            broker = pos.get('券商', pos.get('source', pos.get('broker', ''))).upper()
             market_price = get_stock_price(symbol, exchange)
 
             if market_price and avg_cost > 0:
                 pl = (market_price - avg_cost) * qty
                 if broker in ['IB', 'IBKR']:
                     ib_unrealized += pl
-                elif broker in ['YUANTA']:
+                elif broker in ['YUANTA', '元大']:
                     yuanta_unrealized += pl
+                elif broker in ['SCHWAB', 'CHARLES SCHWAB']:
+                    schwab_unrealized += pl
 
-        # 2. 從 trades 取得已實現損益（分開幣別）
+        # 2. 從 trades 取得已實現損益（分開券商和幣別）
         ib_realized = 0.0
         yuanta_realized = 0.0
+        schwab_realized = 0.0
         trades_df = read_sheet_data_with_cache('trades')
-        if trades_df is not None and 'pnl' in trades_df.columns:
-            pnl_numeric = pd.to_numeric(trades_df['pnl'], errors='coerce').fillna(0)
-            # 檢查是否有 '券商' 欄位，沒有則使用 'broker'
+        if trades_df is not None and '損益' in trades_df.columns:
+            pnl_numeric = pd.to_numeric(trades_df['損益'], errors='coerce').fillna(0)
+            # 檢查是否有 '券商' 欄位，沒有則使用 'source' 或 'broker'
             if '券商' in trades_df.columns:
                 broker_col = trades_df['券商']
+            elif 'source' in trades_df.columns:
+                broker_col = trades_df['source']
             elif 'broker' in trades_df.columns:
                 broker_col = trades_df['broker']
             else:
@@ -827,25 +833,31 @@ def calculate_daily_performance() -> Dict[str, float]:
             # 按券商分類
             broker_upper = broker_col.str.upper() if hasattr(broker_col, 'str') else pd.Series([str(x).upper() for x in broker_col])
             ib_mask = broker_upper.isin(['IB', 'IBKR'])
-            yuanta_mask = broker_upper.isin(['YUANTA'])
+            yuanta_mask = broker_upper.isin(['YUANTA', '元大'])
+            schwab_mask = broker_upper.isin(['SCHWAB', 'CHARLES SCHWAB'])
+
             ib_realized = float(pnl_numeric[ib_mask].sum()) if ib_mask.any() else 0.0
             yuanta_realized = float(pnl_numeric[yuanta_mask].sum()) if yuanta_mask.any() else 0.0
+            schwab_realized = float(pnl_numeric[schwab_mask].sum()) if schwab_mask.any() else 0.0
 
         return {
             'ib_unrealized': round(ib_unrealized, 2),
             'ib_realized': round(ib_realized, 2),
             'yuanta_unrealized': round(yuanta_unrealized, 2),
             'yuanta_realized': round(yuanta_realized, 2),
+            'schwab_unrealized': round(schwab_unrealized, 2),
+            'schwab_realized': round(schwab_realized, 2),
             # 向後相容
-            'unrealized_pl': round(ib_unrealized + yuanta_unrealized, 2),
-            'realized_pl': round(ib_realized + yuanta_realized, 2),
-            'total_pl': round(ib_unrealized + yuanta_unrealized + ib_realized + yuanta_realized, 2)
+            'unrealized_pl': round(ib_unrealized + yuanta_unrealized + schwab_unrealized, 2),
+            'realized_pl': round(ib_realized + yuanta_realized + schwab_realized, 2),
+            'total_pl': round(ib_unrealized + yuanta_unrealized + schwab_unrealized + ib_realized + yuanta_realized + schwab_realized, 2)
         }
     except Exception as e:
         logger.error(f"計算每日損益失敗: {e}")
         return {
             'ib_unrealized': 0.0, 'ib_realized': 0.0,
             'yuanta_unrealized': 0.0, 'yuanta_realized': 0.0,
+            'schwab_unrealized': 0.0, 'schwab_realized': 0.0,
             'unrealized_pl': 0.0, 'realized_pl': 0.0, 'total_pl': 0.0
         }
 
@@ -887,27 +899,27 @@ def record_daily_performance() -> Dict:
                 if line.startswith(today):
                     return {'status': 'skipped', 'message': f'{today} 已記錄'}
 
-        # 4. 寫入本地 CSV（含 IB_NLV 欄位）
-        total_unrealized = perf['ib_unrealized'] + perf['yuanta_unrealized']
-        total_realized = perf['ib_realized'] + perf['yuanta_realized']
+        # 4. 寫入本地 CSV（含 IB_NLV 欄位和 Schwab）
+        total_unrealized = perf['ib_unrealized'] + perf['yuanta_unrealized'] + perf['schwab_unrealized']
+        total_realized = perf['ib_realized'] + perf['yuanta_realized'] + perf['schwab_realized']
 
         if os.path.exists(cache_path):
             with open(cache_path, 'a', encoding='utf-8-sig') as f:
-                f.write(f"{today},{ib_nlv},{perf['ib_unrealized']},{perf['ib_realized']},{perf['yuanta_unrealized']},{perf['yuanta_realized']},{total_unrealized},{total_realized},{timestamp}\n")
+                f.write(f"{today},{ib_nlv},{perf['ib_unrealized']},{perf['ib_realized']},{perf['yuanta_unrealized']},{perf['yuanta_realized']},{perf['schwab_unrealized']},{perf['schwab_realized']},{total_unrealized},{total_realized},{timestamp}\n")
         else:
             with open(cache_path, 'w', encoding='utf-8-sig') as f:
-                f.write("日期,IB_NLV_USD,IB未實現USD,IB已實現USD,Yuanta未實現TWD,Yuanta已實現TWD,總未實現,總已實現,記錄時間\n")
-                f.write(f"{today},{ib_nlv},{perf['ib_unrealized']},{perf['ib_realized']},{perf['yuanta_unrealized']},{perf['yuanta_realized']},{total_unrealized},{total_realized},{timestamp}\n")
+                f.write("日期,IB_NLV_USD,IB未實現USD,IB已實現USD,Yuanta未實現TWD,Yuanta已實現TWD,Schwab未實現USD,Schwab已實現USD,總未實現,總已實現,記錄時間\n")
+                f.write(f"{today},{ib_nlv},{perf['ib_unrealized']},{perf['ib_realized']},{perf['yuanta_unrealized']},{perf['yuanta_realized']},{perf['schwab_unrealized']},{perf['schwab_realized']},{total_unrealized},{total_realized},{timestamp}\n")
 
-        logger.info(f"✅ 記錄完成：{today} (IB_NLV=${ib_nlv}, IB未實現=${perf['ib_unrealized']}, Yuanta未實現=¥{perf['yuanta_unrealized']})")
+        logger.info(f"✅ 記錄完成：{today} (IB_NLV=${ib_nlv}, IB未實現=${perf['ib_unrealized']}, Yuanta未實現=¥{perf['yuanta_unrealized']}, Schwab未實現=${perf['schwab_unrealized']})")
 
         # 5. 嘗試寫入 Google Sheets（非阻塞式）
         try:
             sheet = get_sheet('daily_performance')
             if sheet is not None:
-                row = [today, ib_nlv, perf['ib_unrealized'], perf['ib_realized'], perf['yuanta_unrealized'], perf['yuanta_realized'], total_unrealized, total_realized, timestamp]
+                row = [today, ib_nlv, perf['ib_unrealized'], perf['ib_realized'], perf['yuanta_unrealized'], perf['yuanta_realized'], perf['schwab_unrealized'], perf['schwab_realized'], total_unrealized, total_realized, timestamp]
                 sheet.append_row(row)
-                logger.info(f"✅ 已同步至 Google Sheets（含 IB NLV=${ib_nlv}）")
+                logger.info(f"✅ 已同步至 Google Sheets（含 IB NLV=${ib_nlv}、Schwab=${perf['schwab_unrealized']}）")
         except Exception as sheets_err:
             logger.warning(f"寫入 Google Sheets 失敗（非阻塞）: {sheets_err}")
 
@@ -1048,6 +1060,8 @@ def api_daily_performance():
             'ib_realized': [],
             'yuanta_unrealized': [],
             'yuanta_realized': [],
+            'schwab_unrealized': [],
+            'schwab_realized': [],
             'total_unrealized': [],
             'total_realized': []
         }
@@ -1063,7 +1077,7 @@ def api_daily_performance():
                         df = df.sort_values('日期')
 
                         # 轉換為數值
-                        for col in ['IB未實現USD', 'IB已實現USD', 'Yuanta未實現TWD', 'Yuanta已實現TWD', '總未實現', '總已實現']:
+                        for col in ['IB未實現USD', 'IB已實現USD', 'Yuanta未實現TWD', 'Yuanta已實現TWD', 'Schwab未實現USD', 'Schwab已實現USD', '總未實現', '總已實現']:
                             if col in df.columns:
                                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
@@ -1073,6 +1087,8 @@ def api_daily_performance():
                             'ib_realized': df['IB已實現USD'].round(2).tolist(),
                             'yuanta_unrealized': df['Yuanta未實現TWD'].round(2).tolist(),
                             'yuanta_realized': df['Yuanta已實現TWD'].round(2).tolist(),
+                            'schwab_unrealized': df['Schwab未實現USD'].round(2).tolist() if 'Schwab未實現USD' in df.columns else [],
+                            'schwab_realized': df['Schwab已實現USD'].round(2).tolist() if 'Schwab已實現USD' in df.columns else [],
                             'total_unrealized': df['總未實現'].round(2).tolist() if '總未實現' in df.columns else [],
                             'total_realized': df['總已實現'].round(2).tolist() if '總已實現' in df.columns else []
                         }})
@@ -1104,7 +1120,7 @@ def api_daily_performance():
 
             # 新格式欄位
             if 'IB未實現USD' in df.columns:
-                for col in ['IB未實現USD', 'IB已實現USD', 'Yuanta未實現TWD', 'Yuanta已實現TWD', '總未實現', '總已實現']:
+                for col in ['IB未實現USD', 'IB已實現USD', 'Yuanta未實現TWD', 'Yuanta已實現TWD', 'Schwab未實現USD', 'Schwab已實現USD', '總未實現', '總已實現']:
                     if col in df.columns:
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
@@ -1114,6 +1130,8 @@ def api_daily_performance():
                     'ib_realized': df['IB已實現USD'].round(2).tolist(),
                     'yuanta_unrealized': df['Yuanta未實現TWD'].round(2).tolist(),
                     'yuanta_realized': df['Yuanta已實現TWD'].round(2).tolist(),
+                    'schwab_unrealized': df['Schwab未實現USD'].round(2).tolist() if 'Schwab未實現USD' in df.columns else [],
+                    'schwab_realized': df['Schwab已實現USD'].round(2).tolist() if 'Schwab已實現USD' in df.columns else [],
                     'total_unrealized': df['總未實現'].round(2).tolist() if '總未實現' in df.columns else [],
                     'total_realized': df['總已實現'].round(2).tolist() if '總已實現' in df.columns else []
                 }})
@@ -1201,9 +1219,12 @@ def api_broker_positions():
                     str(p.get('券商', '')).strip().upper() in ('SCHWAB', 'CHARLES SCHWAB'))
 
         def dedup_latest(lst):
+            """去重持倉：按 symbol + broker 組合，保留最新的"""
             seen = {}
             for p in lst:
-                key = str(p.get('symbol', ''))
+                symbol = str(p.get('symbol', ''))
+                broker = str(p.get('source', p.get('券商', '')))
+                key = f"{symbol}_{broker}"  # 按 symbol + broker 組合去重
                 ts = str(p.get('時間', p.get('timestamp', '')))
                 if key not in seen or ts > seen[key][1]:
                     seen[key] = (p, ts)
@@ -1212,21 +1233,30 @@ def api_broker_positions():
         # --- 新增：整合 V8 本地數據庫持倉 ---
         db_positions = get_db_positions()
         if db_positions:
+            # 先建立已有持倉的 key 集合，避免重複
+            existing_keys = set()
+            for p in positions:
+                key = f"{p.get('symbol', '')}_{p.get('source', p.get('券商', ''))}"
+                existing_keys.add(key)
+
             for dp in db_positions:
-                # 轉換欄位名以適應 V8 前端 (SQLite 欄位 vs 前端期望)
                 symbol = dp.get('symbol', '')
                 source = dp.get('broker', dp.get('source', 'unknown'))
-                transformed = {
-                    'source': source,
-                    'exchange': dp.get('exchange', 'US'),
-                    'symbol': symbol,
-                    'position': dp.get('position', 0),
-                    'avgCost': dp.get('avgCost', 0),
-                    'marketPrice': dp.get('marketPrice', dp.get('currentPrice', dp.get('marketPrice', 0))),
-                    'currency': dp.get('currency', 'USD'),
-                    'timestamp': dp.get('synced_at', datetime.now().isoformat())
-                }
-                positions.append(transformed)
+                key = f"{symbol}_{source}"
+
+                # 只添加不重複的持倉
+                if key not in existing_keys:
+                    transformed = {
+                        'source': source,
+                        'exchange': dp.get('exchange', 'US'),
+                        'symbol': symbol,
+                        'position': dp.get('position', 0),
+                        'avgCost': dp.get('avgCost', 0),
+                        'marketPrice': dp.get('marketPrice', dp.get('currentPrice', dp.get('marketPrice', 0))),
+                        'currency': dp.get('currency', 'USD'),
+                        'timestamp': dp.get('synced_at', datetime.now().isoformat())
+                    }
+                    positions.append(transformed)
         # --------------------------------
 
         yuanta = dedup_latest([p for p in positions if is_yuanta(p)])
@@ -1564,10 +1594,25 @@ def api_sync_yuanta():
                 'output': output[-500:] if output else '執行完成'  # 最後 500 字
             })
         else:
-            logger.error(f"❌ Yuanta 同步失敗: {output}")
+            logger.error(f"❌ Yuanta 同步失敗，嘗試從 Google Sheets 讀取備份...")
+            # Fallback: 嘗試從 Google Sheets 讀取備份數據
+            try:
+                from sheets_utils import read_broker_positions
+                df = read_broker_positions()
+                if not df.empty:
+                    logger.info(f"✅ 已從 Google Sheets 讀取 {len(df)} 筆持倉備份")
+                    return jsonify({
+                        'status': 'fallback',
+                        'message': '⚠️ Yuanta 同步失敗，已切換至 Google Sheets 備份資料',
+                        'data': df.to_dict('records'),
+                        'error': output[-300:] if output else '未知錯誤'
+                    }), 200
+            except Exception as e:
+                logger.error(f"❌ Google Sheets 備份讀取也失敗: {e}")
+
             return jsonify({
                 'status': 'error',
-                'message': '❌ 同步失敗',
+                'message': '❌ 同步失敗，無備份數據可用',
                 'error': output[-500:] if output else '未知錯誤'
             }), 500
 
