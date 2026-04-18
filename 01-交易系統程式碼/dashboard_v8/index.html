@@ -9667,10 +9667,83 @@ async function uploadStrategyCSV() {
       }
     };
 
-    // ── 6. 五維分析面板 ─────────────────────────────────────────
+    // ── 6. 呼叫後端 FinLab 分析 ─────────────────────────────────
+    statusEl.innerHTML = '⏳ 後端分析中...';
+    statusEl.style.color = 'var(--text-secondary)';
+
+    let backendAnalysis = null;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('initial_capital', initCap);
+      const resp = await fetch(`${API_BASE}/api/strategy/analyze`, {
+        method: 'POST',
+        body: fd,
+        signal: AbortSignal.timeout(5000)
+      });
+      if (resp.ok) {
+        const result = await resp.json();
+        if (result.status === 'success') {
+          backendAnalysis = result.data;
+          const dims = result.data || {};
+
+          // D1 獲利能力 (後端返回百分比，需要轉換為小數)
+          if (dims.profitability) {
+            kpis.cagr = (dims.profitability.cagr || 0) / 100;
+            kpis.annualReturn = (dims.profitability.annual_return || 0) / 100;
+            kpis.monthlyReturn = (dims.profitability.monthly_return || 0) / 100;
+            kpis.netProfit = dims.profitability.net_profit || kpis.netProfit;
+            kpis.years = dims.profitability.years || 1;
+          }
+
+          // D2 抗風險 (後端返回百分比，需要轉換為小數)
+          if (dims.risk_management) {
+            kpis.mdd = (dims.risk_management.mdd || 0) / 100;
+            kpis.var95 = (dims.risk_management.var_95 || 0) / 100;
+            kpis.cvar95 = (dims.risk_management.cvar_95 || 0) / 100;
+            kpis.downsideDev = dims.risk_management.downside_dev || 0;
+          }
+
+          // D3 風險報酬比
+          if (dims.risk_reward) {
+            kpis.sharpe = dims.risk_reward.sharpe || kpis.sharpe;
+            kpis.sortino = dims.risk_reward.sortino || 0;
+            kpis.calmar = dims.risk_reward.calmar || 0;
+            kpis.volatility = dims.risk_reward.volatility || 0;
+          }
+
+          // D4 勝率期望值 (後端返回百分比，需要轉換為小數)
+          if (dims.win_expectancy) {
+            kpis.winRate = (dims.win_expectancy.win_rate || 0) / 100;
+            kpis.avgWin = dims.win_expectancy.avg_profit || 0;
+            kpis.avgLoss = dims.win_expectancy.avg_loss || 0;
+            kpis.kelly = (dims.win_expectancy.kelly_half || 0) / 100;
+            kpis.ev = dims.win_expectancy.expectancy || 0;
+          }
+
+          // D5 交易流動性
+          if (dims.liquidity) {
+            kpis.totalTrades = dims.liquidity.num_trades || trades.length;
+            kpis.avgHoldingDays = dims.liquidity.avg_holding_days || 0;
+            kpis.tradingDays = dims.liquidity.num_trades || 0;
+          }
+
+          statusEl.innerHTML = '✅ FinLab 分析完成';
+          statusEl.style.color = 'var(--ok)';
+          setTimeout(() => statusEl.style.display = 'none', 2000);
+        }
+      }
+    } catch (e) {
+      console.warn('後端 FinLab 分析失敗', e);
+      statusEl.innerHTML = '⚠️ 後端分析失敗，使用前端計算結果';
+      statusEl.style.color = 'var(--yellow)';
+      setTimeout(() => statusEl.style.display = 'none', 3000);
+    }
+
+    // ── 7. 五維分析面板 ─────────────────────────────────────────
     renderFinlab5D(kpis, trades);
 
-    // ── 6. 前端產生 preview + charts（不需要後端）──────────────
+    // ── 8. 前端產生 preview + charts（不需要後端）──────────────
     const winTrades  = trades.filter(t => t.pnl > 0);
     const lossTrades = trades.filter(t => t.pnl <= 0);
     const totalReturn = initCap > 0 ? kpis.netProfit / initCap * 100 : 0;
@@ -9725,7 +9798,7 @@ async function uploadStrategyCSV() {
     currentChartsData = frontendCharts;
     displayCharts(frontendCharts);
 
-    // ── 7. 嘗試後端（有 Flask 就用，沒有不影響）─────────────────
+    // ── 9. 嘗試後端（有 Flask 就用，沒有不影響）─────────────────
     try {
       const fd = new FormData(); fd.append('file', file);
       const resp = await fetch(`${API_BASE}/api/strategy/import`, { method:'POST', body:fd, signal: AbortSignal.timeout(4000) });

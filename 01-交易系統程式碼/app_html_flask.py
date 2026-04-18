@@ -97,6 +97,382 @@ def get_daily_nav_from_sheets():
         logger.warning(f"讀取 NAV 失敗: {e}")
     return None
 
+# ============================================================================
+# FinLab 五維分析計算引擎
+# ============================================================================
+
+class FinLabAnalyzer:
+    """FinLab 風格的五維回測分析計算器"""
+
+    def __init__(self, trades_df: pd.DataFrame, initial_capital: float = 100000):
+        """
+        初始化分析器
+
+        Args:
+            trades_df: 交易記錄DataFrame，需包含以下欄位:
+                      日期, 進場價, 出場價, 數量, 損益 (或 損益%)
+            initial_capital: 初始資本
+        """
+        self.trades = trades_df.copy() if trades_df is not None else pd.DataFrame()
+        self.initial_capital = initial_capital
+        self.results = {}
+
+    def calculate_all(self) -> Dict[str, Any]:
+        """計算所有五維指標"""
+        if self.trades.empty:
+            return self._get_empty_results()
+
+        try:
+            # 1. 獲利能力指標
+            self.results['profitability'] = self._calc_profitability()
+
+            # 2. 抗風險能力指標
+            self.results['risk_management'] = self._calc_risk_management()
+
+            # 3. 風險報酬比指標
+            self.results['risk_reward'] = self._calc_risk_reward()
+
+            # 4. 勝率期望值指標
+            self.results['win_expectancy'] = self._calc_win_expectancy()
+
+            # 5. 交易流動性指標
+            self.results['liquidity'] = self._calc_liquidity()
+
+            # 計算綜合評分
+            self.results['composite_score'] = self._calc_composite_score()
+
+            return self.results
+        except Exception as e:
+            logger.error(f"FinLab 計算失敗: {e}")
+            return self._get_empty_results()
+
+    def _get_empty_results(self) -> Dict:
+        """返回空結果模板"""
+        return {
+            'profitability': {},
+            'risk_management': {},
+            'risk_reward': {},
+            'win_expectancy': {},
+            'liquidity': {},
+            'composite_score': 0,
+            'dimension_scores': [0, 0, 0, 0, 0]
+        }
+
+    def _calc_profitability(self) -> Dict:
+        """D1: 獲利能力"""
+        try:
+            # 淨利
+            if '損益' in self.trades.columns:
+                pnl_col = '損益'
+            elif '損益金額' in self.trades.columns:
+                pnl_col = '損益金額'
+            else:
+                return {}
+
+            net_profit = pd.to_numeric(self.trades[pnl_col], errors='coerce').sum()
+
+            # 交易數量
+            num_trades = len(self.trades)
+
+            # 回測天數（假設 日期 列存在）
+            if '日期' in self.trades.columns:
+                dates = pd.to_datetime(self.trades['日期'], errors='coerce')
+                dates = dates.dropna()
+                if len(dates) > 0:
+                    days = (dates.max() - dates.min()).days + 1
+                    years = days / 365.25
+                else:
+                    years = 1
+            else:
+                years = 1
+
+            # CAGR (複合年增長率)
+            total_return = net_profit / self.initial_capital if self.initial_capital > 0 else 0
+            cagr = (1 + total_return) ** (1 / years) - 1 if years > 0 else 0
+
+            # 年化報酬率
+            annual_return = total_return / years if years > 0 else 0
+
+            # 月均報酬
+            months = years * 12
+            monthly_return = annual_return / 12 if months > 0 else 0
+
+            return {
+                'cagr': round(cagr * 100, 2),
+                'annual_return': round(annual_return * 100, 2),
+                'monthly_return': round(monthly_return * 100, 4),
+                'net_profit': round(net_profit, 2),
+                'num_trades': num_trades,
+                'years': round(years, 2),
+                'score': self._score_profitability(cagr)
+            }
+        except Exception as e:
+            logger.warning(f"計算獲利能力失敗: {e}")
+            return {}
+
+    def _calc_risk_management(self) -> Dict:
+        """D2: 抗風險能力"""
+        try:
+            # 損益數列
+            if '損益' in self.trades.columns:
+                pnl_col = '損益'
+            elif '損益金額' in self.trades.columns:
+                pnl_col = '損益金額'
+            else:
+                return {}
+
+            pnl_series = pd.to_numeric(self.trades[pnl_col], errors='coerce')
+
+            # 累積損益
+            cumsum_pnl = pnl_series.cumsum()
+
+            # MDD (最大回撤)
+            running_max = cumsum_pnl.expanding().max()
+            drawdown = (cumsum_pnl - running_max) / (running_max + self.initial_capital)
+            mdd = drawdown.min()
+
+            # 平均回撤幅度
+            avg_drawdown = drawdown[drawdown < 0].mean() if (drawdown < 0).any() else 0
+
+            # VaR @ 95%
+            var_95 = np.percentile(pnl_series, 5)
+
+            # CVaR @ 95%
+            cvar_95 = pnl_series[pnl_series <= var_95].mean() if len(pnl_series[pnl_series <= var_95]) > 0 else var_95
+
+            # Downside Deviation
+            downside_dev = pnl_series[pnl_series < 0].std() if len(pnl_series[pnl_series < 0]) > 0 else 0
+
+            return {
+                'mdd': round(mdd * 100, 2),
+                'avg_drawdown': round(avg_drawdown * 100, 2),
+                'var_95': round(var_95, 2),
+                'cvar_95': round(cvar_95, 2),
+                'downside_dev': round(downside_dev, 2),
+                'score': self._score_risk_management(mdd)
+            }
+        except Exception as e:
+            logger.warning(f"計算抗風險能力失敗: {e}")
+            return {}
+
+    def _calc_risk_reward(self) -> Dict:
+        """D3: 風險報酬比"""
+        try:
+            if '損益' in self.trades.columns:
+                pnl_col = '損益'
+            elif '損益金額' in self.trades.columns:
+                pnl_col = '損益金額'
+            else:
+                return {}
+
+            pnl_series = pd.to_numeric(self.trades[pnl_col], errors='coerce')
+
+            # Sharpe Ratio (假設無風險率 2%)
+            mean_return = pnl_series.mean()
+            std_return = pnl_series.std()
+            rf_rate = self.initial_capital * 0.02 / 252
+            sharpe = (mean_return - rf_rate) / std_return if std_return > 0 else 0
+
+            # Sortino Ratio (只考慮下行波動)
+            downside_returns = pnl_series[pnl_series < 0]
+            downside_std = downside_returns.std() if len(downside_returns) > 0 else 0
+            sortino = (mean_return - rf_rate) / downside_std if downside_std > 0 else 0
+
+            # Calmar Ratio
+            cumsum_pnl = pnl_series.cumsum()
+            running_max = cumsum_pnl.expanding().max()
+            drawdown = (cumsum_pnl - running_max) / (running_max + self.initial_capital)
+            mdd = drawdown.min() if len(drawdown) > 0 else 0
+
+            annual_return = pnl_series.sum() / self.initial_capital / (len(pnl_series) / 252)
+            calmar = annual_return / abs(mdd) if mdd != 0 else 0
+
+            # 波動率
+            volatility = std_return
+
+            return {
+                'sharpe': round(sharpe, 2),
+                'sortino': round(sortino, 2),
+                'calmar': round(calmar, 2),
+                'volatility': round(volatility, 2),
+                'score': self._score_risk_reward(sharpe)
+            }
+        except Exception as e:
+            logger.warning(f"計算風險報酬比失敗: {e}")
+            return {}
+
+    def _calc_win_expectancy(self) -> Dict:
+        """D4: 勝率期望值"""
+        try:
+            if '損益' in self.trades.columns:
+                pnl_col = '損益'
+            elif '損益金額' in self.trades.columns:
+                pnl_col = '損益金額'
+            else:
+                return {}
+
+            pnl_series = pd.to_numeric(self.trades[pnl_col], errors='coerce')
+
+            # 勝率
+            win_count = len(pnl_series[pnl_series > 0])
+            total_count = len(pnl_series)
+            win_rate = win_count / total_count if total_count > 0 else 0
+
+            # 平均獲利和虧損
+            wins = pnl_series[pnl_series > 0]
+            losses = pnl_series[pnl_series < 0]
+
+            avg_profit = wins.mean() if len(wins) > 0 else 0
+            avg_loss = abs(losses.mean()) if len(losses) > 0 else 0
+
+            # 盈虧比
+            profit_loss_ratio = avg_profit / avg_loss if avg_loss > 0 else 0
+
+            # 期望值
+            expectancy = (win_rate * avg_profit) - ((1 - win_rate) * avg_loss)
+
+            # Kelly 公式（保守版本 Kelly/2）
+            kelly = (win_rate * profit_loss_ratio - (1 - win_rate)) / profit_loss_ratio if profit_loss_ratio > 0 else 0
+            kelly_half = kelly / 2
+
+            return {
+                'win_rate': round(win_rate * 100, 2),
+                'profit_loss_ratio': round(profit_loss_ratio, 2),
+                'expectancy': round(expectancy, 2),
+                'avg_profit': round(avg_profit, 2),
+                'avg_loss': round(avg_loss, 2),
+                'kelly_half': round(kelly_half * 100, 2),
+                'score': self._score_win_expectancy(win_rate)
+            }
+        except Exception as e:
+            logger.warning(f"計算勝率期望值失敗: {e}")
+            return {}
+
+    def _calc_liquidity(self) -> Dict:
+        """D5: 交易流動性"""
+        try:
+            # 交易次數
+            num_trades = len(self.trades)
+
+            # 平均持倉天數
+            if '日期' in self.trades.columns:
+                dates = pd.to_datetime(self.trades['日期'], errors='coerce')
+                dates = dates.dropna()
+                if len(dates) > 1:
+                    avg_holding_days = (dates.max() - dates.min()).days / len(dates) if len(dates) > 0 else 0
+                else:
+                    avg_holding_days = 0
+            else:
+                avg_holding_days = 0
+
+            # 年均交易次數
+            if '日期' in self.trades.columns:
+                dates = pd.to_datetime(self.trades['日期'], errors='coerce')
+                dates = dates.dropna()
+                if len(dates) > 0:
+                    days_span = (dates.max() - dates.min()).days + 1
+                    years = days_span / 365.25
+                    annual_trades = num_trades / years if years > 0 else num_trades
+                else:
+                    annual_trades = num_trades
+            else:
+                annual_trades = num_trades
+
+            return {
+                'num_trades': num_trades,
+                'avg_holding_days': round(avg_holding_days, 1),
+                'annual_trades': round(annual_trades, 1),
+                'score': self._score_liquidity(num_trades)
+            }
+        except Exception as e:
+            logger.warning(f"計算交易流動性失敗: {e}")
+            return {}
+
+    def _score_profitability(self, cagr: float) -> int:
+        """評分獲利能力 (0-100)"""
+        if cagr >= 0.20:
+            return 100
+        elif cagr >= 0.10:
+            return 80
+        elif cagr >= 0.05:
+            return 60
+        elif cagr >= 0:
+            return 40
+        else:
+            return 0
+
+    def _score_risk_management(self, mdd: float) -> int:
+        """評分抗風險能力 (0-100)"""
+        mdd_pct = abs(mdd) * 100
+        if mdd_pct <= 10:
+            return 100
+        elif mdd_pct <= 20:
+            return 80
+        elif mdd_pct <= 30:
+            return 60
+        elif mdd_pct <= 40:
+            return 40
+        else:
+            return 0
+
+    def _score_risk_reward(self, sharpe: float) -> int:
+        """評分風險報酬比 (0-100)"""
+        if sharpe >= 1.5:
+            return 100
+        elif sharpe >= 1.0:
+            return 80
+        elif sharpe >= 0.5:
+            return 60
+        elif sharpe >= 0:
+            return 40
+        else:
+            return 0
+
+    def _score_win_expectancy(self, win_rate: float) -> int:
+        """評分勝率期望值 (0-100)"""
+        if win_rate >= 0.65:
+            return 100
+        elif win_rate >= 0.55:
+            return 80
+        elif win_rate >= 0.45:
+            return 60
+        elif win_rate >= 0.35:
+            return 40
+        else:
+            return 0
+
+    def _score_liquidity(self, num_trades: int) -> int:
+        """評分交易流動性 (0-100)"""
+        if num_trades >= 100:
+            return 100
+        elif num_trades >= 50:
+            return 80
+        elif num_trades >= 20:
+            return 60
+        elif num_trades >= 10:
+            return 40
+        else:
+            return 0
+
+    def _calc_composite_score(self) -> Dict:
+        """計算綜合評分"""
+        scores = []
+        dimension_names = ['profitability', 'risk_management', 'risk_reward', 'win_expectancy', 'liquidity']
+
+        for dim in dimension_names:
+            score = self.results.get(dim, {}).get('score', 0)
+            scores.append(score)
+
+        # 綜合評分 (加權平均)
+        weights = [0.25, 0.20, 0.20, 0.20, 0.15]  # 獲利權重最高
+        composite = sum(s * w for s, w in zip(scores, weights))
+
+        return {
+            'total': round(composite, 1),
+            'dimensions': scores,
+            'dimension_names': dimension_names
+        }
+
 def get_broker_positions_from_sheets():
     """從 Google Sheets 讀取券商持倉"""
     try:
@@ -2364,6 +2740,34 @@ def api_strategy_import():
             }
         }))
     except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/strategy/analyze', methods=['POST'])
+def api_strategy_analyze():
+    """API：FinLab 五維分析"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        initial_capital = float(request.form.get('initial_capital', 100000))
+
+        # 讀取CSV
+        df = read_csv_file(file)
+        df.columns = [col.lstrip('\ufeff') for col in df.columns]
+
+        # 調用FinLab分析器
+        analyzer = FinLabAnalyzer(df, initial_capital)
+        results = analyzer.calculate_all()
+
+        return jsonify(convert_numpy_types({
+            'status': 'success',
+            'data': results,
+            'composite_score': results.get('composite_score', {}).get('total', 0),
+            'dimension_scores': results.get('composite_score', {}).get('dimensions', [0, 0, 0, 0, 0])
+        }))
+    except Exception as e:
+        logger.error(f"分析策略失敗: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/strategy/import/charts', methods=['POST'])
