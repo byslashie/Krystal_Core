@@ -317,7 +317,8 @@ body::before{
 .mini-stat{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px 16px}
 [data-theme="light"] .mini-stat{background:hsl(210,17%,97%);border-color:hsl(215,20%,88%);backdrop-filter:none}
 .mini-stat-label{font-size:10px;color:var(--text-muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.mini-stat-val{font-size:20px;font-weight:900;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em}
+.mini-stat-val{font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;margin-bottom:4px}
+.mini-stat-pct{font-size:11px;color:var(--text-muted);font-weight:600}
 .mini-stat-val.green{color:var(--green)}.mini-stat-val.red{color:var(--red)}.mini-stat-val.yellow{color:var(--yellow)}
 
 /* TABLE */
@@ -820,10 +821,12 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
         <button onclick="alert('今日損益已記錄 ✅')" style="margin-left:auto;padding:6px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">🔔 記錄今日</button>
       </div>
       <div class="mini-stats">
-        <div class="mini-stat"><div class="mini-stat-label">IB 未實現</div><div class="mini-stat-val" id="p1-ib-upnl">--</div></div>
-        <div class="mini-stat"><div class="mini-stat-label">IB 已實現</div><div class="mini-stat-val" id="p1-ib-rpnl">+$890</div></div>
-        <div class="mini-stat"><div class="mini-stat-label">元大 未實現</div><div class="mini-stat-val" id="p1-yt-upnl">--</div></div>
-        <div class="mini-stat"><div class="mini-stat-label">元大 已實現</div><div class="mini-stat-val" id="p1-yt-rpnl">+NT$48,000</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">IB 未實現</div><div class="mini-stat-val" id="p1-ib-upnl">--</div><div class="mini-stat-pct" id="p1-ib-upnl-pct">--</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">IB 已實現</div><div class="mini-stat-val" id="p1-ib-rpnl">+NT$28,580</div><div class="mini-stat-pct" id="p1-ib-rpnl-pct">--</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">元大 未實現</div><div class="mini-stat-val" id="p1-yt-upnl">--</div><div class="mini-stat-pct" id="p1-yt-upnl-pct">--</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">元大 已實現</div><div class="mini-stat-val" id="p1-yt-rpnl">-NT$5,252</div><div class="mini-stat-pct" id="p1-yt-rpnl-pct">--</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">Schwab 未實現</div><div class="mini-stat-val" id="p1-schwab-upnl">--</div><div class="mini-stat-pct" id="p1-schwab-upnl-pct">--</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">Schwab 已實現</div><div class="mini-stat-val" id="p1-schwab-rpnl">+NT$2,203</div><div class="mini-stat-pct" id="p1-schwab-rpnl-pct">--</div></div>
       </div>
       <div class="chart-card" style="margin-bottom:20px">
         <div class="chart-title">每日損益 <span class="chart-subtitle">近 20 個交易日（淡色為模擬數據）</span></div>
@@ -4040,9 +4043,74 @@ async function loadBrokerPositions() {
         if (p3Donut) { p3Donut.data.datasets[0].data = allocData; p3Donut.update(); }
       }
 
-      const rawIbPnL = sumPnL(ibPos);
-      setEl('p1-ib-upnl', `${rawIbPnL>=0?'+':'-'}$${Math.round(Math.abs(rawIbPnL)).toLocaleString()}`, rawIbPnL>=0?'green':'red');
-      setEl('p1-yt-upnl', fmtS(yuantaPnL), yuantaPnL>=0?'green':'red');
+      // 統一格式函數：處理多幣種、大小數值（全部顯示為台幣）
+      const formatPnL = (value, currency='TWD') => {
+        if (value === null || value === undefined || isNaN(value)) return '--';
+        const abs = Math.abs(value);
+        const sign = value >= 0 ? '+' : '-';
+
+        // 簡化大數字：超過100萬用 M 表示，超過1000用 K 表示
+        let display;
+        if (abs >= 1000000) {
+          display = (abs / 1000000).toFixed(1) + 'M';
+        } else if (abs >= 1000) {
+          display = (abs / 1000).toFixed(1) + 'K';
+        } else {
+          display = Math.round(abs).toLocaleString();
+        }
+
+        return `${sign}NT$${display}`;
+      };
+
+      // 計算初始資本（用於百分比計算）
+      const initialCapital = parseFloat(document.getElementById('initial-capital')?.value || 100000);
+
+      // 計算未實現損益（全部轉為台幣）
+      const rawIbPnL = sumPnL(ibPos) * USD_TWD; // USD → TWD
+      const rawSchwabPnL = sumPnL(schwabPos) * USD_TWD; // USD → TWD
+      const rawYtPnL = yuantaPnL; // 已是台幣
+
+      // 顯示未實現損益 + 百分比
+      setEl('p1-ib-upnl', formatPnL(rawIbPnL, 'TWD'), rawIbPnL>=0?'green':'red');
+      document.getElementById('p1-ib-upnl-pct').textContent = `${(rawIbPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-ib-upnl-pct').className = `mini-stat-pct ${rawIbPnL>=0?'green':'red'}`;
+
+      setEl('p1-yt-upnl', formatPnL(rawYtPnL, 'TWD'), rawYtPnL>=0?'green':'red');
+      document.getElementById('p1-yt-upnl-pct').textContent = `${(rawYtPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-yt-upnl-pct').className = `mini-stat-pct ${rawYtPnL>=0?'green':'red'}`;
+
+      setEl('p1-schwab-upnl', formatPnL(rawSchwabPnL, 'TWD'), rawSchwabPnL>=0?'green':'red');
+      document.getElementById('p1-schwab-upnl-pct').textContent = `${(rawSchwabPnL/initialCapital*100).toFixed(2)}%`;
+      document.getElementById('p1-schwab-upnl-pct').className = `mini-stat-pct ${rawSchwabPnL>=0?'green':'red'}`;
+
+      // 從 API 獲取已實現損益（從 trades 表）
+      fetch('/api/daily-performance')
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success' && data.data) {
+            const d = data.data;
+            // 取最新一日的數據（最後一筆）
+            const lastIdx = (d.dates || []).length - 1;
+            if (lastIdx >= 0) {
+              const ibRealized = ((d.ib_realized || [])[lastIdx] || 0) * USD_TWD; // USD → TWD
+              const ytRealized = (d.yuanta_realized || [])[lastIdx] || 0; // 已是台幣
+              const schwabRealized = ((d.schwab_realized || [])[lastIdx] || 0) * USD_TWD; // USD → TWD
+
+              setEl('p1-ib-rpnl', formatPnL(ibRealized, 'TWD'), ibRealized>=0?'green':'red');
+              document.getElementById('p1-ib-rpnl-pct').textContent = `${(ibRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-ib-rpnl-pct').className = `mini-stat-pct ${ibRealized>=0?'green':'red'}`;
+
+              setEl('p1-yt-rpnl', formatPnL(ytRealized, 'TWD'), ytRealized>=0?'green':'red');
+              document.getElementById('p1-yt-rpnl-pct').textContent = `${(ytRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-yt-rpnl-pct').className = `mini-stat-pct ${ytRealized>=0?'green':'red'}`;
+
+              setEl('p1-schwab-rpnl', formatPnL(schwabRealized, 'TWD'), schwabRealized>=0?'green':'red');
+              document.getElementById('p1-schwab-rpnl-pct').textContent = `${(schwabRealized/initialCapital*100).toFixed(2)}%`;
+              document.getElementById('p1-schwab-rpnl-pct').className = `mini-stat-pct ${schwabRealized>=0?'green':'red'}`;
+            }
+          }
+        })
+        .catch(err => console.warn('無法載入已實現損益:', err));
 
       // Top 5 Holdings for P1
       const p1Top5Body = document.getElementById('p1-top5-body');
