@@ -55,26 +55,46 @@
             "state": {
               "type": "markdown",
               "state": {
+<<<<<<< Updated upstream
                 "file": "04-個人特質與規劃/週目標/weekly_2026-W16.md",
+=======
+                "file": "01-交易系統程式碼/dashboard_v8/BACKTESTING_CALCULATIONS.md",
+>>>>>>> Stashed changes
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
+<<<<<<< Updated upstream
               "title": "weekly_2026-W16"
             }
           },
           {
             "id": "e44f1272ea0ebeb9",
+=======
+              "title": "BACKTESTING_CALCULATIONS"
+            }
+          },
+          {
+            "id": "af35991893c37d63",
+>>>>>>> Stashed changes
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
+<<<<<<< Updated upstream
                 "file": "諮商準備_核心恐懼與決心.md",
+=======
+                "file": "FinLab_回測系統完整分析.md",
+>>>>>>> Stashed changes
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
+<<<<<<< Updated upstream
               "title": "諮商準備_核心恐懼與決心"
+=======
+              "title": "FinLab_回測系統完整分析"
+>>>>>>> Stashed changes
             }
           }
         ],
@@ -110,7 +130,11 @@
             "state": {
               "type": "search",
               "state": {
+<<<<<<< Updated upstream
                 "query": "諮商準備",
+=======
+                "query": "FINLAB",
+>>>>>>> Stashed changes
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -227,6 +251,7 @@
       "bases:建立新的 base": false
     }
   },
+<<<<<<< Updated upstream
   "active": "e44f1272ea0ebeb9",
   "lastOpenFiles": [
     "04-個人特質與規劃/我的個人特質/Chen_Yu_Wei_Communication_Recovery_Plan.md",
@@ -265,6 +290,46 @@
     "01-交易系統程式碼/course_outline.md",
     "FinLab_回測系統完整分析.md",
     "04-個人特質與規劃/職涯規劃/策略_回測報告.md",
+=======
+  "active": "af35991893c37d63",
+  "lastOpenFiles": [
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426404688",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426386016",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426374785",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426356655",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426340622",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426330055",
+    "01-交易系統程式碼/dashboard_v8/temp_uploads/20260417_-.csv",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425711770",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425706092",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425696842",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425686560",
+    "01-交易系統程式碼/dashboard_v8/BACKTESTING_CALCULATIONS.md",
+    "01-交易系統程式碼/dashboard_v8/BACKEND_REQUIREMENTS.md",
+    "04-個人特質與規劃/職涯規劃/履歷.md",
+    "04-個人特質與規劃/職涯規劃/策略_回測報告.md",
+    "03-XScript知識庫/[Manual] XScript_System_Functions_Reference.md",
+    "03-XScript知識庫/[Example] XQ_Scripts_Functions.md",
+    "01-交易系統程式碼/docs/元大庫存同步說明.md",
+    "01-交易系統程式碼/dashboard_v8/STRATEGY_LIFECYCLE.md",
+    "01-交易系統程式碼/DISCORD_BOT_SETUP.md",
+    "04-個人特質與規劃/我的個人特質/心理諮商師初診資料_簡潔版.md",
+    "07-工具/AI課程直播規劃.md",
+    "01-交易系統程式碼/course_outline.md",
+    "FinLab_回測系統完整分析.md",
+    "01-交易系統程式碼/dashboard_v8/TODO.md",
+    "01-交易系統程式碼/dashboard_v8/SYSTEM_ARCHITECTURE.md",
+    "01-交易系統程式碼/TODO.md",
+    "05-文件與報告/市場研究/Krystal_AI_System_Integration_and_3_Schemes.md",
+    "01-交易系統程式碼/FULL_FEATURE_PLAN.md",
+    "02-策略知識庫/CSV_VALIDATION_REPORT.md",
+    "01-交易系統程式碼/dashboard_v8/IMPORT_INTEGRATION_PLAN.md",
+    "02-策略知識庫/ENCODING_CONVERSION_GUIDE.md",
+    "02-策略知識庫/XQ_STRATEGY_IMPORT_TEMPLATE.md",
+    "01-交易系統程式碼/dashboard_v8/QUICK_START.md",
+    "01-交易系統程式碼/dashboard_v8/CURRENT_STATUS.md",
+    "01-交易系統程式碼/dashboard_v8/CLEANUP_PLAN.md",
+>>>>>>> Stashed changes
     "01-交易系統程式碼/tab5_distribution.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/more.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/less.png",

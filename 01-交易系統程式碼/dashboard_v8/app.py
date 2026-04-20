@@ -709,6 +709,78 @@ def api_sync_positions():
         return jsonify({**result, 'message': msg})
     return jsonify(result), 500
 
+@app.route('/api/smart-sync-all', methods=['POST'])
+def api_smart_sync_all():
+    """智能全部同步：優先即時 API 寫入 Sheets，失敗則讀 Sheets 降級。"""
+    result = {'schwab': {}, 'ib': {}, 'yuanta': {}}
+
+    # ── 1. Schwab ─────────────────────────────────────────────
+    try:
+        with app.test_client() as client:
+            r = client.post('/api/schwab/sync-to-sheets')
+            j = r.get_json() or {}
+            if r.status_code == 200 and j.get('status') == 'success':
+                result['schwab'] = {'mode': 'live', 'count': j.get('count', 0), 'message': j.get('message', '')}
+            else:
+                result['schwab'] = {'mode': 'sheets_fallback', 'reason': j.get('message', 'API 無法使用')}
+    except Exception as e:
+        result['schwab'] = {'mode': 'sheets_fallback', 'reason': str(e)}
+
+    # ── 2. IB ─────────────────────────────────────────────────
+    try:
+        with app.test_client() as client:
+            r = client.get('/api/query-ib')
+            j = r.get_json() or {}
+            if r.status_code == 200 and j.get('status') == 'success' and j.get('positions'):
+                r2 = client.post('/api/ib-sync', json={
+                    'positions': j.get('positions', []),
+                    'net_liquidation_value': j.get('net_liquidation_value'),
+                    'total_cash_value': j.get('total_cash_value'),
+                    'account_id': j.get('account_id'),
+                })
+                j2 = r2.get_json() or {}
+                if r2.status_code == 200 and j2.get('status') == 'success':
+                    result['ib'] = {'mode': 'live', 'count': len(j.get('positions', [])), 'message': j2.get('message', '')}
+                else:
+                    result['ib'] = {'mode': 'sheets_fallback', 'reason': j2.get('message', 'IB → Sheets 寫入失敗')}
+            else:
+                result['ib'] = {'mode': 'sheets_fallback', 'reason': j.get('message', 'TWS/Gateway 未連線')}
+    except Exception as e:
+        result['ib'] = {'mode': 'sheets_fallback', 'reason': str(e)}
+
+    # ── 3. 元大 ────────────────────────────────────────────────
+    try:
+        py32 = Path(__file__).parent.parent / '.venv_yuanta32' / 'Scripts' / 'python.exe'
+        script = Path(__file__).parent.parent / 'brokers' / 'sync_yuanta_positions.py'
+        if py32.exists() and script.exists():
+            proc = subprocess.run([str(py32), str(script)], capture_output=True, timeout=120,
+                                  cwd=str(Path(__file__).parent.parent))
+            if proc.returncode == 0:
+                result['yuanta'] = {'mode': 'live', 'message': '元大即時 API 同步成功'}
+            else:
+                err = (proc.stderr or b'').decode('utf-8', errors='replace')
+                result['yuanta'] = {'mode': 'sheets_fallback', 'reason': err[:200] or '元大腳本失敗'}
+        else:
+            result['yuanta'] = {'mode': 'sheets_fallback', 'reason': '找不到 32-bit Python 或元大腳本'}
+    except subprocess.TimeoutExpired:
+        result['yuanta'] = {'mode': 'sheets_fallback', 'reason': '元大同步逾時（60s）'}
+    except Exception as e:
+        result['yuanta'] = {'mode': 'sheets_fallback', 'reason': str(e)}
+
+    # ── 4. 最後：Sheets → 本地 DB ──────────────────────────────
+    final = sync_from_google_sheets()
+    result['sheets_to_db'] = final
+
+    live_count = sum(1 for b in ('schwab', 'ib', 'yuanta') if result[b].get('mode') == 'live')
+    return jsonify({
+        'status': 'success' if final.get('status') == 'success' else 'partial',
+        'summary': f'即時 {live_count}/3，Sheets 共 {final.get("count", 0)} 筆',
+        'brokers': {k: result[k] for k in ('schwab', 'ib', 'yuanta')},
+        'total_count': final.get('count', 0),
+        'auto_closed': final.get('auto_closed', []),
+    })
+
+
 @app.route('/api/broker-positions', methods=['GET'])
 def api_broker_positions():
     """獲取持倉數據"""

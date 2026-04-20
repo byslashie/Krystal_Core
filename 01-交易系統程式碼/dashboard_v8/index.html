@@ -4852,23 +4852,36 @@ function showToast(type, title, msg, duration = 4500) {
 }
 
 async function syncAllBrokers(sidebarBtn) {
-  if (sidebarBtn) {
-    sidebarBtn.disabled = true;
-    const sp = sidebarBtn.querySelector('.btn-text') || sidebarBtn;
-    const orig = sp.textContent;
-    sp.textContent = '同步中...';
-    showToast('info', '全部同步中…', 'IB + 元大 同時同步', 3000);
-    let results = [];
-    try {
-      const ibResult    = await syncIBPositions();
-      const yuantaResult = await syncYuantaPositions();
-      if (ibResult)    results.push(ibResult);
-      if (yuantaResult) results.push(yuantaResult);
-    } catch(e) { console.warn('syncAllBrokers error', e); }
-    const summary = results.join('　');
-    sp.textContent = '✅ 已同步';
-    setTimeout(() => { sp.textContent = orig; sidebarBtn.disabled = false; }, 2500);
+  if (!sidebarBtn) return;
+  sidebarBtn.disabled = true;
+  const sp = sidebarBtn.querySelector('.btn-text') || sidebarBtn;
+  const orig = sp.textContent;
+  sp.textContent = '同步中...';
+  showToast('info', '全部同步中…', 'Schwab + IB + 元大：優先即時 API，失敗則讀 Sheets', 3000);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/smart-sync-all`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await res.json();
+
+    if (res.ok && (json.status === 'success' || json.status === 'partial')) {
+      const b = json.brokers || {};
+      const mark = (x) => x?.mode === 'live' ? '✅ 即時' : '📊 Sheets';
+      const detail = `Schwab ${mark(b.schwab)}　IB ${mark(b.ib)}　元大 ${mark(b.yuanta)}　｜　共 ${json.total_count || 0} 筆`;
+      showToast('ok', '全部同步完成', detail, 5000);
+      sp.textContent = '✅ 已同步';
+      setTimeout(() => loadBrokerPositions(), 800);
+    } else {
+      showToast('err', '全部同步失敗', json.message || '');
+      sp.textContent = '❌ 失敗';
+    }
+  } catch(e) {
+    showToast('err', '全部同步錯誤', e.message);
+    sp.textContent = '❌ 錯誤';
   }
+
+  setTimeout(() => { sp.textContent = orig; sidebarBtn.disabled = false; }, 3000);
 }
 
 async function syncIBPositions() {
