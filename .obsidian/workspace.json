@@ -69,12 +69,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01-交易系統程式碼/dashboard_v8/STRATEGY_LIFECYCLE.md",
+                "file": "諮商準備_核心恐懼與決心.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "STRATEGY_LIFECYCLE"
+              "title": "諮商準備_核心恐懼與決心"
             }
           }
         ],
@@ -110,7 +110,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "FinLab 五維分析",
+                "query": "諮商準備",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -229,6 +229,17 @@
   },
   "active": "e44f1272ea0ebeb9",
   "lastOpenFiles": [
+    "04-個人特質與規劃/我的個人特質/Chen_Yu_Wei_Communication_Recovery_Plan.md",
+    "諮商準備_核心恐懼與決心.md",
+    "諮商準備_完整索引.md",
+    "諮商準備_核心問題.md",
+    "諮商準備_整理版.md",
+    "[LINE] Chat with Wei.txt",
+    "01-交易系統程式碼/dashboard_v8/STRATEGY_LIFECYCLE.md",
+    "終極談判草稿_與他的對話.md",
+    "十日脫身計畫.md",
+    "諮商準備_覺察日記.md",
+    "理想伴侶規格與自我覺察.md",
     "03-XScript知識庫/[Example] XQ_Scripts_Alerts.md",
     "11-自媒體專區/Threads/templates.md",
     "01-交易系統程式碼/data/cache/daily_performance.csv",
@@ -240,7 +251,6 @@
     "01-交易系統程式碼/credentials.json",
     "01-交易系統程式碼/wrapper/krystal_sync.py",
     "01-交易系統程式碼/wrapper/krystal_nav.py",
-    "01-交易系統程式碼/wrapper",
     "11-自媒體專區/官網/redesign-brief.md",
     "04-個人特質與規劃/週目標/weekly_2026-W16.md",
     "11-自媒體專區/README.md",
@@ -255,16 +265,6 @@
     "01-交易系統程式碼/course_outline.md",
     "FinLab_回測系統完整分析.md",
     "04-個人特質與規劃/職涯規劃/策略_回測報告.md",
-    "01-交易系統程式碼/dashboard_v8/TODO.md",
-    "01-交易系統程式碼/dashboard_v8/SYSTEM_ARCHITECTURE.md",
-    "01-交易系統程式碼/TODO.md",
-    "05-文件與報告/市場研究/Krystal_AI_System_Integration_and_3_Schemes.md",
-    "01-交易系統程式碼/FULL_FEATURE_PLAN.md",
-    "02-策略知識庫/CSV_VALIDATION_REPORT.md",
-    "01-交易系統程式碼/dashboard_v8/IMPORT_INTEGRATION_PLAN.md",
-    "02-策略知識庫/ENCODING_CONVERSION_GUIDE.md",
-    "02-策略知識庫/XQ_STRATEGY_IMPORT_TEMPLATE.md",
-    "01-交易系統程式碼/dashboard_v8/BACKTESTING_CALCULATIONS.md",
     "01-交易系統程式碼/tab5_distribution.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/more.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/less.png",
