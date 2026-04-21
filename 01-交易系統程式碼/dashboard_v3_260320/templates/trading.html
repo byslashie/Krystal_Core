@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}💹 交易管理 - Krystal AI 交易系統{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>💹 實盤交易管理系統</h1>
+    <p class="subtitle">即時交易狀態監控與管理</p>
+</div>
+
+<!-- 系統狀態 -->
+<section class="section">
+    <div class="section-header">
+        <h2>系統狀態</h2>
+        <p class="section-subtitle">實盤交易系統連接狀態</p>
+    </div>
+    <div class="card">
+        <div id="trades-container" style="padding: 20px; color: #6b7280;">
+            <div class="loading">加載系統狀態中...</div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h2>當前交易 📈</h2>
+        <p class="section-subtitle">所有進行中的交易</p>
+    </div>
+    <div class="card">
+        <div class="current-trades-controls" style="margin-bottom: 15px;">
+            <input type="text" id="current-trades-search" class="search-input" placeholder="🔍 搜尋：標的、策略..." />
+            <select id="current-trades-strategy-filter" class="filter-select">
+                <option value="">所有策略</option>
+            </select>
+        </div>
+        <div id="current-trades-container" class="trades-list">
+            <div class="loading">加載進行中的交易...</div>
+        </div>
+    </div>
+</section>
+
+<!-- 已實現交易部分 -->
+<section class="section">
+    <div class="section-header">
+        <h2>已實現交易 📊</h2>
+        <p class="section-subtitle">已完成的交易詳情與分析</p>
+    </div>
+    <div class="card">
+        <div class="realized-trades-controls" style="margin-bottom: 15px;">
+            <input type="text" id="realized-trades-search" class="search-input" placeholder="🔍 搜尋：標的、策略..." />
+            <select id="realized-trades-strategy-filter" class="filter-select">
+                <option value="">所有策略</option>
+            </select>
+        </div>
+        <div id="realized-trades-container" class="trades-list">
+            <div class="loading">加載中...</div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加載交易數據
+    console.log('Loading trading data...');
+});
+</script>
+{% endblock %}

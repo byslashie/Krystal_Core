@@ -1,0 +1,50 @@
+# 環境變數和密鑰
+.env
+.env.local
+.env*.local
+.env.save
+.env.txt
+.env_clean
+api.env
+*.pem
+*.key
+*.pfx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv*
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 數據和臨時
+*.csv
+*.log
+*.png
+*.jpg
+
+# 其他
+.DS_Store
+.cache/
+.git_backup/
+secrets/
+*.env
+.env
+credentials.json
+key/
+
+credentials.json
+key/
+service_account*.json

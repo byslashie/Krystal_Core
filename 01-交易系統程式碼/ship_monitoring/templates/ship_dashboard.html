@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>波斯灣油輪監測系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1f3a 0%, #2d2656 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #6B21A8 0%, #06B6D4 100%);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-bottom: 2px solid #06B6D4;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-info {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            flex: 1;
+            background: #2a3a4a;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.3);
+            border-top: 1px solid #444;
+        }
+
+        .stat-card {
+            background: rgba(107, 33, 168, 0.1);
+            border: 1px solid rgba(107, 33, 168, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(107, 33, 168, 0.2);
+            border-color: #6B21A8;
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            background: linear-gradient(135deg, #6B21A8 0%, #06B6D4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: rgba(0,0,0,0.5);
+            border-left: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #444;
+            background: rgba(107, 33, 168, 0.1);
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .alert-item {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #EF4444;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-item.high { border-left-color: #EF4444; }
+        .alert-item.medium { border-left-color: #F59E0B; background: rgba(245, 158, 11, 0.1); }
+        .alert-item.low { border-left-color: #10B981; background: rgba(16, 185, 129, 0.1); }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 0.3rem;
+        }
+
+        .alert-vessel {
+            font-weight: 600;
+            color: #fff;
+            margin: 0.3rem 0;
+        }
+
+        .alert-message {
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-active { background: #10B981; animation: pulse 2s infinite; }
+        .status-warning { background: #F59E0B; }
+        .status-critical { background: #EF4444; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #444;
+            border-radius: 50%;
+            border-top-color: #06B6D4;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-top: 1px solid #444;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            background: linear-gradient(135deg, #6B21A8 0%, #06B6D4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 33, 168, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .timestamp {
+            font-size: 0.75rem;
+            color: #888;
+            text-align: right;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #444;
+        }
+
+        /* Leaflet 自訂 */
+        .leaflet-popup-content {
+            color: #000 !important;
+        }
+
+        .vessel-popup {
+            background: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .vessel-popup b {
+            color: #6B21A8;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 40%;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                max-height: 35%;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 0.8rem;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <i class="fas fa-ship"></i>
+            波斯灣油輪監測系統
+        </h1>
+        <div class="header-info">
+            🌍 實時追蹤油輪位置 | ⚡ Telegram 即時告警 | 📊 24/7 監測
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div id="map"></div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">🚢 監測油輪</div>
+                    <div class="stat-value" id="total-vessels">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📍 波斯灣內</div>
+                    <div class="stat-value" id="in-region">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🔴 24h 告警</div>
+                    <div class="stat-value" id="alerts-24h">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⚠️ 嚴重事件</div>
+                    <div class="stat-value" id="critical-alerts">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>📢 實時告警</h3>
+            </div>
+            <div class="sidebar-content" id="alerts-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>加載告警中...</p>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="updateData()" title="立即刷新">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+                <button onclick="centerMap()" title="重置地圖">
+                    <i class="fas fa-map"></i> 重置
+                </button>
+            </div>
+            <div class="timestamp">
+                更新於: <span id="last-update">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet 庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    <script>
+        // 全局變量
+        let map, markers = {}, updateInterval;
+        const GULF_CENTER = [26.5, 52.0];
+        const GULF_BOUNDS = {
+            north: 30.0,
+            south: 25.0,
+            east: 57.0,
+            west: 48.0
+        };
+
+        // 初始化地圖
+        function initMap() {
+            map = L.map('map').setView(GULF_CENTER, 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+                backgroundColor: '#2a3a4a'
+            }).addTo(map);
+
+            // 添加波斯灣邊界框
+            const bounds = L.latLngBounds(
+                [GULF_BOUNDS.south, GULF_BOUNDS.west],
+                [GULF_BOUNDS.north, GULF_BOUNDS.east]
+            );
+            L.rectangle(bounds, { color: '#06B6D4', weight: 2, fill: false, dashArray: '5,5' }).addTo(map);
+        }
+
+        // 更新數據
+        async function updateData() {
+            try {
+                // 並行獲取數據
+                const [vessels, alerts, stats] = await Promise.all([
+                    fetch('/api/vessels').then(r => r.json()),
+                    fetch('/api/alerts').then(r => r.json()),
+                    fetch('/api/statistics').then(r => r.json())
+                ]);
+
+                if (vessels.success) updateVessels(vessels.vessels);
+                if (alerts.success) updateAlerts(alerts.alerts);
+                if (stats.success) updateStatistics(stats);
+
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString('zh-TW');
+            } catch (error) {
+                console.error('❌ 數據更新失敗:', error);
+            }
+        }
+
+        // 更新船舶標記
+        function updateVessels(vessels) {
+            // 清除舊標記
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
+
+            vessels.forEach(vessel => {
+                const { mmsi, vessel_name, latitude, longitude, speed, heading } = vessel;
+
+                // 確定顏色（根據速度狀態）
+                let color = speed > 1 ? '#10B981' : '#F59E0B';
+
+                // 創建標記
+                const marker = L.marker([latitude, longitude], {
+                    title: vessel_name,
+                    icon: L.divIcon({
+                        html: `<div style="transform: rotate(${heading}deg); color: ${color};">⛵</div>`,
+                        className: 'vessel-marker',
+                        iconSize: [24, 24]
+                    })
+                }).bindPopup(`
+                    <div class="vessel-popup">
+                        <b>${vessel_name}</b><br>
+                        MMSI: ${mmsi}<br>
+                        速度: ${speed.toFixed(1)} 節<br>
+                        位置: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}
+                    </div>
+                `);
+
+                marker.addTo(map);
+                markers[mmsi] = marker;
+            });
+        }
+
+        // 更新告警
+        function updateAlerts(alerts) {
+            const container = document.getElementById('alerts-container');
+
+            if (alerts.length === 0) {
+                container.innerHTML = '<div class="no-data">✅ 暫無告警</div>';
+                return;
+            }
+
+            // 按時間排序（最新優先）
+            alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            container.innerHTML = alerts.slice(0, 15).map(alert => `
+                <div class="alert-item ${alert.severity}">
+                    <div class="alert-time">${new Date(alert.timestamp).toLocaleTimeString('zh-TW')}</div>
+                    <div class="alert-vessel">
+                        <span class="status-indicator status-${getSeverityClass(alert.severity)}"></span>
+                        ${alert.vessel_name}
+                    </div>
+                    <div class="alert-message">${alert.message}</div>
+                </div>
+            `).join('');
+        }
+
+        // 更新統計
+        function updateStatistics(stats) {
+            document.getElementById('total-vessels').textContent = stats.total_vessels;
+            document.getElementById('in-region').textContent = stats.in_region;
+            document.getElementById('alerts-24h').textContent = stats.recent_alerts_24h;
+            document.getElementById('critical-alerts').textContent = stats.critical_alerts;
+        }
+
+        // 輔助函數
+        function getSeverityClass(severity) {
+            const map = { high: 'critical', medium: 'warning', low: 'active' };
+            return map[severity] || 'active';
+        }
+
+        function centerMap() {
+            map.setView(GULF_CENTER, 8);
+        }
+
+        // 初始化
+        window.onload = () => {
+            initMap();
+            updateData();
+            updateInterval = setInterval(updateData, 30000); // 每 30 秒更新
+        };
+
+        window.onbeforeunload = () => {
+            clearInterval(updateInterval);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 Krystal AI 交易系統 v2 - 完整儀表板</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary: #6B21A8;
+            --secondary: #06B6D4;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg-primary: #F5F0FF;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A1A2E;
+            --text-secondary: #6B7280;
+            --border-color: #E8E0FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .container {
+            margin-top: 64px;
+            padding: 24px;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Status Bar - 實現狀態 */
+        .status-bar {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .status-item {
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .status-item.done {
+            background: #dcfce7;
+            border-left-color: #10B981;
+        }
+
+        .status-item.todo {
+            background: #fef3c7;
+            border-left-color: #F59E0B;
+        }
+
+        .status-item-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .status-item-count {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .status-item.done .status-item-count {
+            color: #10B981;
+        }
+
+        .status-item.todo .status-item-count {
+            color: #F59E0B;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Accounts Grid */
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .account-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .account-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .account-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .account-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .account-status.active {
+            background: #dcfce7;
+            color: #10B981;
+        }
+
+        .account-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            padding: 12px;
+            background: #f9f7ff;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .metric-value.positive {
+            color: #10B981;
+        }
+
+        .metric-value.negative {
+            color: #EF4444;
+        }
+
+        .account-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5b1a7a;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Details Section */
+        .detail-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .detail-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #f9f7ff;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: #f9f7ff;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: #f9f7ff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-card-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .metric-card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .chart {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Sync Status */
+        .sync-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .sync-info.warning {
+            background: #fef3c7;
+            border-color: #fcd34d;
+        }
+
+        .sync-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10B981;
+            margin-right: 8px;
+        }
+
+        .sync-dot.inactive {
+            background: #F59E0B;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <span class="logo-icon">💎</span>
+            <span>Krystal AI 交易系統 v2</span>
+        </div>
+        <nav class="main-nav" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="nav-btn active" onclick="loadPage('accounts'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B21A8; font-weight: 500; cursor: pointer; font-size: 13px;">📊 賬戶總覽</button>
+            <button class="nav-btn" onclick="loadPage('risk-control'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">⚙️ 風控管理</button>
+            <button class="nav-btn" onclick="loadPage('performance'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">📈 績效</button>
+            <button class="nav-btn" onclick="loadPage('monitoring'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">🔍 監控</button>
+            <button class="nav-btn" onclick="loadPage('trading'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">💹 交易</button>
+            <button class="nav-btn" onclick="loadPage('strategies'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">📁 策略</button>
+            <button class="nav-btn" onclick="loadPage('intel'); return false;" style="padding: 8px 12px; border: none; background: transparent; color: #6B7280; font-weight: 500; cursor: pointer; font-size: 13px;">📡 情報</button>
+        </nav>
+    </div>
+
+    <style>
+        .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0 24px !important;
+        }
+
+        .main-nav {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .nav-btn {
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: #6B7280;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: #6B21A8;
+        }
+
+        .nav-btn.active {
+            color: #6B21A8;
+            border-bottom-color: #6B21A8;
+        }
+    </style>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Status Bar - 實現狀態 -->
+        <div class="status-bar">
+            <div class="status-item done">
+                <div class="status-item-title">✅ 已實現</div>
+                <div class="status-item-count">5</div>
+                <div style="font-size: 12px; color: #10B981;">風控、資金、績效、景氣、監控</div>
+            </div>
+            <div class="status-item todo">
+                <div class="status-item-title">⏳ 待實現</div>
+                <div class="status-item-count">4</div>
+                <div style="font-size: 12px; color: #F59E0B;">API 整合、告警推播、策略自動化、數據源</div>
+            </div>
+            <div class="status-item done">
+                <div class="status-item-title">🎨 前端完成</div>
+                <div class="status-item-count">100%</div>
+                <div style="font-size: 12px; color: #10B981;">5 個主面板 + 3 個賬戶視圖</div>
+            </div>
+            <div class="status-item todo">
+                <div class="status-item-title">🔌 後端完成</div>
+                <div class="status-item-count">30%</div>
+                <div style="font-size: 12px; color: #F59E0B;">12 個 API 端點 (虛假數據)</div>
+            </div>
+        </div>
+
+        <!-- Page Title -->
+        <div class="page-title">📊 交易賬戶總覽</div>
+        <div class="page-subtitle">實時監控三個交易賬戶的當前狀況</div>
+
+        <!-- Accounts Overview Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💼 活躍賬戶</h2>
+                <p>點擊卡片查看詳細內容</p>
+            </div>
+
+            <div class="accounts-grid">
+                <!-- IB Account -->
+                <div class="account-card" onclick="selectAccount('ib')">
+                    <div class="account-header">
+                        <div class="account-name">🏦 Interactive Brokers</div>
+                        <div class="account-status active">活躍</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric">
+                            <div class="metric-label">淨值</div>
+                            <div class="metric-value">$348,706</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">月報酬</div>
+                            <div class="metric-value positive">+4.23%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sharpe 比率</div>
+                            <div class="metric-value">1.87</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">最大回撤</div>
+                            <div class="metric-value negative">-8.5%</div>
+                        </div>
+                    </div>
+                    <div class="sync-info">
+                        <span><span class="sync-dot"></span>最後同步: 3 分鐘前</span>
+                        <button class="btn btn-secondary" style="flex: 0; padding: 6px 12px;">🔄</button>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-primary" onclick="showAccountDetail('ib', event)">詳情</button>
+                        <button class="btn btn-secondary" onclick="syncAccount('ib', event)">同步</button>
+                    </div>
+                </div>
+
+                <!-- Yuanta Account -->
+                <div class="account-card" onclick="selectAccount('yuanta')">
+                    <div class="account-header">
+                        <div class="account-name">🏪 元大證券</div>
+                        <div class="account-status active">活躍</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric">
+                            <div class="metric-label">淨值</div>
+                            <div class="metric-value">$273,983</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">月報酬</div>
+                            <div class="metric-value positive">+3.15%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sharpe 比率</div>
+                            <div class="metric-value">1.52</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">最大回撤</div>
+                            <div class="metric-value negative">-6.2%</div>
+                        </div>
+                    </div>
+                    <div class="sync-info">
+                        <span><span class="sync-dot"></span>最後同步: 7 分鐘前</span>
+                        <button class="btn btn-secondary" style="flex: 0; padding: 6px 12px;">🔄</button>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-primary" onclick="showAccountDetail('yuanta', event)">詳情</button>
+                        <button class="btn btn-secondary" onclick="syncAccount('yuanta', event)">同步</button>
+                    </div>
+                </div>
+
+                <!-- Schwab Account -->
+                <div class="account-card" onclick="selectAccount('schwab')">
+                    <div class="account-header">
+                        <div class="account-name">🔐 Schwab</div>
+                        <div class="account-status active">活躍</div>
+                    </div>
+                    <div class="account-metrics">
+                        <div class="metric">
+                            <div class="metric-label">淨值</div>
+                            <div class="metric-value">$249,076</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">月報酬</div>
+                            <div class="metric-value positive">+2.87%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sharpe 比率</div>
+                            <div class="metric-value">1.45</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">最大回撤</div>
+                            <div class="metric-value negative">-5.8%</div>
+                        </div>
+                    </div>
+                    <div class="sync-info warning">
+                        <span><span class="sync-dot inactive"></span>最後同步: 15 分鐘前</span>
+                        <button class="btn btn-secondary" style="flex: 0; padding: 6px 12px;">🔄</button>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-primary" onclick="showAccountDetail('schwab', event)">詳情</button>
+                        <button class="btn btn-secondary" onclick="syncAccount('schwab', event)">同步</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Detail Section -->
+        <div id="detail-section" class="section" style="display: none;">
+            <div class="detail-tabs">
+                <button class="tab-btn active" onclick="switchTab('positions', event)">📊 持倉</button>
+                <button class="tab-btn" onclick="switchTab('performance', event)">📈 績效</button>
+                <button class="tab-btn" onclick="switchTab('trades', event)">💹 交易</button>
+                <button class="tab-btn" onclick="switchTab('risk', event)">⚠️ 風險</button>
+            </div>
+
+            <!-- Positions Tab -->
+            <div id="positions-tab" class="tab-content active">
+                <div class="detail-section">
+                    <h3 style="margin-bottom: 16px;">📊 當前持倉</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>標的</th>
+                                <th>數量</th>
+                                <th>成本價</th>
+                                <th>現價</th>
+                                <th>未實現損益</th>
+                                <th>佔比</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Performance Tab -->
+            <div id="performance-tab" class="tab-content">
+                <div class="detail-section">
+                    <h3 style="margin-bottom: 16px;">📈 績效指標</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-card-label">年報酬</div>
+                            <div class="metric-card-value" style="color: #10B981;">+18.5%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">月報酬</div>
+                            <div class="metric-card-value" style="color: #10B981;">+4.23%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">Sharpe 比率</div>
+                            <div class="metric-card-value">1.87</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">勝率</div>
+                            <div class="metric-card-value">62%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">最大回撤</div>
+                            <div class="metric-card-value" style="color: #EF4444;">-8.5%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">本月損益</div>
+                            <div class="metric-card-value" style="color: #10B981;">+$14,756</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="performance-chart" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trades Tab -->
+            <div id="trades-tab" class="tab-content">
+                <div class="detail-section">
+                    <h3 style="margin-bottom: 16px;">💹 最近交易</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>策略</th>
+                                <th>標的</th>
+                                <th>方向</th>
+                                <th>數量</th>
+                                <th>進場</th>
+                                <th>出場</th>
+                                <th>損益</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trades-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Risk Tab -->
+            <div id="risk-tab" class="tab-content">
+                <div class="detail-section">
+                    <h3 style="margin-bottom: 16px;">⚠️ 風險指標</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-card-label">單筆風險</div>
+                            <div class="metric-card-value" style="color: #10B981;">0.8%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">日風險</div>
+                            <div class="metric-card-value" style="color: #10B981;">2.1%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">月風險</div>
+                            <div class="metric-card-value" style="color: #F59E0B;">4.8%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">回撤</div>
+                            <div class="metric-card-value" style="color: #10B981;">-8.5%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">集中度</div>
+                            <div class="metric-card-value">28%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-label">狀態</div>
+                            <div class="metric-card-value" style="color: #10B981;">✓ 安全</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💰 合計統計</h2>
+                <p>三個賬戶的總體表現</p>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-card-label">總淨值</div>
+                    <div class="metric-card-value">$871,765</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label">合計報酬</div>
+                    <div class="metric-card-value" style="color: #10B981;">+10.25%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label">加權 Sharpe</div>
+                    <div class="metric-card-value">1.61</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label">總風險評分</div>
+                    <div class="metric-card-value" style="color: #10B981;">2.3/10</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAccount = null;
+        let accountData = {
+            ib: {name: 'Interactive Brokers', symbol: 'IB'},
+            yuanta: {name: '元大證券', symbol: 'Yuanta'},
+            schwab: {name: 'Schwab', symbol: 'Schwab'}
+        };
+
+        // 初始化時加載所有數據
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+
+        function loadDashboardData() {
+            console.log('開始加載儀表板數據...');
+            // 加載持倉數據
+            loadHoldings();
+            // 加載績效數據
+            loadPerformanceData();
+            // 加載風險評分
+            loadRiskScore();
+            // 加載交易紀錄
+            loadRecentTrades();
+        }
+
+        function selectAccount(accountName) {
+            selectedAccount = accountName;
+            showAccountDetail(accountName);
+        }
+
+        function showAccountDetail(accountName, event) {
+            if (event) event.stopPropagation();
+            selectedAccount = accountName;
+            document.getElementById('detail-section').style.display = 'block';
+            document.getElementById('detail-section').scrollIntoView({ behavior: 'smooth' });
+            loadAccountData(accountName);
+        }
+
+        function syncAccount(accountName, event) {
+            event.stopPropagation();
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '同步中...';
+
+            // 模擬同步，實際應該調用 API
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = '✓ 剛同步';
+                console.log(`${accountName} 賬戶已同步`);
+            }, 1000);
+        }
+
+        function switchTab(tabName, event) {
+            event.preventDefault();
+
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Draw chart if performance tab
+            if (tabName === 'performance') {
+                setTimeout(drawPerformanceChart, 100);
+            }
+        }
+
+        function loadAccountData(accountName) {
+            const accountInfo = accountData[accountName];
+            console.log(`已載入 ${accountInfo.name} 的詳細資料`);
+            loadHoldingsForAccount(accountName);
+        }
+
+        function loadHoldings() {
+            /**獲取所有持倉數據 */
+            fetch('/api/holdings')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('持倉數據已加載:', data);
+                    populateHoldingsTable(data.data || []);
+                })
+                .catch(error => console.error('加載持倉失敗:', error));
+        }
+
+        function loadHoldingsForAccount(accountName) {
+            /**獲取特定賬戶的持倉 */
+            fetch('/api/holdings/by-broker')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(`${accountName} 持倉數據:`, data);
+                    let accountPositions = [];
+
+                    // 根據 accountName 獲取對應的持倉
+                    if (accountName === 'ib' && data.ib) {
+                        accountPositions = data.ib.positions || [];
+                    } else if (accountName === 'yuanta' && data.yuanta) {
+                        accountPositions = data.yuanta.positions || [];
+                    } else if (accountName === 'schwab' && data.other) {
+                        accountPositions = data.other.positions || [];
+                    }
+
+                    populateAccountHoldingsTable(accountPositions);
+                })
+                .catch(error => console.error(`加載 ${accountName} 持倉失敗:`, error));
+        }
+
+        function populateHoldingsTable(holdings) {
+            /**填充持倉表格 */
+            const tbody = document.querySelector('#positions-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            if (holdings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">尚無持倉數據</td></tr>';
+                return;
+            }
+
+            holdings.forEach(h => {
+                // 兼容多種字段名稱
+                const symbol = h.symbol || h.Symbol || h.代碼 || '-';
+                const qty = parseFloat(h.position || h.quantity || h.數量 || 0);
+                const costPrice = parseFloat(h.avgCost || h.cost_price || h.成本價 || 0);
+                const currentPrice = parseFloat(h.currentPrice || h.current_price || h.現價 || costPrice);
+                const unrealizedPnL = (currentPrice - costPrice) * qty;
+                const allocationPct = h.allocation_percent || h.allocationPercent || h.佔比 || 0;
+
+                const pnlColor = unrealizedPnL >= 0 ? '#10B981' : '#EF4444';
+                const row = `<tr>
+                    <td>${symbol}</td>
+                    <td style="text-align: right;">${qty.toLocaleString()}</td>
+                    <td style="text-align: right;">$${costPrice.toFixed(2)}</td>
+                    <td style="text-align: right;">$${currentPrice.toFixed(2)}</td>
+                    <td style="text-align: right; color: ${pnlColor};">
+                        $${unrealizedPnL.toFixed(2)}
+                    </td>
+                    <td style="text-align: right;">${allocationPct.toFixed(1)}%</td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function populateAccountHoldingsTable(holdings) {
+            /**填充賬戶級別的持倉表格 */
+            populateHoldingsTable(holdings);
+        }
+
+        function loadPerformanceData() {
+            /**加載績效數據 */
+            fetch('/api/daily-performance')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('績效數據已加載:', data);
+                    updatePerformanceMetrics(data);
+                })
+                .catch(error => console.error('加載績效數據失敗:', error));
+        }
+
+        function updatePerformanceMetrics(data) {
+            /**更新績效指標卡片 */
+            // 示例：更新績效指標
+            if (data.daily_performance) {
+                const perf = data.daily_performance;
+                // 可在此更新相應的 DOM 元素
+            }
+        }
+
+        function loadRiskScore() {
+            /**加載風險評分 */
+            fetch('/api/risk/score')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('風險評分已加載:', data);
+                    updateRiskMetrics(data);
+                })
+                .catch(error => console.error('加載風險評分失敗:', error));
+        }
+
+        function updateRiskMetrics(riskData) {
+            /**更新風險指標 */
+            const riskCard = document.querySelector('.metric-card:last-child');
+            if (riskCard) {
+                const value = riskCard.querySelector('.metric-card-value');
+                if (value) {
+                    value.textContent = (riskData.overall_score || 0) + '/100';
+                }
+            }
+        }
+
+        function loadRecentTrades() {
+            /**加載最近交易紀錄 */
+            fetch('/api/trades/realized')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('交易紀錄已加載:', data);
+                    populateTradesTable(data.data || data.trades || []);
+                })
+                .catch(error => console.error('加載交易紀錄失敗:', error));
+        }
+
+        function populateTradesTable(trades) {
+            /**填充交易表格 */
+            const tbody = document.querySelector('#trades-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            if (trades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">尚無交易紀錄</td></tr>';
+                return;
+            }
+
+            // 取最近 10 筆交易
+            const recentTrades = trades.slice(0, 10);
+
+            recentTrades.forEach(t => {
+                // 兼容多種字段名稱
+                const date = t.date || t.日期 || t.exitTime || new Date().toISOString().split('T')[0];
+                const strategy = t.strategy || t.策略 || '-';
+                const symbol = t.symbol || t.標的 || '-';
+                const direction = t.direction || t.方向 || t.side || '-';
+                const qty = parseFloat(t.quantity || t.position || t.數量 || 0);
+                const entryPrice = parseFloat(t.entryPrice || t.entry_price || t.進場 || 0);
+                const exitPrice = parseFloat(t.exitPrice || t.exit_price || t.出場 || 0);
+                const pnl = (exitPrice > 0 ? (exitPrice - entryPrice) * qty : 0);
+                const pnlColor = pnl >= 0 ? '#10B981' : '#EF4444';
+
+                const row = `<tr>
+                    <td>${new Date(date).toLocaleDateString('zh-TW')}</td>
+                    <td>${strategy}</td>
+                    <td>${symbol}</td>
+                    <td>${direction.toUpperCase()}</td>
+                    <td style="text-align: right;">${qty.toLocaleString()}</td>
+                    <td style="text-align: right;">$${entryPrice.toFixed(2)}</td>
+                    <td style="text-align: right;">${exitPrice > 0 ? '$' + exitPrice.toFixed(2) : '--'}</td>
+                    <td style="text-align: right; color: ${pnlColor};">
+                        ${exitPrice > 0 ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) : '--'}
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function drawPerformanceChart() {
+            const dates = Array.from({length: 30}, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (29 - i));
+                return d.toLocaleDateString('zh-TW', {month: 'short', day: 'numeric'});
+            });
+
+            const performance = [100, 101.2, 100.8, 102.1, 103.5, 102.8, 104.2, 105.1, 104.5, 106.3, 107.2, 106.8, 108.1, 109.5, 108.9, 110.2, 111.5, 110.8, 112.3, 113.8, 112.5, 114.2, 115.1, 114.5, 116.3, 117.8, 116.9, 118.5, 119.2, 118.4];
+
+            const trace = {
+                x: dates,
+                y: performance,
+                mode: 'lines',
+                line: {color: '#6B21A8', width: 3},
+                fill: 'tozeroy',
+                fillcolor: 'rgba(107, 33, 168, 0.1)'
+            };
+
+            const layout = {
+                title: '月度績效走勢',
+                xaxis: {title: '日期'},
+                yaxis: {title: '績效指數'},
+                height: 300,
+                margin: {t: 40, b: 40, l: 60, r: 40}
+            };
+
+            Plotly.newPlot('performance-chart', [trace], layout, {responsive: true});
+        }
+
+        // 頁面導航函數 - 通過 AJAX 動態加載頁面
+        function loadPage(pageName) {
+            console.log(`載入頁面: ${pageName}`);
+
+            // 隱藏詳細部分（如果顯示）
+            const detailSection = document.getElementById('detail-section');
+            if (detailSection) {
+                detailSection.style.display = 'none';
+            }
+
+            // 頁面對應的路由
+            const pageRoutes = {
+                'dashboard': null,  // 主頁面（不需要載入）
+                'risk': '/pages/risk',
+                'performance': '/pages/performance',
+                'monitoring': '/pages/monitoring',
+                'trading': '/pages/trading',
+                'strategies': '/pages/strategies',
+                'intel': '/pages/intel'
+            };
+
+            if (pageName === 'dashboard') {
+                // 返回主儀表板視圖
+                document.querySelectorAll('[id^="page-"]').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.getElementById('page-dashboard').style.display = 'block';
+                window.scrollTo(0, 0);
+                return;
+            }
+
+            const pageUrl = pageRoutes[pageName];
+            if (!pageUrl) {
+                console.error(`未知的頁面: ${pageName}`);
+                return;
+            }
+
+            // 隱藏所有現有頁面
+            document.querySelectorAll('[id^="page-"]').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // 創建或取得動態容器
+            let pageContainer = document.getElementById('dynamic-page-container');
+            if (!pageContainer) {
+                pageContainer = document.createElement('div');
+                pageContainer.id = 'dynamic-page-container';
+                pageContainer.style.cssText = 'margin-top: 64px; padding: 24px; max-width: 1600px; margin-left: auto; margin-right: auto;';
+                document.querySelector('.container').appendChild(pageContainer);
+            }
+
+            // 顯示加載指示
+            pageContainer.innerHTML = '<div style="text-align: center; padding: 40px;"><div style="font-size: 18px; color: #6B7280;">⏳ 加載中...</div></div>';
+            pageContainer.style.display = 'block';
+
+            // 通過 AJAX 加載頁面
+            fetch(pageUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    pageContainer.innerHTML = html;
+                    pageContainer.style.display = 'block';
+                    window.scrollTo(0, 0);
+                    console.log(`✓ 頁面 ${pageName} 已加載`);
+                })
+                .catch(error => {
+                    console.error(`加載失敗:`, error);
+                    pageContainer.innerHTML = `<div style="padding: 40px; text-align: center; color: #EF4444;"><p style="font-size: 18px; font-weight: 600;">⚠️ 頁面加載失敗</p><p style="font-size: 12px; color: #6B7280; margin-top: 8px;">${error.message}</p></div>`;
+                    pageContainer.style.display = 'block';
+                });
+        }
+
+        console.log('dashboardV2 加載完成！');
+    </script>
+</body>
+</html>

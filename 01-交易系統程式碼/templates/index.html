@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 交易儀表板 - Krystal AI Trading System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">💎</span>
+                <span class="logo-text">交易儀表板</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">📊 儀表板</a>
+                <a href="#" class="nav-item">💼 投資組合</a>
+                <a href="#" class="nav-item">⚙️ 設置</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <h3>⚙️ 設置</h3>
+
+            <div class="sidebar-section">
+                <label class="section-label">時間範圍</label>
+                <select id="period-select" class="select-control">
+                    <option value="1d">1日</option>
+                    <option value="7d">7日</option>
+                    <option value="30d">30日</option>
+                    <option value="90d">90日</option>
+                    <option value="1y" selected>全年</option>
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <label class="section-label">風險級別</label>
+                <div class="risk-selector">
+                    <label class="risk-option">
+                        <input type="radio" name="risk" value="low"> 低
+                    </label>
+                    <label class="risk-option">
+                        <input type="radio" name="risk" value="medium" checked> 中
+                    </label>
+                    <label class="risk-option">
+                        <input type="radio" name="risk" value="high"> 高
+                    </label>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <h1>💎 交易儀表板</h1>
+            <p class="subtitle">實時投資組合表現概覽</p>
+        </div>
+
+        <!-- Key Metrics Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2>📊 資產概覽</h2>
+                <p class="section-subtitle">您的投資組合表現概況</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">💰 總資產</span>
+                        <span class="metric-change positive">+2.34%</span>
+                    </div>
+                    <div class="metric-value" id="total-value">$125,345.01</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">📈 年度報酬</span>
+                        <span class="metric-change positive">+5.12%</span>
+                    </div>
+                    <div class="metric-value" id="annual-return">15.5%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">📊 持倉數</span>
+                        <span class="metric-change positive">+1</span>
+                    </div>
+                    <div class="metric-value" id="holdings-count">4</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">⚡ 風險評分</span>
+                        <span class="metric-change neutral">-0.5</span>
+                    </div>
+                    <div class="metric-value" id="risk-score">中</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Price Chart Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2>📈 資產走勢</h2>
+                <p class="section-subtitle">過去 12 個月的價格變化</p>
+            </div>
+
+            <div class="chart-card">
+                <div id="price-chart" class="chart-container"></div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2>📊 詳細分析</h2>
+                <p class="section-subtitle">投資回報與風險指標</p>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div id="cumulative-chart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div id="distribution-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Holdings Table Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2>💼 當前持倉</h2>
+                <p class="section-subtitle">您當前的所有持倉情況</p>
+            </div>
+
+            <div class="table-card">
+                <table class="holdings-table" id="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>價格</th>
+                            <th>數量</th>
+                            <th>市值</th>
+                            <th>漲跌</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdings-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer Info -->
+        <div class="info-box">
+            <p><strong>💡 提示：</strong> 本儀表板展示了完全按照Figma設計實現的HTML + Flask應用。所有數據通過API實時更新。</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2026 Krystal AI Trading System. 所有權利保留。</p>
+        </footer>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

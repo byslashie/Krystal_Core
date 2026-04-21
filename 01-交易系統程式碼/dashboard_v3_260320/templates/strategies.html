@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}📁 策略管理 - Krystal AI 交易系統{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📁 策略管理</h1>
+    <p class="subtitle">策略設置、回測和績效管理</p>
+</div>
+
+<section class="section">
+    <div class="section-header">
+        <h2>活躍策略</h2>
+        <p class="section-subtitle">當前運行中的交易策略</p>
+    </div>
+    <div class="card">
+        <div id="active-strategies" style="padding: 20px; color: #6b7280;">
+            <div class="loading">加載策略列表中...</div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h2>策略績效排行</h2>
+        <p class="section-subtitle">按報酬率排序</p>
+    </div>
+    <div class="card">
+        <table class="holdings-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f3f4f6;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">策略名稱</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">報酬率</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">勝率</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">狀態</th>
+                </tr>
+            </thead>
+            <tbody id="strategies-list">
+                <tr><td colspan="4" style="text-align: center; padding: 20px; color: #9ca3af;">加載中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加載策略數據
+    console.log('Loading strategies data...');
+});
+</script>
+{% endblock %}

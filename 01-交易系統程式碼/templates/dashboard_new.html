@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 Krystal AI 量化交易系統 - 完整儀表板</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- Leaflet.js for interactive maps -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">💎</span>
+                <span class="logo-text">Krystal AI 交易系統</span>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-page="dashboard" onclick="loadPage('dashboard'); return false;">📊 投資組合</button>
+                <button class="nav-btn" data-page="risk-control" onclick="loadPage('risk-control'); return false;">⚠️ 風控</button>
+                <button class="nav-btn" data-page="allocation" onclick="loadPage('allocation'); return false;">💰 資金</button>
+                <button class="nav-btn" data-page="performance" onclick="loadPage('performance'); return false;">📈 績效</button>
+                <button class="nav-btn" data-page="minsky-clock" onclick="loadPage('minsky-clock'); return false;">🌍 景氣</button>
+                <button class="nav-btn" data-page="community-risk" onclick="loadPage('community-risk'); return false;">🎯 監控</button>
+                <button class="nav-btn" data-page="trading" onclick="loadPage('trading'); return false;">💹 交易</button>
+                <button class="nav-btn" data-page="strategies" onclick="loadPage('strategies'); return false;">📁 策略</button>
+                <button class="nav-btn" data-page="comparison" onclick="loadPage('comparison'); return false;">📊 對比</button>
+                <button class="nav-btn" data-page="ship-monitor" onclick="loadPage('ship-monitor'); return false;">🚢 油輪</button>
+                <button class="nav-btn" data-page="intel" onclick="loadPage('intel'); return false;">🌍 情報</button>
+                <a href="/schwab" class="nav-btn">🔐 Schwab</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="sidebar-header">
+                    <h3>⚙️ 控制面板</h3>
+                    <button class="sidebar-toggle" id="sidebar-toggle" title="收合面板">
+                        <span class="toggle-icon">◀</span>
+                    </button>
+                </div>
+
+                <!-- Common Controls -->
+                <div class="sidebar-section">
+                    <label class="section-label">時間範圍</label>
+                    <select id="period-select" class="select-control">
+                        <option value="1d">1日</option>
+                        <option value="7d">7日</option>
+                        <option value="30d">30日</option>
+                        <option value="90d">90日</option>
+                        <option value="1y" selected>全年</option>
+                    </select>
+                </div>
+
+                <div class="sidebar-section">
+                    <label class="section-label">風險級別</label>
+                    <div class="risk-selector">
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="low"> 低
+                        </label>
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="medium" checked> 中
+                        </label>
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="high"> 高
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Page-specific Controls -->
+                <div id="page-controls"></div>
+
+                <!-- Broker Sync Controls -->
+                <div class="sidebar-section">
+                    <label class="section-label">📊 数据同步</label>
+                    <button id="sync-all-btn" class="btn-sync-all" onclick="syncAllBrokers()" title="同步所有 Broker">
+                        🔄 全部同步
+                    </button>
+                    <div class="sync-buttons">
+                        <button id="sync-ib-btn" class="btn-sync" onclick="syncBroker('ib')" title="同步 IB 持仓">
+                            🏦 IB
+                        </button>
+                        <button id="sync-yuanta-btn" class="btn-sync" onclick="syncBroker('yuanta')" title="同步元大持仓">
+                            🏪 Yuanta
+                        </button>
+                        <button id="sync-schwab-btn" class="btn-sync" onclick="syncBroker('schwab')" title="Schwab 配置">
+                            🔐 Schwab
+                        </button>
+                    </div>
+                    <div id="sync-status" class="sync-status-box" style="display:none;">
+                        <span id="sync-status-text">同步中...</span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="sidebar-section">
+                    <label class="section-label">系統狀態</label>
+                    <div id="system-status" class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>正常</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1>📊 儀表板</h1>
+                    <p class="subtitle">實時投資組合表現概覽</p>
+                </div>
+
+                <!-- 自動監控通知區域 -->
+                <div id="notification-area" style="display: none; margin: 20px 0;"></div>
+
+                <!-- 自動監控狀態指示 -->
+                <div style="background: #f0f9ff; padding: 12px 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #3b82f6; font-size: 13px; color: #1e40af;">
+                    🔄 <strong>自動同步已啟用</strong> - 每次加載頁面時，系統會自動檢查持倉變化並同步到 Google Sheets
+                </div>
+
+                <!-- Key Metrics -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>資產概覽</h2>
+                        <p class="section-subtitle">您的投資組合表現概況</p>
+                    </div>
+                    <div class="metrics-grid" id="metrics-grid">
+                        <!-- Metrics will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Charts -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>資產走勢</h2>
+                        <p class="section-subtitle">過去 12 個月的價格變化</p>
+                    </div>
+                    <div class="chart-card">
+                        <div id="price-chart" class="chart-container"></div>
+                    </div>
+                </section>
+
+                <!-- Holdings by Broker -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📊 當前持倉</h2>
+                        <p class="section-subtitle">按券商分類顯示</p>
+                    </div>
+
+                    <!-- IB Holdings -->
+                    <div class="table-card">
+                        <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 16px;">
+                            🏦 Interactive Brokers (IB)
+                            <span style="font-size: 12px; color: #9ca3af; font-weight: normal;">
+                                (<span id="ib-count">0</span> 筆)
+                            </span>
+                        </h3>
+                        <table class="holdings-table" id="ib-holdings-table">
+                            <thead>
+                                <tr>
+                                    <th>代碼</th>
+                                    <th>市場</th>
+                                    <th>數量</th>
+                                    <th>平均成本</th>
+                                    <th>貨幣</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ib-holdings-body">
+                                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #9ca3af;">無持倉</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Yuanta Holdings -->
+                    <div class="table-card" style="margin-top: 20px;">
+                        <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 16px;">
+                            🏪 Yuanta Securities (元大)
+                            <span style="font-size: 12px; color: #9ca3af; font-weight: normal;">
+                                (<span id="yuanta-count">0</span> 筆)
+                            </span>
+                        </h3>
+                        <table class="holdings-table" id="yuanta-holdings-table">
+                            <thead>
+                                <tr>
+                                    <th>代碼</th>
+                                    <th>代稱</th>
+                                    <th>數量</th>
+                                    <th>平均成本</th>
+                                    <th>貨幣</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yuanta-holdings-body">
+                                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #9ca3af;">無持倉</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 每日損益追蹤 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📈 每日損益追蹤</h2>
+                        <p class="section-subtitle">IB (USD) 與 元大 (TWD) 損益對比</p>
+                        <button class="btn btn-secondary" id="record-performance-btn" style="font-size: 12px; padding: 6px 12px; margin-left: auto;">🔔 記錄今日</button>
+                    </div>
+
+                    <!-- 指標摘要卡片 -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div class="metric-summary-card" id="card-ib-unrealized">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏦 IB 未實現</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+$0.00</div>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">USD</div>
+                        </div>
+                        <div class="metric-summary-card" id="card-ib-realized">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏦 IB 已實現</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+$0.00</div>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">USD</div>
+                        </div>
+                        <div class="metric-summary-card" id="card-yuanta-unrealized">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏪 元大 未實現</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+NT$0</div>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">TWD</div>
+                        </div>
+                        <div class="metric-summary-card" id="card-yuanta-realized">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏪 元大 已實現</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+NT$0</div>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">TWD</div>
+                        </div>
+                    </div>
+
+                    <!-- 雙Y軸圖表 -->
+                    <div class="chart-card">
+                        <div id="performance-trend-chart" style="height: 400px;"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Trading Page -->
+            <div id="trading-page" class="page">
+                <div class="page-header">
+                    <h1>💹 實盤交易管理系統</h1>
+                    <p class="subtitle">即時交易狀態監控與管理</p>
+                </div>
+
+                <!-- 系統狀態 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>系統狀態</h2>
+                        <p class="section-subtitle">實盤交易系統連接狀態</p>
+                    </div>
+                    <div class="card">
+                        <div id="trades-container">
+                            <div class="loading">加載系統狀態中...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>當前交易 📈</h2>
+                        <p class="section-subtitle">所有進行中的交易（可編輯進場理由和策略）</p>
+                    </div>
+                    <div class="card">
+                        <div class="current-trades-controls">
+                            <input type="text" id="current-trades-search" class="search-input" placeholder="🔍 搜尋：標的、策略..." />
+                            <select id="current-trades-strategy-filter" class="filter-select">
+                                <option value="">所有策略</option>
+                            </select>
+                        </div>
+                        <div id="current-trades-container" class="trades-list">
+                            <div class="loading">加載進行中的交易...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 已實現交易部分 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>已實現交易 📊</h2>
+                        <p class="section-subtitle">已完成的交易詳情與分析</p>
+                    </div>
+                    <div class="card">
+                        <div class="realized-trades-controls">
+                            <input type="text" id="realized-trades-search" class="search-input" placeholder="🔍 搜尋：標的、策略..." />
+                            <select id="realized-trades-strategy-filter" class="filter-select">
+                                <option value="">所有策略</option>
+                            </select>
+                        </div>
+                        <div id="realized-trades-container" class="trades-list">
+                            <div class="loading">加載中...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>帳戶概況</h2>
+                        <p class="section-subtitle">帳戶餘額與風險指標</p>
+                    </div>
+                    <div class="metrics-grid" id="account-metrics">
+                        <!-- Account metrics will be populated here -->
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>Broker 連接</h2>
+                        <p class="section-subtitle">連接到交易所</p>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="sync-ib">同步 Interactive Brokers</button>
+                        <button class="btn btn-primary" id="sync-yuanta">同步 元大</button>
+                        <button class="btn btn-primary" id="sync-schwab">同步 Schwab</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Strategies Page -->
+            <div id="strategies-page" class="page">
+                <div class="page-header">
+                    <h1>📁 策略上傳與績效</h1>
+                    <p class="subtitle">上傳並分析您的交易策略</p>
+                </div>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>上傳策略</h2>
+                        <p class="section-subtitle">選擇 CSV 檔案上傳新策略</p>
+                    </div>
+                    <div class="card upload-card">
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="strategy-name">策略名稱</label>
+                                <input type="text" id="strategy-name" name="strategy_name" placeholder="例如：Wave Strategy">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="initial-capital">初始資金</label>
+                                <input type="number" id="initial-capital" name="initial_capital" value="100000" min="1000">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="csv-file">CSV 檔案</label>
+                                <input type="file" id="csv-file" name="file" accept=".csv" required>
+                                <small>支持編碼: UTF-8, CP950</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">上傳並分析</button>
+                        </form>
+                        <div id="upload-status"></div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>策略列表</h2>
+                        <p class="section-subtitle">已上傳的所有策略</p>
+                    </div>
+                    <div class="table-card">
+                        <table class="strategies-table" id="strategies-table">
+                            <thead>
+                                <tr>
+                                    <th>策略名稱</th>
+                                    <th>版本</th>
+                                    <th>年化報酬</th>
+                                    <th>Sharpe</th>
+                                    <th>勝率</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="strategies-body">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Comparison Page -->
+            <div id="comparison-page" class="page">
+                <div class="page-header">
+                    <h1>📈 多策略績效比較</h1>
+                    <p class="subtitle">比較多個策略的表現</p>
+                </div>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>績效對比</h2>
+                        <p class="section-subtitle">不同策略的關鍵指標比較</p>
+                    </div>
+                    <div class="chart-card">
+                        <div id="comparison-chart" class="chart-container"></div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>統計比較</h2>
+                        <p class="section-subtitle">詳細統計資料</p>
+                    </div>
+                    <div class="table-card">
+                        <table class="comparison-table" id="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>策略</th>
+                                    <th>年化報酬</th>
+                                    <th>Sharpe比率</th>
+                                    <th>最大回撤</th>
+                                    <th>勝率</th>
+                                    <th>總交易數</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-body">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Ship Monitor Page -->
+            <div id="ship-monitor-page" class="page">
+                <div class="page-header">
+                    <h1>🚢 波斯灣油輪監測</h1>
+                    <p class="subtitle">實時情報感知系統 - INTEL-1 層</p>
+                </div>
+
+                <!-- Statistics Cards -->
+                <section class="section">
+                    <div class="metrics-grid" id="ship-stats-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">🚢 監測油輪</div>
+                            <div class="metric-value" id="ship-total">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">📍 波斯灣內</div>
+                            <div class="metric-value" id="ship-in-region">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⏳ 等待中(6h+)</div>
+                            <div class="metric-value" id="ship-waiting">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🔴 24h 告警</div>
+                            <div class="metric-value" id="ship-alerts">--</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Real-time Map -->
+                <section class="section">
+                    <div class="section-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div>
+                                <h2>🗺️ 實時地圖</h2>
+                                <p class="section-subtitle">波斯灣油輪位置分布</p>
+                            </div>
+                            <a href="https://www.marinetraffic.com/en/ais/home/centerx:56.9/centery:25.6/zoom:9" target="_blank" style="padding: 8px 16px; background: linear-gradient(135deg, #5B47D9 0%, #06B6D4 100%); color: white; border-radius: 8px; text-decoration: none; white-space: nowrap; font-weight: 500; margin-left: 20px;">🌐 MarineTraffic</a>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div id="ship-map" style="height: 400px; background: #2a3a4a; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #888;">
+                            <p>地圖加載中...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alert Log -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📢 實時告警日誌</h2>
+                        <p class="section-subtitle">過去 24 小時的異常事件</p>
+                    </div>
+                    <div class="table-card">
+                        <div id="ship-alerts-log" style="max-height: 400px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 2rem; color: #888;">加載中...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Waiting Vessels List -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>⏳ 等待中的油輪 (停留>6小時)</h2>
+                        <p class="section-subtitle">在波斯灣內等待很久沒有移動的油輪</p>
+                    </div>
+                    <div class="table-card">
+                        <table class="comparison-table" id="waiting-table">
+                            <thead>
+                                <tr>
+                                    <th>船名</th>
+                                    <th>MMSI</th>
+                                    <th>等待時間</th>
+                                    <th>起始港</th>
+                                    <th>目的港</th>
+                                    <th>位置</th>
+                                    <th>船旗</th>
+                                </tr>
+                            </thead>
+                            <tbody id="waiting-table-body">
+                                <tr><td colspan="7" style="text-align: center; padding: 2rem;">加載中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Vessel List -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>⚓ 油輪列表</h2>
+                        <p class="section-subtitle">監測區域內的所有油輪詳情</p>
+                    </div>
+                    <div class="table-card">
+                        <table class="comparison-table" id="ship-table">
+                            <thead>
+                                <tr>
+                                    <th>船名</th>
+                                    <th>MMSI</th>
+                                    <th>速度 (節)</th>
+                                    <th>航向</th>
+                                    <th>位置</th>
+                                    <th>狀態</th>
+                                    <th>船旗</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ship-table-body">
+                                <tr><td colspan="7" style="text-align: center; padding: 2rem;">加載中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Control Panel -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🎛️ 控制面板</h2>
+                        <p class="section-subtitle">監測參數設置</p>
+                    </div>
+                    <div class="card">
+                        <button id="refresh-ships" class="btn-primary" style="margin-right: 1rem;">🔄 手動刷新</button>
+                        <button id="auto-refresh-toggle" class="btn-secondary" style="margin-right: 1rem;">⏱️ 自動刷新 (開)</button>
+                        <button id="help-ships" class="btn-secondary">❓ 幫助</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Intel Events Page -->
+            <div id="intel-page" class="page">
+                <div class="page-header">
+                    <h1>🌍 情報中心</h1>
+                    <p class="subtitle">實時情報感知系統 - 地震 / 油輪 / 風控</p>
+                </div>
+
+                <!-- Intel Statistics -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>情報統計</h2>
+                        <p class="section-subtitle">今日關鍵指標</p>
+                    </div>
+                    <div class="metrics-grid" id="intel-stats-grid">
+                        <!-- Stats cards populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- USGS Earthquakes -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🌍 USGS 地震監測</h2>
+                        <p class="section-subtitle">過去 24 小時 4.5+ 級地震</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">時間</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">地點</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">規模</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">深度 (km)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="earthquake-table-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">加載中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Intel Events Log -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🚢 情報事件日誌</h2>
+                        <p class="section-subtitle">影子艦隊 / 油輪異常</p>
+                    </div>
+                    <div id="intel-events-log" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Events populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Risk Incidents -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>⚠️ 風控日誌</h2>
+                        <p class="section-subtitle">系統攔截與風險事件</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">時間</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">事件類型</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">嚴重程度</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">描述</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risk-incidents-table-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">加載中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Analysis Page -->
+            <div id="analysis-page" class="page">
+                <div class="page-header">
+                    <h1>⚙️ 進階分析</h1>
+                    <p class="subtitle">深度數據分析與優化建議</p>
+                </div>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>風險分析</h2>
+                        <p class="section-subtitle">投資組合的風險指標</p>
+                    </div>
+                    <div class="metrics-grid" id="risk-metrics">
+                        <!-- Risk metrics will be populated here -->
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>累積回報分析</h2>
+                        <p class="section-subtitle">長期累積表現</p>
+                    </div>
+                    <div class="chart-card">
+                        <div id="cumulative-chart" class="chart-container"></div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>日回報分佈</h2>
+                        <p class="section-subtitle">日回報的統計分佈</p>
+                    </div>
+                    <div class="chart-card">
+                        <div id="distribution-chart" class="chart-container"></div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>AI 優化建議</h2>
+                        <p class="section-subtitle">機器學習模型提供的建議</p>
+                    </div>
+                    <div class="card">
+                        <div id="ai-suggestions" class="suggestions-container">
+                            <p>分析中...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🌍 宏觀經濟狀態</h2>
+                        <p class="section-subtitle">全球經濟信號 & Intel 風險評估</p>
+                    </div>
+                    <div id="macro-dashboard">
+                        <!-- Macro state populated by JavaScript -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Minsky Clock & Economic Cycle Page -->
+            <div id="minsky-clock-page" class="page">
+                <div class="page-header">
+                    <h1>🌍 景氣循環與美林時鐘</h1>
+                    <p class="subtitle">經濟周期位置判斷與策略建議</p>
+                </div>
+
+                <!-- Three-Column Layout: Position | Clock | Recommendation -->
+                <section class="section">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <!-- Current Position Card -->
+                        <div class="card">
+                            <h3 style="margin-bottom: 16px;">📍 當前位置</h3>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: var(--success); margin: 12px 0;">🟢 擴張期</div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin: 12px 0;">信心度: <span style="font-weight: bold; color: var(--primary);">78%</span></div>
+                            </div>
+                            <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border-color);">
+                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+                                <div style="margin-bottom: 8px;"><strong>⚡ 再平衡建議:</strong></div>
+                                <div>S1 -$99,215</div>
+                                <div>S3 +$99,215</div>
+                            </div>
+                        </div>
+
+                        <!-- Minsky Clock Chart -->
+                        <div class="chart-card">
+                            <div id="minsky-clock-chart" class="chart-container" style="height: 350px;"></div>
+                        </div>
+
+                        <!-- Strategy Recommendation Card -->
+                        <div class="card">
+                            <h3 style="margin-bottom: 16px;">💡 策略建議</h3>
+                            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">📈 資產配置</div>
+                                    <div>股票: 70%</div>
+                                    <div>債券: 20%</div>
+                                    <div>現金: 10%</div>
+                                </div>
+                                <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--border-color);">
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">🎯 股票風格</div>
+                                    <div>成長股優先</div>
+                                </div>
+                                <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--border-color);">
+                                <div>
+                                    <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">📊 部門配置</div>
+                                    <div>科技 ↑ 超配</div>
+                                    <div>能源 ↓ 低配</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Economic Indicators Table -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📊 經濟指標</h2>
+                        <p class="section-subtitle">實時監控核心經濟數據</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">指標</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">當前值</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">上月值</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">趨勢</th>
+                                </tr>
+                            </thead>
+                            <tbody id="econ-indicators-table">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">Fed 利率</td>
+                                    <td style="padding: 12px; text-align: center;">5.33%</td>
+                                    <td style="padding: 12px; text-align: center;">5.25%</td>
+                                    <td style="padding: 12px; text-align: center;">🔴 上升</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">CPI 通膨</td>
+                                    <td style="padding: 12px; text-align: center;">3.28%</td>
+                                    <td style="padding: 12px; text-align: center;">3.24%</td>
+                                    <td style="padding: 12px; text-align: center;">🟠 偏高</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">GDP 增長</td>
+                                    <td style="padding: 12px; text-align: center;">2.5%</td>
+                                    <td style="padding: 12px; text-align: center;">2.3%</td>
+                                    <td style="padding: 12px; text-align: center;">🟢 加速</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">失業率</td>
+                                    <td style="padding: 12px; text-align: center;">3.8%</td>
+                                    <td style="padding: 12px; text-align: center;">3.9%</td>
+                                    <td style="padding: 12px; text-align: center;">🟢 下降</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;">消費信心</td>
+                                    <td style="padding: 12px; text-align: center;">104.7</td>
+                                    <td style="padding: 12px; text-align: center;">103.5</td>
+                                    <td style="padding: 12px; text-align: center;">🟢 改善</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 12-Month Cycle Tracking -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📈 12 月景氣循環追蹤</h2>
+                        <p class="section-subtitle">階段進度 (復甦→擴張→過熱→衰退→復甦)</p>
+                    </div>
+                    <div class="chart-card">
+                        <div id="cycle-tracking-chart" class="chart-container" style="height: 300px;"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Community Risk Monitoring Page -->
+            <div id="community-risk-page" class="page">
+                <div class="page-header">
+                    <h1>🎯 社群風險監控中心</h1>
+                    <p class="subtitle">實時風險告警與多維度監控</p>
+                </div>
+
+                <!-- Risk Score Cards -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>實時風險評分</h2>
+                        <p class="section-subtitle">多維度風險指標監控</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="card" style="border-top: 4px solid #10B981; text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">整體風險評分</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #10B981; margin-bottom: 8px;">28</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">🟢 低風險</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #F59E0B; text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">社群情緒</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">+45</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">⬆️ 樂觀情緒</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #3B82F6; text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">異常交易量</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #3B82F6; margin-bottom: 8px;">12</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">⚠️ 個異常信號</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #6B21A8; text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">機構動向</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #6B21A8; margin-bottom: 8px;">5</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">📊 大宗交易</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alert Log -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🚨 實時風險告警</h2>
+                        <p class="section-subtitle">過去 24 小時監控記錄</p>
+                    </div>
+                    <div class="card">
+                        <div id="alert-log" style="display: flex; flex-direction: column; gap: 0;">
+                            <!-- Alerts populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Risk Trend Charts -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📈 風險指標 7 日趨勢</h2>
+                        <p class="section-subtitle">風險評分與維度分析</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div class="chart-card">
+                            <div id="risk-trend-chart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div id="risk-dimensions-chart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Social Signals Tabs -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>💬 社群信號詳細分析</h2>
+                        <p class="section-subtitle">多個社群平台的實時信號追蹤</p>
+                    </div>
+                    <div class="card">
+                        <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 16px;">
+                            <div style="display: flex; gap: 0;">
+                                <button class="social-tab-btn active" onclick="switchSocialTab('twitter', event)" style="flex: 1; padding: 12px; border: none; background: transparent; border-bottom: 3px solid transparent; color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">🐦 Twitter/X</button>
+                                <button class="social-tab-btn" onclick="switchSocialTab('reddit', event)" style="flex: 1; padding: 12px; border: none; background: transparent; border-bottom: 3px solid transparent; color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">📱 Reddit</button>
+                                <button class="social-tab-btn" onclick="switchSocialTab('news', event)" style="flex: 1; padding: 12px; border: none; background: transparent; border-bottom: 3px solid transparent; color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">📰 新聞</button>
+                                <button class="social-tab-btn" onclick="switchSocialTab('institutions', event)" style="flex: 1; padding: 12px; border: none; background: transparent; border-bottom: 3px solid transparent; color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: all 0.2s;">🏦 機構</button>
+                            </div>
+                        </div>
+                        <div id="twitter-tab" class="social-tab-content" style="display: block;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">標籤</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">提及次數</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">正面比例</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">情緒趨勢</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="twitter-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="reddit-tab" class="social-tab-content" style="display: none;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">板塊</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">本週討論</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">熱門話題</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">情緒</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reddit-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="news-tab" class="social-tab-content" style="display: none;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">時間</th>
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">來源</th>
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">標題</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">影響</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="news-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div id="institutions-tab" class="social-tab-content" style="display: none;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">機構</th>
+                                        <th style="padding: 10px; text-align: left; font-weight: bold;">最新動向</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">資金規模</th>
+                                        <th style="padding: 10px; text-align: center; font-weight: bold;">影響</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="institutions-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Risk Control Panel -->
+            <div id="risk-control-page" class="page">
+                <div class="page-header">
+                    <h1>⚠️ 風險控制儀表板</h1>
+                    <p class="subtitle">實時風險監控與觸發狀態</p>
+                </div>
+
+                <!-- Risk Status Cards -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>實時風險狀態</h2>
+                        <p class="section-subtitle">帳戶風險指標卡片</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="card" style="border-top: 4px solid #10B981;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">帳戶資金狀態</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #10B981; margin-bottom: 8px;">🟢</div>
+                            <div style="font-size: 13px; margin-bottom: 8px;"><span style="font-weight: bold;">評分: 2/10</span></div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">低風險</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #F59E0B;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">當日損益</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">⚠️</div>
+                            <div style="font-size: 13px; margin-bottom: 8px;"><span style="font-weight: bold;">-$2,340</span></div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">進度: 47%</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #F59E0B;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">最大回撤</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">🟡</div>
+                            <div style="font-size: 13px; margin-bottom: 8px;"><span style="font-weight: bold;">-8.5%</span></div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">進度: 71%</div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #10B981;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">單策略上限</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #10B981; margin-bottom: 8px;">🟢</div>
+                            <div style="font-size: 13px; margin-bottom: 8px;"><span style="font-weight: bold;">28%</span></div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">安全</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Risk Rules Table -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>🛑 風控規則觸發狀態</h2>
+                        <p class="section-subtitle">實時監控所有風控指標</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">風控規則</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">當前值</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">限制值</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">進度</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risk-rules-table">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">帳戶風險評分</td>
+                                    <td style="padding: 12px; text-align: center;">2.3/10</td>
+                                    <td style="padding: 12px; text-align: center;">7.0/10</td>
+                                    <td style="padding: 12px; text-align: center;">33%</td>
+                                    <td style="padding: 12px; text-align: center;">✓ 安全</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">日最大損失</td>
+                                    <td style="padding: 12px; text-align: center;">-$2,340</td>
+                                    <td style="padding: 12px; text-align: center;">-$5,000</td>
+                                    <td style="padding: 12px; text-align: center;">47%</td>
+                                    <td style="padding: 12px; text-align: center;">⚠️ 警告</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">最大回撤</td>
+                                    <td style="padding: 12px; text-align: center;">-8.5%</td>
+                                    <td style="padding: 12px; text-align: center;">-12%</td>
+                                    <td style="padding: 12px; text-align: center;">71%</td>
+                                    <td style="padding: 12px; text-align: center;">⚠️ 接近</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;">S1 部位比例</td>
+                                    <td style="padding: 12px; text-align: center;">28%</td>
+                                    <td style="padding: 12px; text-align: center;">35%</td>
+                                    <td style="padding: 12px; text-align: center;">80%</td>
+                                    <td style="padding: 12px; text-align: center;">✓ 安全</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Risk Log -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📋 風控日誌</h2>
+                        <p class="section-subtitle">系統攔截與風險事件</p>
+                    </div>
+                    <div class="card">
+                        <div id="risk-control-log" style="display: flex; flex-direction: column; gap: 0;"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Allocation Panel -->
+            <div id="allocation-page" class="page">
+                <div class="page-header">
+                    <h1>💰 資金分配與再平衡</h1>
+                    <p class="subtitle">動態資金配置與再平衡建議</p>
+                </div>
+
+                <!-- Rebalance Suggestion -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>⚡ 再平衡建議</h2>
+                        <p class="section-subtitle">當前偏離提示</p>
+                    </div>
+                    <div class="card" style="background: #fef3c7; border-left: 4px solid #F59E0B; padding: 20px;">
+                        <div style="font-weight: bold; color: #d97706; margin-bottom: 8px;">🔔 S1 油輪信號策略偏離目標權重 +8%</div>
+                        <div style="color: #b45309; font-size: 13px; margin-bottom: 12px;">建議執行動態再平衡</div>
+                        <div style="color: #b45309; font-size: 13px; margin-bottom: 12px;">預計移動資金: -$99,215 from S1 → S3</div>
+                        <div style="background: #ffffff; border-radius: 4px; height: 8px; overflow: hidden; margin: 12px 0;">
+                            <div style="background: #F59E0B; height: 100%; width: 35%; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #b45309;">進度: ████████████████░░░░ 35%</div>
+                    </div>
+                </section>
+
+                <!-- Weight Comparison Table -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📊 權重對比 (當前 vs 目標)</h2>
+                        <p class="section-subtitle">策略資金配置情況</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold;">策略</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">目標</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">當前</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">當前金額</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: bold;">建議</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allocation-table">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">強勢股優化</td>
+                                    <td style="padding: 12px; text-align: center;">20%</td>
+                                    <td style="padding: 12px; text-align: center;">28%</td>
+                                    <td style="padding: 12px; text-align: center;">$348,706</td>
+                                    <td style="padding: 12px; text-align: center;">⬇️ 減少</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">技術面策略</td>
+                                    <td style="padding: 12px; text-align: center;">22%</td>
+                                    <td style="padding: 12px; text-align: center;">22%</td>
+                                    <td style="padding: 12px; text-align: center;">$273,983</td>
+                                    <td style="padding: 12px; text-align: center;">➡️ 保持</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">總經策略</td>
+                                    <td style="padding: 12px; text-align: center;">25%</td>
+                                    <td style="padding: 12px; text-align: center;">20%</td>
+                                    <td style="padding: 12px; text-align: center;">$249,076</td>
+                                    <td style="padding: 12px; text-align: center;">⬆️ 增加</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">季節性策略</td>
+                                    <td style="padding: 12px; text-align: center;">18%</td>
+                                    <td style="padding: 12px; text-align: center;">15%</td>
+                                    <td style="padding: 12px; text-align: center;">$186,807</td>
+                                    <td style="padding: 12px; text-align: center;">⬆️ 增加</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px;">避險策略</td>
+                                    <td style="padding: 12px; text-align: center;">10%</td>
+                                    <td style="padding: 12px; text-align: center;">10%</td>
+                                    <td style="padding: 12px; text-align: center;">$124,538</td>
+                                    <td style="padding: 12px; text-align: center;">➡️ 保持</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;">現金儲備</td>
+                                    <td style="padding: 12px; text-align: center;">5%</td>
+                                    <td style="padding: 12px; text-align: center;">5%</td>
+                                    <td style="padding: 12px; text-align: center;">$62,269</td>
+                                    <td style="padding: 12px; text-align: center;">➡️ 保持</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Action Buttons -->
+                <section class="section">
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-primary">✓ 執行再平衡</button>
+                        <button class="btn btn-secondary">📊 詳情</button>
+                        <button class="btn btn-secondary">⚙️ 調整</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Performance Panel -->
+            <div id="performance-page" class="page">
+                <div class="page-header">
+                    <h1>📈 績效追蹤系統</h1>
+                    <p class="subtitle">自動同步與績效監控</p>
+                </div>
+
+                <!-- Sync Status -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>⏰ 自動同步狀態</h2>
+                        <p class="section-subtitle">券商連接與同步狀況</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                        <div class="card" style="border-top: 4px solid #10B981;">
+                            <div style="font-weight: bold; margin-bottom: 12px;">🏦 Interactive Brokers</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                <div>✓ 已連接</div>
+                                <div>最後同步: 3 分鐘前</div>
+                                <button class="btn btn-secondary" style="margin-top: 10px; width: 100%;">🔄 立即同步</button>
+                            </div>
+                        </div>
+                        <div class="card" style="border-top: 4px solid #10B981;">
+                            <div style="font-weight: bold; margin-bottom: 12px;">🏪 Yuanta Securities</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                <div>✓ 已連接</div>
+                                <div>最後同步: 7 分鐘前</div>
+                                <button class="btn btn-secondary" style="margin-top: 10px; width: 100%;">🔄 立即同步</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Performance Metrics -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📊 績效指標</h2>
+                        <p class="section-subtitle">本月交易績效</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="card" style="text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">本月勝率</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #10B981; margin-bottom: 8px;">62%</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">盈利: 31/50</div>
+                        </div>
+                        <div class="card" style="text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">平均勝利</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #10B981; margin-bottom: 8px;">$850</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">平均虧損: -$450</div>
+                        </div>
+                        <div class="card" style="text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">收益因子</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #10B981; margin-bottom: 8px;">1.87</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">盈利/虧損比</div>
+                        </div>
+                        <div class="card" style="text-align: center;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">自動同步</div>
+                            <div style="font-size: 32px; font-weight: bold; color: #10B981; margin-bottom: 8px;">✓</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">最後: 2分鐘前</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Trades -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2>📋 最近交易記錄</h2>
+                        <p class="section-subtitle">自動從券商同步</p>
+                    </div>
+                    <div class="card">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 10px; text-align: left; font-weight: bold;">日期</th>
+                                    <th style="padding: 10px; text-align: left; font-weight: bold;">策略</th>
+                                    <th style="padding: 10px; text-align: left; font-weight: bold;">標的</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: bold;">方向</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: bold;">數量</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: bold;">進場</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: bold;">出場</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: bold;">損益</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-trades-table">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 10px;">3/20</td>
+                                    <td style="padding: 10px;">S1</td>
+                                    <td style="padding: 10px;">XLE</td>
+                                    <td style="padding: 10px; text-align: center;">BUY</td>
+                                    <td style="padding: 10px; text-align: center;">500</td>
+                                    <td style="padding: 10px; text-align: center;">79.5</td>
+                                    <td style="padding: 10px; text-align: center;">--</td>
+                                    <td style="padding: 10px; text-align: center; color: #10B981;">+$1,900</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 10px;">3/19</td>
+                                    <td style="padding: 10px;">S2</td>
+                                    <td style="padding: 10px;">AAPL</td>
+                                    <td style="padding: 10px; text-align: center;">BUY</td>
+                                    <td style="padding: 10px; text-align: center;">50</td>
+                                    <td style="padding: 10px; text-align: center;">191</td>
+                                    <td style="padding: 10px; text-align: center;">195</td>
+                                    <td style="padding: 10px; text-align: center; color: #10B981;">+$200</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 10px;">3/18</td>
+                                    <td style="padding: 10px;">S3</td>
+                                    <td style="padding: 10px;">GLD</td>
+                                    <td style="padding: 10px; text-align: center;">SELL</td>
+                                    <td style="padding: 10px; text-align: center;">100</td>
+                                    <td style="padding: 10px; text-align: center;">190</td>
+                                    <td style="padding: 10px; text-align: center;">188</td>
+                                    <td style="padding: 10px; text-align: center; color: #10B981;">+$230</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px;">3/17</td>
+                                    <td style="padding: 10px;">S4</td>
+                                    <td style="padding: 10px;">IWM</td>
+                                    <td style="padding: 10px; text-align: center;">BUY</td>
+                                    <td style="padding: 10px; text-align: center;">150</td>
+                                    <td style="padding: 10px; text-align: center;">195</td>
+                                    <td style="padding: 10px; text-align: center;">193</td>
+                                    <td style="padding: 10px; text-align: center; color: #EF4444;">-$210</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 交易詳情模態窗口 -->
+    <div id="trade-detail-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="trade-detail-title">交易詳情</h2>
+                <button class="modal-close" onclick="closeTradDetailModal()">✕</button>
+            </div>
+            <div class="modal-body" id="trade-detail-body">
+                <!-- Trade details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTradDetailModal()">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編輯當前交易模態窗口 -->
+    <div id="edit-trade-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="edit-trade-title">編輯交易信息</h2>
+                <button class="modal-close" onclick="closeEditTradeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-trade-form">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #1F2937;">標的代碼</label>
+                        <input type="text" id="edit-trade-symbol" readonly style="padding: 10px; border: 1px solid #E5E7EB; border-radius: 6px; background: #F3F4F6; width: 100%;" />
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #1F2937;">所屬策略</label>
+                        <select id="edit-trade-strategy" style="padding: 10px; border: 1px solid #E5E7EB; border-radius: 6px; width: 100%; font-family: inherit; font-size: 14px;">
+                            <option value="">-- 選擇策略 --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #1F2937;">進場理由</label>
+                        <textarea id="edit-trade-entry-reason" rows="3" style="padding: 10px; border: 1px solid #E5E7EB; border-radius: 6px; width: 100%; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #1F2937;">備註</label>
+                        <textarea id="edit-trade-remark" rows="2" style="padding: 10px; border: 1px solid #E5E7EB; border-radius: 6px; width: 100%; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 8px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">儲存</button>
+                        <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeEditTradeModal()">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js?v=20260312"></script>
+</body>
+</html>

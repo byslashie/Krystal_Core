@@ -1,0 +1,352 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 時代的彎道超車 - Krystal AI 直播簡報</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      /* ── Aura Light Theme (matching dashboardV8) ── */
+      :root {
+        --bg: #F7F5F1;
+        --blue: #A8C5E8;
+        --blue-deep: #6FA8D4;
+        --peach: #F0A888;
+        --peach-deep: #E07848;
+        --text: #1A1814;
+        --text-2: #6B6560;
+        --text-3: #9E9891;
+        --green: #1a7a4a;
+        --red: #c0392b;
+        --yellow: #b7770d;
+        --glass: rgba(255,255,255,0.72);
+        --glass-border: rgba(255,255,255,0.90);
+        --aura-grad:
+          radial-gradient(ellipse 80% 60% at 0% 0%, rgba(168,197,232,.35) 0%, transparent 65%),
+          radial-gradient(ellipse 70% 55% at 100% 100%, rgba(240,168,136,.28) 0%, transparent 65%);
+
+        --r-main-font: 'Plus Jakarta Sans', "Helvetica Neue", sans-serif;
+        --r-heading-font: 'Plus Jakarta Sans', "Helvetica Neue", sans-serif;
+        --r-heading-text-transform: none;
+        --r-background-color: #F7F5F1;
+        --r-main-color: #1A1814;
+        --r-heading-color: #6FA8D4;
+        --r-link-color: #E07848;
+        --r-selection-background-color: rgba(168,197,232,0.35);
+      }
+
+      /* Background aura gradient */
+      .reveal .backgrounds { background: var(--aura-grad), var(--bg) !important; }
+      .reveal .slide-background { background: transparent !important; }
+
+      /* Typography */
+      .reveal h1 { font-weight: 900; letter-spacing: -0.04em; color: var(--text); }
+      .reveal h2 { font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
+      .reveal h3 { font-weight: 800; letter-spacing: -0.02em; color: var(--blue-deep); text-align: left; margin-bottom: 20px; }
+      .reveal p  { font-size: 30px; line-height: 1.6; color: var(--text-2); text-align: left; }
+      .reveal li { font-size: 28px; line-height: 1.8; color: var(--text-2); margin-bottom: 12px; text-align: left; }
+      .reveal strong { color: var(--text); }
+
+      /* Accent colours */
+      .highlight { color: var(--peach-deep); font-weight: bold; }
+      .accent    { color: var(--green);      font-weight: bold; }
+      .center-text { text-align: center !important; }
+
+      /* Glassmorphism card */
+      .flex-row { display: flex; gap: 32px; margin-top: 30px; justify-content: center; }
+      .card {
+        flex: 1; padding: 24px; border-radius: 16px;
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+      }
+      .card h4 { margin-top: 0; font-size: 18px; }
+      .card p  { font-size: 24px; color: var(--text-2); }
+      .card.alert {
+        background: rgba(192,57,43,0.07);
+        border-color: rgba(192,57,43,0.25);
+      }
+
+      /* Code block */
+      .script-box {
+        background: rgba(247,245,241,0.9);
+        border: 1px solid rgba(168,197,232,0.4);
+        padding: 20px; border-radius: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 20px; text-align: left;
+        color: var(--text); line-height: 1.7;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.04);
+      }
+
+      .floating-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--text-3); font-family: sans-serif; z-index: 10; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        
+        <!-- Slide 1 -->
+        <section>
+           <h1 style="font-size: 2em; margin-bottom: 20px;">AI 時代的彎道超車</h1>
+           <h3 class="center-text" style="color:var(--r-link-color); font-size: 1.3em;">不學寫程式，也能打造專屬的生活與交易系統</h3>
+           <p class="center-text" style="margin-top: 60px; font-size: 24px;">Krystal AI 直播沙龍</p>
+           
+           <aside class="notes">
+             大家好，今晚這 1 小時，我不教你艱澀的 Python 或演算法。我只要帶你看一個觀念——如何把 AI 當成「不用發薪水的超強助理」，為你省下 80% 的工作時間。
+           </aside>
+        </section>
+
+        <!-- Slide 2 -->
+        <section>
+          <h3>我的 AI 日常</h3>
+          <p>從「LINE 飲食追蹤器」到「健身紀錄自動化」</p>
+          <ul style="margin-top: 30px;">
+            <li><strong>以前：</strong>手動開不同的 App、打字記帳算卡路里...</li>
+            <li><strong>現在：</strong>只要拍照丟給 AI，<span class="highlight">自動辨識、計算熱量並歸檔</span></li>
+          </ul>
+          <div style="margin-top: 50px; font-style: italic; color: var(--text); font-size: 32px; text-align: center; background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.9); backdrop-filter: blur(16px); padding: 20px; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+            「既然處理瑣碎小事這麼強，<br>那如果拿來輔助交易與投資呢？」
+          </div>
+          <aside class="notes">
+            這半年來，AI 徹底改變我的生活。以前我記帳、算卡路里，要一直開軟體查。現在我對著 LINE 拍收據、拍便當，AI 自動幫我算好熱量、歸檔、入帳。當我發現 AI 處理「瑣碎小事」這麼強的時候，我就想：「那如果我把它拿來輔助交易與投資呢？」
+          </aside>
+        </section>
+
+        <!-- Slide 3 -->
+        <section>
+          <h3>傳統交易者的痛點</h3>
+          <p>看盤的時間，都被「整理資料的苦工」吃掉了</p>
+          <div class="flex-row">
+            <div class="card">
+              <h4 style="color:var(--green); margin-top:0;">☕️ 理想的操盤手</h4>
+              <p style="font-size:24px; color:var(--text-2);">優雅喝咖啡看盤<br>大腦專注於「策略研發」<br>與「資金風控規劃」</p>
+            </div>
+            <div class="card alert">
+              <h4 style="color:var(--red); margin-top:0;">😫 真實的散戶</h4>
+              <p style="font-size:24px; color:var(--text-2);">熬夜一檔檔看財報<br>拉 Excel 拉到手軟<br>看到機會時已精神耗弱</p>
+            </div>
+          </div>
+          <aside class="notes">
+            每天下班，你有多少時間能做功課？你要看美股總經、看台股新聞、看外資籌碼，還要跑回測。其實，我們把精力全花在「資料整理」這個苦勞上。
+          </aside>
+        </section>
+
+        <!-- Slide 4 -->
+        <section>
+          <h2 style="text-align: left;">AI 真正的強項在哪？</h2>
+          <div class="flex-row">
+            <div class="card">
+              <h4 style="color:var(--blue-deep); margin-top:0;">🧠 人類大腦該做的</h4>
+              <ul style="font-size:24px;">
+                <li>定義交易的大方向</li>
+                <li>設計進出場邏輯</li>
+                <li>決定凱利公式與資金控管</li>
+              </ul>
+            </div>
+            <div class="card" style="border-color: var(--peach);">
+              <h4 style="color:var(--peach-deep); margin-top:0;">🤖 AI 大腦能做的</h4>
+              <ul style="font-size:24px;">
+                <li>執行高強度<span class="highlight">重複性動作</span></li>
+                <li>一秒讀完 10 頁法說會判斷情緒</li>
+                <li>海量且枯燥的資料清洗</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">
+            很多人以為 AI 是要幫你預測哪支股票會漲明牌，大錯特錯！AI 最強的是「高強度重複性動作」。你只要定義好規則，它一秒看完長達十頁的法說會逐字稿。
+          </aside>
+        </section>
+
+        <!-- Slide 5 -->
+        <section>
+          <h3>我們有 XQ 了，為什麼還要 AI？</h3>
+          <p>XQ 資料齊全、選股強大，但有 <span class="highlight">3 個致命傷</span>：</p>
+          <ul style="font-size: 28px; margin-top: 30px;">
+            <li><strong style="color:var(--text);">1. 無法解讀文字：</strong>只能處理數字（價量），無法分析法說會與新聞的「多空語意情緒」。</li>
+            <li><strong style="color:var(--text);">2. 介面無法融合：</strong>難以將總經羅盤、產業輪動、個股訊號全部融合在一個自訂的流暢 UI 裡。</li>
+            <li><strong style="color:var(--text);">3. 跨界整合封閉：</strong>想要自動推播到 Line，或串接美股/虛擬貨幣 API 形成跨市場儀表板非常困難。</li>
+          </ul>
+          <aside class="notes">
+            XQ 絕對是台灣最強工具。但當我越用越深，我發現三個致命傷：看不懂文字、版面配置太受限、自動化太難。
+          </aside>
+        </section>
+
+        <!-- Slide 6 -->
+        <section>
+          <h3>用 AI 來補足傳統軟體的極限 🚀</h3>
+          <div style="background:rgba(255,255,255,0.72); border:1px solid rgba(255,255,255,0.9); backdrop-filter:blur(20px); padding:30px; border-radius:16px; margin-top:30px; text-align:center; box-shadow:0 6px 24px rgba(0,0,0,0.06);">
+            <h4 style="color:var(--text); margin:0;">XQ 全球贏家 <span style="color:var(--blue-deep); margin: 0 15px;">🤝</span> Krystal AI 大腦</h4>
+            
+            <div style="display:flex; justify-content: space-around; margin-top: 30px;">
+               <div style="text-align:left;">
+                 <strong style="color:var(--green); font-size: 28px;">骨幹 (XQ)</strong>
+                 <ul style="font-size: 22px; margin-top:10px;">
+                   <li>底層報價資料庫</li>
+                   <li>歷史回測運算引擎</li>
+                   <li>基礎技術籌碼篩選</li>
+                 </ul>
+               </div>
+               <div style="font-size: 40px; line-height: 120px;">➡️</div>
+               <div style="text-align:left;">
+                 <strong style="color:var(--peach-deep); font-size: 28px;">大腦 (Krystal AI)</strong>
+                 <ul style="font-size: 22px; margin-top:10px;">
+                   <li>自然語言劇本生成</li>
+                   <li>新聞與法說會語意解讀</li>
+                   <li>客製化圖表與推播視覺化</li>
+                 </ul>
+               </div>
+            </div>
+          </div>
+          <aside class="notes">
+            於是，我結合了這兩者，孕育出我們今天要展示的 Krystal AI 系統。不需要重新發明輪子，我們讓 XQ 做強大的資料庫骨幹，讓 AI 當超級大腦。
+          </aside>
+        </section>
+
+        <!-- Slide 7 -->
+        <section class="center-text">
+          <h2 style="font-size: 2.5em;">【火力展示】</h2>
+          <h3 class="center-text" style="color:var(--peach-deep); font-size: 1.5em;">Live Demo 環節</h3>
+          <p class="center-text" style="margin-top: 20px;">不再紙上談兵，真槍實彈操作我們的自建系統</p>
+          <aside class="notes">
+            (此時切換視窗到 HTML Demo 網頁進行操作展示)
+          </aside>
+        </section>
+
+        <!-- Slide 8 -->
+        <section>
+          <h3>Demo 1：Top-Down 總經羅盤</h3>
+          <p>一頁掌握全球宏觀與資金流向</p>
+          <ul style="font-size: 28px; margin-top: 30px;">
+            <li>AI 自動從外部來源萃取非結構化的財經數據</li>
+            <li>將複雜資訊化為簡單的視覺化 2D 象限（擴張、趨緩、衰退、復甦）</li>
+            <li>一秒鐘指出 <span class="highlight">「現在大環境適合加碼還是保守退場」</span></li>
+          </ul>
+          <aside class="notes">
+            切換到 Krystal 系統的「Top-Down 總經視角」。包含 FED、景氣信號到產業輪動。AI 自動把非結構化資料萃取放進這 2D 象限。我一眼就能看出現在在擴張期，該主攻動能策略。
+          </aside>
+        </section>
+
+        <!-- Slide 9 -->
+        <section>
+          <h3>Demo 2：白話文生腳本</h3>
+          <p>對著對話框講話，消滅語法錯誤門檻</p>
+          <div class="script-box" style="margin-top: 20px;">
+            <span style="color:var(--peach-deep); font-weight:bold;">你：</span>「請幫我寫一個策略，KD小於20、量能放大為昨天的1.5倍」<br><br>
+            <span style="color:var(--blue-deep); font-weight:bold;">AI (3秒後)：</span><br>
+            <span style="color:#text-muted">// KD 指標計算</span><br>
+            Var K = KValue(9, 3, 3);<br>
+            Var D = DValue(9, 3, 3);<br>
+            <span style="color:#text-muted">// 篩選條件</span><br>
+            If K < 20 And Volume > Volume[1] * 1.5 Then Buy;
+          </div>
+          <aside class="notes">
+            過去要買書學 XS，少個分號找半天。現在你只要定義白話文，AI 三秒生出腳本。寫策略不再是工程師的專利，而是「有邏輯思維的參與者」的專利。
+          </aside>
+        </section>
+
+        <!-- Slide 10 -->
+        <section>
+          <h3>Demo 3：AI 選股中心 🎯</h3>
+          <p>XQ 無腦海選 ✖️ AI 精準深加工過濾</p>
+          <ul style="font-size: 28px; margin-top: 30px;">
+            <li><strong>第一層 海選：</strong> XQ 條件選股跳出 54 檔符合技術面的起漲標的</li>
+            <li><strong>第二層 精挑：</strong> AI 自動爬取這 54 檔近期的<span class="highlight">法說會重點、新聞多空情緒分數</span></li>
+            <li><strong>最　終 出線：</strong> 淘汰有基本面隱憂的，只推薦「價量齊揚+AI解讀為極度正面」的 Top 3 標的</li>
+          </ul>
+          <aside class="notes">
+            XQ 條件選股可能跳出 50 檔多頭股票。以前一檔檔看財報，現在讓 AI 選股中心讀新聞抓情緒，自動挑出前 3 檔。XQ 負責海選，AI 負責精挑。
+          </aside>
+        </section>
+
+        <!-- Slide 11 -->
+        <section>
+          <h3>Demo 4：瞬間解析 XQ 回測報表</h3>
+          <p>把 Excel 樞紐分析的時間省下來</p>
+          <ul style="font-size: 28px; margin-top: 30px;">
+            <li>只要將 XQ 匯出的 CSV 交易明細「拉進網頁」</li>
+            <li><span class="highlight">3 秒內</span> 計算出真實的 CAGR、最大回撤、勝率與盈虧比</li>
+            <li>自動生成極度好讀的 <strong style="color:var(--blue-deep)">月度報酬熱力圖</strong></li>
+          </ul>
+          <aside class="notes">
+            從 XQ 匯出 CSV 後拉 Excel 很痛苦。現在點「載入真實回測範例」，3 秒不到，所有數據與月度熱力圖馬上出來。以往半小時的苦工現在 3 秒完成，省下的時間拿去優化策略不是更好？
+          </aside>
+        </section>
+
+        <!-- Slide 12 -->
+        <section class="center-text">
+          <h2 style="color:var(--peach-deep)">投資的本質是認知變現</h2>
+          <h3 class="center-text" style="color:var(--text)">而不是當做資料的苦力</h3>
+          <p class="center-text" style="font-size: 26px; margin-top: 40px; color: var(--text-2);">
+            Krystal AI 系統不是要取代你的交易決策，<br>
+            它是幫你省下 <span class="highlight">80% 勞力密集的瑣碎時間</span>，<br>
+            確保你能以最飽滿的精神，<br>
+            去做那 <span style="color:var(--blue-deep); font-weight:bold;">20% 能創造超額報酬</span> 的決定。
+          </p>
+          <aside class="notes">
+            這句是核心金句。AI 不是神，它只是不知疲倦的代理人。把精力花在投資哲學，把苦工花在運算。
+          </aside>
+        </section>
+
+        <!-- Slide 13 -->
+        <section>
+          <h3>給新手的三個 AI 實踐建議</h3>
+          <ol style="font-size: 28px; line-height: 2; margin-top: 30px;">
+            <li>先找出你生活中 <span class="highlight">最討厭、最花時間的瑣事</span>，不要為了用 AI 而硬用。</li>
+            <li>把它當成 <strong>不知疲倦的高級實習生</strong>，訓練自己下 Prompt（清楚給指令）的能力。</li>
+            <li>沒有工程師背景？太好了，現在正是你利用中文與 AI <strong>彎道超車</strong> 的最佳時刻。</li>
+          </ol>
+          <aside class="notes">
+            不要為了用 AI 而用 AI。重點在於怎麼當主管對 AI 下指令。
+          </aside>
+        </section>
+
+        <!-- Slide 14 -->
+        <section>
+          <h2>未來課程：你會學到什麼？</h2>
+          <ul style="font-size: 28px; line-height: 1.8; margin-top: 40px;">
+            <li>🔥 <strong style="color:var(--blue-deep)">零基礎起手式：</strong> 如何精準拆解需求，不再對著 AI 視窗發呆。</li>
+            <li>🔥 <strong style="color:var(--blue-deep)">工作流全自動化：</strong> 串接日常看盤工具，打造下班後的被動分析流。</li>
+            <li>🔥 <strong style="color:var(--blue-deep)">專屬私人助理：</strong> 從 0 到 1 建構你的「生活 + 交易」超強外掛。</li>
+          </ul>
+          <aside class="notes">
+            如果你覺得這套系統很棒，接下來的課程就是教你怎麼自己搭建！不需五年資工背景，從 0 到 1 打造私人助理。
+          </aside>
+        </section>
+
+        <!-- Slide 15 -->
+        <section class="center-text">
+          <h1 style="font-size: 3em;">Q & A</h1>
+          <h3 class="center-text" style="color: var(--text)">開放現場互動問答</h3>
+          <div style="margin-top: 50px; padding: 20px; border: 2px dashed var(--peach); border-radius: 14px; display: inline-block; background: rgba(240,168,136,0.08);">
+             <p style="font-size: 24px; color: var(--peach-deep); margin: 0;">
+               🎁 掃描 QR Code 或首頁連結 領取直播專屬福利 🎁
+             </p>
+          </div>
+          <aside class="notes">
+            開放觀眾提問，並推廣專屬的折扣碼或群組。謝謝大家！
+          </aside>
+        </section>
+
+      </div>
+    </div>
+    
+    <div class="floating-hint">💡 講者提示：按下鍵盤 'S' 鍵可開啟講稿備忘錄</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        transition: 'slide',
+        center: false,
+        margin: 0.1,
+        width: 1024,
+        height: 768
+      });
+    </script>
+  </body>
+</html>

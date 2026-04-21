@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}💼 投資組合 - Krystal AI 交易系統{% endblock %}
+
+{% block page_controls %}
+<!-- Portfolio-specific controls can be added here -->
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>💼 投資組合</h1>
+    <p class="subtitle">實時投資組合表現概覽</p>
+</div>
+
+<!-- 自動監控通知區域 -->
+<div id="notification-area" style="display: none; margin: 20px 0;"></div>
+
+<!-- 自動監控狀態指示 -->
+<div style="background: #f0f9ff; padding: 12px 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #3b82f6; font-size: 13px; color: #1e40af;">
+    🔄 <strong>自動同步已啟用</strong> - 每次加載頁面時，系統會自動檢查持倉變化並同步到 Google Sheets
+</div>
+
+<!-- Key Metrics -->
+<section class="section">
+    <div class="section-header">
+        <h2>資產概覽</h2>
+        <p class="section-subtitle">您的投資組合表現概況</p>
+    </div>
+    <div class="metrics-grid" id="metrics-grid">
+        <!-- Metrics will be populated by JavaScript -->
+    </div>
+</section>
+
+<!-- Charts -->
+<section class="section">
+    <div class="section-header">
+        <h2>資產走勢</h2>
+        <p class="section-subtitle">過去 12 個月的價格變化</p>
+    </div>
+    <div class="chart-card">
+        <div id="price-chart" class="chart-container"></div>
+    </div>
+</section>
+
+<!-- Holdings by Broker -->
+<section class="section">
+    <div class="section-header">
+        <h2>📊 當前持倉</h2>
+        <p class="section-subtitle">按券商分類顯示</p>
+    </div>
+
+    <!-- IB Holdings -->
+    <div class="table-card">
+        <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 16px;">
+            🏦 Interactive Brokers (IB)
+            <span style="font-size: 12px; color: #9ca3af; font-weight: normal;">
+                (<span id="ib-count">0</span> 筆)
+            </span>
+        </h3>
+        <table class="holdings-table" id="ib-holdings-table">
+            <thead>
+                <tr>
+                    <th>代碼</th>
+                    <th>市場</th>
+                    <th>數量</th>
+                    <th>平均成本</th>
+                    <th>貨幣</th>
+                </tr>
+            </thead>
+            <tbody id="ib-holdings-body">
+                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #9ca3af;">無持倉</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Yuanta Holdings -->
+    <div class="table-card" style="margin-top: 20px;">
+        <h3 style="margin: 0 0 15px 0; color: #374151; font-size: 16px;">
+            🏪 Yuanta Securities (元大)
+            <span style="font-size: 12px; color: #9ca3af; font-weight: normal;">
+                (<span id="yuanta-count">0</span> 筆)
+            </span>
+        </h3>
+        <table class="holdings-table" id="yuanta-holdings-table">
+            <thead>
+                <tr>
+                    <th>代碼</th>
+                    <th>代稱</th>
+                    <th>數量</th>
+                    <th>平均成本</th>
+                    <th>貨幣</th>
+                </tr>
+            </thead>
+            <tbody id="yuanta-holdings-body">
+                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #9ca3af;">無持倉</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- 每日損益追蹤 -->
+<section class="section">
+    <div class="section-header">
+        <h2>📈 每日損益追蹤</h2>
+        <p class="section-subtitle">IB (USD) 與 元大 (TWD) 損益對比</p>
+        <button class="btn btn-secondary" id="record-performance-btn" style="font-size: 12px; padding: 6px 12px; margin-left: auto;">🔔 記錄今日</button>
+    </div>
+
+    <!-- 指標摘要卡片 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div class="metric-summary-card" id="card-ib-unrealized">
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏦 IB 未實現</div>
+            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+$0.00</div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">USD</div>
+        </div>
+        <div class="metric-summary-card" id="card-ib-realized">
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏦 IB 已實現</div>
+            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+$0.00</div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">USD</div>
+        </div>
+        <div class="metric-summary-card" id="card-yuanta-unrealized">
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏪 元大 未實現</div>
+            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+NT$0</div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">TWD</div>
+        </div>
+        <div class="metric-summary-card" id="card-yuanta-realized">
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">🏪 元大 已實現</div>
+            <div style="font-size: 24px; font-weight: 600; color: #10B981;">+NT$0</div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">TWD</div>
+        </div>
+    </div>
+
+    <!-- 雙Y軸圖表 -->
+    <div class="chart-card">
+        <div id="performance-trend-chart" style="height: 400px;"></div>
+    </div>
+</section>
+
+<script>
+// 頁面初始化代碼
+document.addEventListener('DOMContentLoaded', function() {
+    // 載入投資組合數據
+    fetch('/api/metrics')
+        .then(res => res.json())
+        .then(data => console.log('Portfolio data:', data));
+
+    // 載入持倉數據
+    fetch('/api/holdings')
+        .then(res => res.json())
+        .then(data => console.log('Holdings data:', data));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>簡單上傳測試</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input, button { padding: 10px; margin: 10px 0; }
+        #result { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>策略導入 - 簡單測試</h1>
+
+    <div>
+        <label>選擇 CSV 檔案：</label><br>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
+
+    <button onclick="uploadCSV()">上傳 & 分析</button>
+
+    <div id="result" style="display: none;">
+        <h2>📊 結果</h2>
+        <pre id="resultText"></pre>
+    </div>
+
+    <script>
+        async function uploadCSV() {
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) {
+                alert('請選擇檔案');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                console.log('上傳中...');
+                const response = await fetch('http://localhost:9000/api/strategy/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log('回應:', data);
+
+                const result = document.getElementById('result');
+                const resultText = document.getElementById('resultText');
+
+                if (response.ok && data.status === 'success') {
+                    const preview = data.preview;
+                    const text = `✅ 上傳成功！
+
+📊 統計數據:
+- 交易筆數: ${preview.total_trades}
+- 總獲利: ${preview.total_profit.toLocaleString()}
+- 勝率: ${preview.win_rate}%
+- 平均報酬: ${preview.avg_return}%
+- 總報酬率: ${preview.total_return}%
+- 盈利交易: ${preview.winning_trades}
+
+交易樣本 (前 3 筆):
+${preview.sample_trades.slice(0, 3).map((t, i) => `
+${i+1}. ${t.name} (${t.symbol})
+   進場: ${t.entry_price} → 出場: ${t.exit_price}
+   數量: ${t.qty} 手 | 獲利: ${t.profit.toLocaleString()} | 報酬: ${(t.return_rate * 100).toFixed(4)}%
+`).join('')}`;
+                    resultText.textContent = text;
+                } else {
+                    resultText.textContent = '❌ 錯誤:\n' + JSON.stringify(data, null, 2);
+                }
+                result.style.display = 'block';
+            } catch (error) {
+                console.error('錯誤:', error);
+                alert('連接失敗: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

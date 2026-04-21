@@ -1,0 +1,122 @@
+<!-- 績效分析頁面 -->
+<div class="page-title">📈 績效分析</div>
+<div class="page-subtitle">詳細的績效統計和對比分析</div>
+
+<!-- 績效概覽 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📊 績效概覽</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">年度報酬</div>
+            <div style="font-size: 32px; font-weight: bold; color: #10B981;">+34.78%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">月度報酬</div>
+            <div style="font-size: 32px; font-weight: bold; color: #10B981;">+10.25%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">Sharpe 比率</div>
+            <div style="font-size: 32px; font-weight: bold; color: #06B6D4;">1.61</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">勝率</div>
+            <div style="font-size: 32px; font-weight: bold; color: #10B981;">53.42%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">最大回撤</div>
+            <div style="font-size: 32px; font-weight: bold; color: #EF4444;">-8.7%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">盈虧比</div>
+            <div style="font-size: 32px; font-weight: bold; color: #10B981;">1.85</div>
+        </div>
+    </div>
+</div>
+
+<!-- 績效圖表 -->
+<div class="section">
+    <div class="section-header">
+        <h2>📉 績效曲線</h2>
+    </div>
+    <div id="performance-curve-chart" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E8E0FF; height: 400px;"></div>
+</div>
+
+<!-- 賬戶對比 -->
+<div class="section">
+    <div class="section-header">
+        <h2>⚖️ 賬戶對比</h2>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E8E0FF;">
+                <th style="text-align: left; padding: 12px; font-weight: 600;">賬戶</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">淨值</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">月度報酬</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">年度報酬</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">Sharpe</th>
+                <th style="text-align: right; padding: 12px; font-weight: 600;">勝率</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px; font-weight: 600;">🏦 IB</td>
+                <td style="text-align: right; padding: 12px;">$348,706</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+4.23%</td>
+                <td style="text-align: right; padding: 12px;">+35.2%</td>
+                <td style="text-align: right; padding: 12px;">1.72</td>
+                <td style="text-align: right; padding: 12px;">54.5%</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8E0FF;">
+                <td style="padding: 12px; font-weight: 600;">🏪 元大</td>
+                <td style="text-align: right; padding: 12px;">$273,983</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+3.15%</td>
+                <td style="text-align: right; padding: 12px;">+32.1%</td>
+                <td style="text-align: right; padding: 12px;">1.45</td>
+                <td style="text-align: right; padding: 12px;">51.2%</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; font-weight: 600;">🔐 Schwab</td>
+                <td style="text-align: right; padding: 12px;">$249,076</td>
+                <td style="text-align: right; padding: 12px; color: #10B981;">+2.87%</td>
+                <td style="text-align: right; padding: 12px;">+35.8%</td>
+                <td style="text-align: right; padding: 12px;">1.65</td>
+                <td style="text-align: right; padding: 12px;">53.8%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // 性能曲線圖表
+    setTimeout(function() {
+        const dates = Array.from({length: 30}, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (29 - i));
+            return d.toLocaleDateString('zh-TW', {month: 'short', day: 'numeric'});
+        });
+        const performance = [100, 101.2, 100.8, 102.1, 103.5, 102.8, 104.2, 105.1, 104.5, 106.3, 107.2, 106.8, 108.1, 109.5, 108.9, 110.2, 111.5, 110.8, 112.3, 113.8, 112.5, 114.2, 115.1, 114.5, 116.3, 117.8, 116.9, 118.5, 119.2, 118.4];
+
+        if (typeof Plotly !== 'undefined') {
+            const trace = {
+                x: dates,
+                y: performance,
+                mode: 'lines',
+                line: {color: '#6B21A8', width: 3},
+                fill: 'tozeroy',
+                fillcolor: 'rgba(107, 33, 168, 0.1)'
+            };
+            const layout = {
+                title: '月度績效走勢',
+                xaxis: {title: '日期'},
+                yaxis: {title: '績效指數'},
+                height: 300,
+                margin: {t: 40, b: 40, l: 60, r: 40}
+            };
+            Plotly.newPlot('performance-curve-chart', [trace], layout, {responsive: true});
+        }
+    }, 100);
+
+    console.log('績效分析頁面已加載');
+</script>

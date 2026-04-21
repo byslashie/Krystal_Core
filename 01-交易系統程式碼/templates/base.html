@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}💎 Krystal AI 量化交易系統{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- Leaflet.js for interactive maps -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">💎</span>
+                <span class="logo-text">Krystal AI 交易系統</span>
+            </div>
+            <nav class="main-nav">
+                <a href="/" class="nav-btn {% if page == 'dashboard' %}active{% endif %}">📊 投資組合</a>
+                <a href="/portfolio" class="nav-btn {% if page == 'portfolio' %}active{% endif %}">💼 投資組合</a>
+                <a href="/risk" class="nav-btn {% if page == 'risk' %}active{% endif %}">⚠️ 風控</a>
+                <a href="/allocation" class="nav-btn {% if page == 'allocation' %}active{% endif %}">💰 資金</a>
+                <a href="/performance" class="nav-btn {% if page == 'performance' %}active{% endif %}">📈 績效</a>
+                <a href="/trading" class="nav-btn {% if page == 'trading' %}active{% endif %}">💹 交易</a>
+                <a href="/strategies" class="nav-btn {% if page == 'strategies' %}active{% endif %}">📁 策略</a>
+                <a href="/schwab" class="nav-btn">🔐 Schwab</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="sidebar-header">
+                    <h3>⚙️ 控制面板</h3>
+                    <button class="sidebar-toggle" id="sidebar-toggle" title="收合面板">
+                        <span class="toggle-icon">◀</span>
+                    </button>
+                </div>
+
+                <!-- Common Controls -->
+                <div class="sidebar-section">
+                    <label class="section-label">時間範圍</label>
+                    <select id="period-select" class="select-control">
+                        <option value="1d">1日</option>
+                        <option value="7d">7日</option>
+                        <option value="30d">30日</option>
+                        <option value="90d">90日</option>
+                        <option value="1y" selected>全年</option>
+                    </select>
+                </div>
+
+                <div class="sidebar-section">
+                    <label class="section-label">風險級別</label>
+                    <div class="risk-selector">
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="low"> 低
+                        </label>
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="medium" checked> 中
+                        </label>
+                        <label class="risk-option">
+                            <input type="radio" name="risk" value="high"> 高
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Page-specific Controls -->
+                <div id="page-controls">
+                    {% block page_controls %}{% endblock %}
+                </div>
+
+                <!-- Broker Sync Controls -->
+                <div class="sidebar-section">
+                    <label class="section-label">📊 數據同步</label>
+                    <button id="sync-all-btn" class="btn-sync-all" onclick="syncAllBrokers()" title="同步所有 Broker">
+                        🔄 全部同步
+                    </button>
+                    <div class="sync-buttons">
+                        <button id="sync-ib-btn" class="btn-sync" onclick="syncBroker('ib')" title="同步 IB 持倉">
+                            🏦 IB
+                        </button>
+                        <button id="sync-yuanta-btn" class="btn-sync" onclick="syncBroker('yuanta')" title="同步元大持倉">
+                            🏪 Yuanta
+                        </button>
+                        <button id="sync-schwab-btn" class="btn-sync" onclick="syncBroker('schwab')" title="Schwab 配置">
+                            🔐 Schwab
+                        </button>
+                    </div>
+                    <div id="sync-status" class="sync-status-box" style="display:none;">
+                        <span id="sync-status-text">同步中...</span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="sidebar-section">
+                    <label class="section-label">系統狀態</label>
+                    <div id="system-status" class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>正常</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; margin-top: 40px;">
+        <p>© 2026 Krystal AI Trading System. 所有權利保留。</p>
+    </footer>
+
+    <script src="/static/js/dashboard.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
