@@ -55,50 +55,16 @@
             "state": {
               "type": "markdown",
               "state": {
-<<<<<<< Updated upstream
                 "file": "04-個人特質與規劃/週目標/weekly_2026-W16.md",
-=======
-                "file": "01-交易系統程式碼/dashboard_v8/BACKTESTING_CALCULATIONS.md",
->>>>>>> Stashed changes
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-<<<<<<< Updated upstream
               "title": "weekly_2026-W16"
-            }
-          },
-          {
-            "id": "e44f1272ea0ebeb9",
-=======
-              "title": "BACKTESTING_CALCULATIONS"
-            }
-          },
-          {
-            "id": "af35991893c37d63",
->>>>>>> Stashed changes
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-<<<<<<< Updated upstream
-                "file": "諮商準備_核心恐懼與決心.md",
-=======
-                "file": "FinLab_回測系統完整分析.md",
->>>>>>> Stashed changes
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-<<<<<<< Updated upstream
-              "title": "諮商準備_核心恐懼與決心"
-=======
-              "title": "FinLab_回測系統完整分析"
->>>>>>> Stashed changes
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -130,11 +96,7 @@
             "state": {
               "type": "search",
               "state": {
-<<<<<<< Updated upstream
                 "query": "諮商準備",
-=======
-                "query": "FINLAB",
->>>>>>> Stashed changes
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -251,85 +213,44 @@
       "bases:建立新的 base": false
     }
   },
-<<<<<<< Updated upstream
-  "active": "e44f1272ea0ebeb9",
+  "active": "62df164e522f09ea",
   "lastOpenFiles": [
-    "04-個人特質與規劃/我的個人特質/Chen_Yu_Wei_Communication_Recovery_Plan.md",
+    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/20260422_第二次諮商準備與核心提問.md",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/核心修復課題與行動綱領.md",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/20260420_深夜覺察日記.md",
     "諮商準備_核心恐懼與決心.md",
-    "諮商準備_完整索引.md",
-    "諮商準備_核心問題.md",
-    "諮商準備_整理版.md",
-    "[LINE] Chat with Wei.txt",
-    "01-交易系統程式碼/dashboard_v8/STRATEGY_LIFECYCLE.md",
-    "終極談判草稿_與他的對話.md",
-    "十日脫身計畫.md",
-    "諮商準備_覺察日記.md",
-    "理想伴侶規格與自我覺察.md",
-    "03-XScript知識庫/[Example] XQ_Scripts_Alerts.md",
-    "11-自媒體專區/Threads/templates.md",
-    "01-交易系統程式碼/data/cache/daily_performance.csv",
-    "01-交易系統程式碼/data/cache/daily_nav.csv",
-    "01-交易系統程式碼/__pycache__/app_html_flask.cpython-314.pyc",
-    "01-交易系統程式碼/data/cache/broker_snapshot.csv",
-    "01-交易系統程式碼/data/cache/trades.csv",
-    "01-交易系統程式碼/data/cache/broker_positions.csv",
-    "01-交易系統程式碼/credentials.json",
-    "01-交易系統程式碼/wrapper/krystal_sync.py",
-    "01-交易系統程式碼/wrapper/krystal_nav.py",
-    "11-自媒體專區/官網/redesign-brief.md",
-    "04-個人特質與規劃/週目標/weekly_2026-W16.md",
-    "11-自媒體專區/README.md",
-    "11-自媒體專區/CLAUDE.md",
-    "04-個人特質與規劃/11-自媒體專區/README.md",
-    "04-個人特質與規劃/11-自媒體專區/官網/redesign-brief.md",
-    "04-個人特質與規劃/11-自媒體專區/Threads/templates.md",
-    "04-個人特質與規劃/11-自媒體專區/CLAUDE.md",
-    "04-個人特質與規劃/我的個人特質/心理諮商師初診資料_簡潔版.md",
-    "01-交易系統程式碼/docs/元大庫存同步說明.md",
-    "07-工具/AI課程直播規劃.md",
-    "01-交易系統程式碼/course_outline.md",
-    "FinLab_回測系統完整分析.md",
-    "04-個人特質與規劃/職涯規劃/策略_回測報告.md",
-=======
-  "active": "af35991893c37d63",
-  "lastOpenFiles": [
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426404688",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426386016",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426374785",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426356655",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426340622",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776426330055",
-    "01-交易系統程式碼/dashboard_v8/temp_uploads/20260417_-.csv",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425711770",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425706092",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425696842",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.33468.1776425686560",
-    "01-交易系統程式碼/dashboard_v8/BACKTESTING_CALCULATIONS.md",
-    "01-交易系統程式碼/dashboard_v8/BACKEND_REQUIREMENTS.md",
-    "04-個人特質與規劃/職涯規劃/履歷.md",
-    "04-個人特質與規劃/職涯規劃/策略_回測報告.md",
-    "03-XScript知識庫/[Manual] XScript_System_Functions_Reference.md",
-    "03-XScript知識庫/[Example] XQ_Scripts_Functions.md",
-    "01-交易系統程式碼/docs/元大庫存同步說明.md",
-    "01-交易系統程式碼/dashboard_v8/STRATEGY_LIFECYCLE.md",
-    "01-交易系統程式碼/DISCORD_BOT_SETUP.md",
-    "04-個人特質與規劃/我的個人特質/心理諮商師初診資料_簡潔版.md",
-    "07-工具/AI課程直播規劃.md",
-    "01-交易系統程式碼/course_outline.md",
-    "FinLab_回測系統完整分析.md",
-    "01-交易系統程式碼/dashboard_v8/TODO.md",
-    "01-交易系統程式碼/dashboard_v8/SYSTEM_ARCHITECTURE.md",
-    "01-交易系統程式碼/TODO.md",
-    "05-文件與報告/市場研究/Krystal_AI_System_Integration_and_3_Schemes.md",
-    "01-交易系統程式碼/FULL_FEATURE_PLAN.md",
-    "02-策略知識庫/CSV_VALIDATION_REPORT.md",
-    "01-交易系統程式碼/dashboard_v8/IMPORT_INTEGRATION_PLAN.md",
-    "02-策略知識庫/ENCODING_CONVERSION_GUIDE.md",
-    "02-策略知識庫/XQ_STRATEGY_IMPORT_TEMPLATE.md",
-    "01-交易系統程式碼/dashboard_v8/QUICK_START.md",
-    "01-交易系統程式碼/dashboard_v8/CURRENT_STATUS.md",
-    "01-交易系統程式碼/dashboard_v8/CLEANUP_PLAN.md",
->>>>>>> Stashed changes
+    "04-個人特質與規劃/日記/2026-04/journal_2026-04-14.md",
+    "04-個人特質與規劃/日記/2026-04",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-31.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-30.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-28.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-26.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-25.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-24.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-23.md",
+    "04-個人特質與規劃/日記/2026-03/journal_2026-03-22.md",
+    "04-個人特質與規劃/日記/2026-03",
+    "04-個人特質與規劃/我的個人特質/理想伴侶規格與自我覺察.md",
+    "04-個人特質與規劃/我的個人特質/03-自我探測與覺察/社群經營與個人特質解析.md",
+    "04-個人特質與規劃/我的個人特質/03-自我探測與覺察/深度探索反映回饋.md",
+    "04-個人特質與規劃/我的個人特質/03-自我探測與覺察",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式/家庭成員溝通特質分析_純對話版.md",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式/家庭成員溝通特質分析.md",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式/conflict_output.txt",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式/Chen_Yu_Wei_Communication_Recovery_Plan.md",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式/S型與E型大腦切換法則與影視解析.md",
+    "04-個人特質與規劃/我的個人特質/02-大腦與溝通模式",
+    "04-個人特質與規劃/我的個人特質/01-全像特質分析/陳昱潔 (Krystal) 全像自我特質整合報告.md",
+    "04-個人特質與規劃/我的個人特質/01-全像特質分析",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/終極談判草稿_與他的對話.md",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/十日脫身計畫.md",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/人格特質與感情相容性報告.md",
+    "04-個人特質與規劃/心靈成長/03-專業諮商紀錄/諮商準備_核心恐懼與決心.md",
+    "04-個人特質與規劃/心靈成長/03-專業諮商紀錄/心理諮商師初診資料_簡潔版.md",
+    "04-個人特質與規劃/心靈成長/03-專業諮商紀錄",
+    "04-個人特質與規劃/心靈成長/02-療癒與系統修復",
+    "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離",
+    "04-個人特質與規劃/心靈成長",
     "01-交易系統程式碼/tab5_distribution.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/more.png",
     "07-工具/FoodTracker/venv/Lib/site-packages/werkzeug/debug/shared/less.png",

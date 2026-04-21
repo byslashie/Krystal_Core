@@ -6,32 +6,28 @@ description: Git Pull - 從遠端倉庫拉取最新變更
 
 ## 流程步驟
 
-1. 確認目前 Git 狀態（確保本地無未儲存的衝突變更）
+1. 獲取遠端所有最新狀態
 
-```powershell
-cd c:\Projects\Krystal_完整系統; git status
+```bash
+git fetch --all
 ```
 
-2. 暫存本地未提交的變更（若有未提交變更）
+2. 自動尋找遠端最新更新的分支，並切換、拉取（解決跨裝置同步問題）
 
-```powershell
-cd c:\Projects\Krystal_完整系統; git stash
+```bash
+LATEST_BRANCH=$(git branch -r --sort=-committerdate | grep -v HEAD | head -n 1 | sed 's/origin\///' | xargs)
+if [ -n "$LATEST_BRANCH" ]; then
+    echo "最新分支為: $LATEST_BRANCH，正在切換與拉取..."
+    git checkout $LATEST_BRANCH
+    git pull origin $LATEST_BRANCH
+else
+    echo "找不到帶有的時間戳分支，使用預設定拉取。"
+    git pull origin HEAD
+fi
 ```
 
-3. 從遠端拉取最新變更
+3. 確認最新 log
 
-```powershell
-cd c:\Projects\Krystal_完整系統; git pull origin $(git rev-parse --abbrev-ref HEAD)
-```
-
-4. 還原暫存的本地變更（若步驟 2 有執行 stash）
-
-```powershell
-cd c:\Projects\Krystal_完整系統; git stash pop
-```
-
-5. 確認最新 log
-
-```powershell
-cd c:\Projects\Krystal_完整系統; git log --oneline -5
+```bash
+git log --oneline -5
 ```
