@@ -6,5 +6,5 @@ description: 一鍵啟動 Krystal AI 交易系統
 // turbo-all
 1. 執行啟動腳本
 ```bash
-open "/Users/chenyu/Desktop/Krystal_完整系統/01-交易系統程式碼/啟動交易系統.command"
+open "/Users/chenyu/Desktop/Projects/Krystal_Core/01-交易系統程式碼/啟動交易系統.command"
 ```

@@ -1,0 +1,290 @@
+Found 197 conflict clusters.
+
+--- Conflict Cluster 1 ---
+14:33	Chen Yu	也不是沒淋過雨
+14:33	Wei	別傻了
+14:33	Wei	今天我講話都沒在聽了
+14:33	Wei	站在那幹嘛
+14:33	Wei	見到我你不會比較開心
+14:33	Wei	哈哈
+14:34	Chen Yu	那你也可以不要聽我講話
+14:34	Chen Yu	讓我淋雨
+14:34	Chen Yu	最好全身都濕
+14:34	Wei	…
+14:34	Wei	去上課
+14:34	Wei	聽演講
+14:35	Chen Yu	沒關係
+14:35	Chen Yu	就讓我淋雨清醒一點
+14:35	Wei	好無聊哦
+14:35	Wei	真的幼稚
+14:36	Chen Yu	你才幼稚
+14:36	Wei	我幼稚 ？
+14:37	Chen Yu	[Sticker]
+14:38	Wei	嗯嗯
+14:38	Wei	我沒什麼話要說了
+14:39	Chen Yu	隨便你
+14:40	Wei	嗯哼
+14:40	Wei	那就隨便我啊
+14:40	Wei	妳就繼續
+14:40	Chen Yu	那我淋爽我就回去
+14:40	Wei	我看你能把活動看的多重
+14:41	Chen Yu	嗯嗯
+14:41	Chen Yu	好爽好涼
+14:41	Wei	妳寧可用活動的東西
+14:41	Chen Yu	[Sticker]
+14:41	Wei	也不要練程式
+14:41	Wei	我懂了
+14:42	Wei	反正剩不到20天
+14:42	Chen Yu	嗯嗯
+14:42	Wei	要怎麼樣你自己造化
+14:42	Chen Yu	嗯嗯
+14:42	Chen Yu	你去上你的課吧
+14:42	Chen Yu	快去
+14:42	Chen Yu	不用管我了
+14:44	Wei	妳到底要鬧到什麼時候
+14:44	Wei	？
+15:05	Wei	孤單寂寞 ？
+15:06	Chen Yu	嗯嗯
+15:11	Wei	[Sticker]
+15:51	Chen Yu	幹嗎這樣就生氣啊
+15:51	Wei	ㄏㄠㄨㄢㄇㄚ
+15:51	Chen Yu	覺得蛀牙很丟臉？
+15:51	Wei	好玩嗎
+15:51	Wei	什麼事都講
+15:51	Wei	講山小
+15:51	Chen Yu	⋯
+17:24	Chen Yu	https://goo.gl/photos/CH894wpMFg5nQqSz6
+16:13	Wei	到
+16:13	Wei	車站了
+16:13	Wei	區間開走了
+16:13	Wei	[Sticker]
+16:14	Chen Yu	那要座幾點的
+16:14	Chen Yu	[Sticker]
+16:14	Wei	16：35
+16:14	Wei	莒光
+
+--- Conflict Cluster 2 ---
+02:40	Wei	☎ Call time 3:13:02
+02:46	Chen Yu	☎ No answer
+09:04	Wei	☎ Missed call
+10:39	Chen Yu	☎ No answer
+11:08	Wei	☎ Call time 24:49
+11:08	Wei	…
+11:08	Wei	…
+11:08	Wei	…
+11:08	Wei	掛我電話 ？
+11:09	Chen Yu	我媽
+11:09	Chen Yu	來了⋯
+11:09	Chen Yu	嚇死我
+11:09	Chen Yu	[Sticker]
+11:12	Chen Yu	寶貝
+11:12	Chen Yu	[Sticker]
+11:12	Chen Yu	生氣了喔？
+11:13	Wei	被
+11:13	Wei	掛
+11:13	Wei	電話了
+11:13	Chen Yu	齁
+11:14	Chen Yu	[Sticker]
+11:14	Chen Yu	[Sticker]
+11:14	Chen Yu	[Sticker]
+11:14	Chen Yu	[Sticker]
+11:14	Chen Yu	讓你打我
+11:14	Chen Yu	別生氣了
+11:15	Wei	現在打來
+11:15	Wei	[Sticker]
+11:16	Chen Yu	媽咪在齁
+11:16	Wei	[Sticker]
+11:16	Chen Yu	[Sticker]
+11:16	Chen Yu	[Sticker]
+11:16	Wei	被掛電話了
+11:16	Chen Yu	[Sticker]
+11:16	Chen Yu	等我一下
+11:18	Wei	[Sticker]
+11:18	Wei	[Sticker]
+11:19	Chen Yu	⋯
+11:19	Chen Yu	[Sticker]
+11:19	Chen Yu	[Sticker]
+11:19	Chen Yu	[Sticker]
+11:19	Chen Yu	白癡
+11:23	Wei	算了
+11:23	Wei	吃飯
+11:23	Wei	哼
+11:23	Wei	掛我電話
+11:23	Chen Yu	愛生氣
+11:24	Chen Yu	[Sticker]
+11:24	Chen Yu	[Sticker]
+11:24	Chen Yu	[Sticker]
+11:24	Chen Yu	[Sticker]
+11:24	Chen Yu	[Sticker]
+11:30	Wei	哼
+11:31	Chen Yu	☎ No answer
+11:31	Wei	吃飯
+11:31	Chen Yu	[Sticker]
+11:31	Chen Yu	去吧
+11:32	Chen Yu	我也去吃飯了
+11:51	Chen Yu	[Photo]
+11:53	Wei	[Sticker]
+11:53	Wei	騙人的體重
+11:53	Chen Yu	[Sticker]
+
+--- Conflict Cluster 3 ---
+17:53	Wei	很
+17:53	Wei	慢
+17:53	Wei	回
+17:53	Wei	去
+17:53	Wei	幹
+17:53	Wei	嘛
+17:53	Wei	了
+17:53	Chen Yu	在外面
+17:53	Chen Yu	我朋友家齁
+17:54	Wei	掰掰
+17:54	Chen Yu	掰屁喔
+17:54	Chen Yu	⋯
+17:54	Chen Yu	⋯
+17:57	Chen Yu	幹嘛啦
+17:57	Chen Yu	臭威威
+17:57	Chen Yu	生氣喔
+18:05	Wei	掰掰
+18:05	Wei	[Sticker]
+18:06	Chen Yu	掰屁喔
+18:09	Wei	[Sticker]
+18:11	Chen Yu	幹嘛啦臭寶貝
+18:12	Wei	幹嘛
+18:13	Chen Yu	沒啦
+18:14	Chen Yu	[Sticker]
+18:31	Wei	哦
+18:46	Wei	嗯
+18:46	Wei	歐
+18:46	Chen Yu	喔什麼
+18:46	Wei	肯回了 ？
+18:47	Chen Yu	一直都有在回
+18:58	Wei	歐
+18:58	Wei	不打擾妳了
+18:58	Chen Yu	幹嘛啦
+18:59	Chen Yu	齁
+18:59	Chen Yu	生氣囉
+19:04	Wei	在哪
+19:05	Chen Yu	在台南
+19:05	Wei	？
+19:05	Wei	自己 ？
+19:05	Wei	台南市區 ？
+19:05	Wei	？
+19:05	Wei	[Sticker]
+19:05	Chen Yu	朋友家啦
+19:06	Wei	幹嘛
+19:07	Chen Yu	跟他說要去日本
+19:07	Wei	？
+19:07	Wei	要去日本
+19:07	Chen Yu	我朋友啦
+19:10	Wei	哦
+19:10	Wei	慢慢聊
+19:10	Wei	我休息
+19:10	Wei	掰掰
+19:10	Chen Yu	= =
+19:10	Chen Yu	幹嘛啦
+19:10	Chen Yu	真的是齁
+19:10	Chen Yu	愛生氣
+19:11	Wei	？
+19:11	Wei	男的
+19:11	Wei	女的
+19:11	Wei	？
+19:11	Wei	T?
+19:11	Wei	?
+19:11	Wei	??
+19:11	Wei	???
+19:11	Wei	???
+19:11	Wei	??
+19:11	Wei	?
+19:12	Wei	找我很遠 ？
+19:17	Chen Yu	女的
+19:17	Chen Yu	不是齁
+19:17	Wei	慢慢聊
+
+--- Conflict Cluster 4 ---
+23:02	Wei	[Sticker]
+23:03	Chen Yu	 幹嘛
+23:03	Wei	[Sticker]
+01:25	Chen Yu	☎ Call time 2:06:57
+02:32	Chen Yu	☎ Call time 1:07:18
+03:25	Chen Yu	☎ Call time 52:03
+03:28	Wei	☎ Missed call
+05:48	Chen Yu	☎ No answer
+07:07	Chen Yu	☎ Canceled call
+09:06	Wei	☎ Call time 38:32
+09:30	Wei	☎ Call time 23:57
+09:32	Chen Yu	☎ Call time 1:20
+09:48	Chen Yu	☎ Call time 14:26
+10:29	Wei	☎ Call time 41:17
+11:19	Chen Yu	☎ Call time 49:23
+11:20	Chen Yu	威威愛生氣
+11:20	Chen Yu	要乖乖
+11:20	Wei	再說了 不打擾了
+11:21	Chen Yu	⋯⋯⋯⋯
+11:21	Chen Yu	愛生氣的威威
+11:21	Chen Yu	[Sticker]
+11:21	Wei	體諒你
+11:21	Wei	所以不打擾了
+11:22	Wei	我自己OK的
+11:22	Chen Yu	好啦之後再來
+11:22	Chen Yu	[Sticker]
+11:22	Wei	不了
+11:22	Wei	不想了
+11:23	Chen Yu	自己說的喔
+11:23	Chen Yu	[Sticker]
+11:24	Wei	歐歐
+11:24	Wei	嗯嗯
+11:27	Chen Yu	嗯嗯
+11:27	Wei	唉唉
+11:28	Chen Yu	嘆氣幹嘛
+12:05	Wei	沒事
+12:31	Chen Yu	嗯嗯愛生氣威威
+12:32	Wei	沒
+12:32	Wei	學妳的
+13:12	Chen Yu	白癡威威
+13:12	Chen Yu	不要這樣齁
+14:15	Chen Yu	 睡著了喔？
+14:58	Chen Yu	威威不見了
+14:58	Chen Yu	[Sticker]
+15:38	Wei	[Sticker]
+17:19	Chen Yu	去哪裡了
+17:23	Chen Yu	那首台語歌
+17:23	Chen Yu	叫什麼
+17:23	Chen Yu	哦喔
+17:23	Wei	我的路
+17:23	Chen Yu	哦喔
+17:24	Chen Yu	是嗎
+
+--- Conflict Cluster 5 ---
+10:46	Chen Yu	[Sticker]
+10:46	Wei	洗了
+10:47	Wei	[Sticker]
+10:47	Chen Yu	哦喔
+10:48	Chen Yu	已讀我？
+10:49	Wei	[Sticker]
+10:49	Chen Yu	[Sticker]
+10:51	Wei	[Sticker]
+10:51	Wei	幹嘛
+10:53	Chen Yu	沒有
+10:54	Chen Yu	你休息吧
+10:55	Wei	幹嘛
+10:55	Wei	愛張
+10:57	Chen Yu	沒有啊
+10:57	Chen Yu	去玩電腦
+10:58	Wei	愛生氣
+10:58	Wei	愛生氣
+10:58	Wei	愛生氣
+10:58	Chen Yu	沒啊
+10:59	Chen Yu	都不打給我不知道你在幹嘛
+11:33	Wei	☎ Call time 30:59
+11:33	Wei	[Sticker]
+11:33	Chen Yu	⋯⋯⋯⋯
+11:34	Chen Yu	[Voice message]
+11:34	Wei	[Sticker]
+11:34	Chen Yu	[Photo]
+11:34	Wei	等等吃飽在打給妳
+11:34	Chen Yu	我在打給你我也去吃飯
+11:34	Wei	…
+11:34	Wei	幹
+11:35	Chen Yu	哈哈哈哈哈哈
+11:35	Chen Yu	可愛嗎
+11:35	Chen Yu	我寶貝
