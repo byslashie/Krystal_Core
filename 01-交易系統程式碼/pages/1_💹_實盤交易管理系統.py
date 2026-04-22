@@ -1490,17 +1490,27 @@ def sync_daily_nav_real_per_strategy(dry_run: bool = False, days_back: int = 365
                 nav = (value / cap0) if cap0 else np.nan
                 nav_series.append(nav)
 
+                # 取得該策略的基本資訊
+                s_info = strat_pool[strat_pool["策略名稱"] == strat].iloc[0] if strat in strat_pool["策略名稱"].values else {}
+                
                 rows.append(
                     {
                         "日期": d,
                         "策略": strat,
-                        "mode": str(mode).strip(),
+                        "幣別": s_info.get("幣別", s_info.get("幣別(USD/TWD)", "TWD")),
+                        "起始資金": cap0,
                         "value": float(value) if np.isfinite(value) else "",
                         "NAV": float(nav) if np.isfinite(nav) else "",
                         "realized_pnl": float(rc) if np.isfinite(rc) else 0.0,
                         "unrealized_pnl": float(un) if np.isfinite(un) else 0.0,
+                        "cash": float(value - pv) if np.isfinite(value - pv) else 0.0,
                         "position_value": float(pv) if np.isfinite(pv) else 0.0,
+                        "broker": s_info.get("券商", ""),
+                        "account": s_info.get("帳號", ""),
+                        "mode": str(mode).strip(),
+                        "source": "Streamlit_Sync",
                         "備註": f"REAL: cap0={cap0}",
+                        "更新時間": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     }
                 )
 
@@ -1516,7 +1526,7 @@ def sync_daily_nav_real_per_strategy(dry_run: bool = False, days_back: int = 365
         out_df = pd.DataFrame(rows)
 
         # 4) Upsert 寫回 daily_nav（key = 日期 + 策略 + mode）
-        sh = get_sheet("daily_nav")
+        sh = get_sheet("daily_nav_strategy")
         if sh is None:
             return {"added": 0, "updated": 0, "skipped": 0, "error": "無法連線至 Google Sheets (SSL/網路問題)"}
         values = _get_sheet_all_values(sh)
@@ -2309,7 +2319,7 @@ elif page == "🔄 同步":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("### 🔎 daily_nav 最近資料（預覽）")
+    st.markdown("### 🔎 daily_nav_strategy 最近資料（預覽）")
     try:
         df = load_daily_nav()
         if df is None or df.empty:

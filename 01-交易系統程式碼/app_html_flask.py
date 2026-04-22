@@ -4872,47 +4872,31 @@ def api_schwab_sync_to_sheets():
         if not SHEETS_OK:
             return jsonify({'status': 'error', 'message': 'Google Sheets 未連線'}), 503
 
-        # Upsert 模式：同 symbol 就更新，否則新增
-        sheet = get_sheet('broker_positions')
-        if sheet is None:
-            return jsonify({'status': 'error', 'message': '找不到 broker_positions tab'}), 500
-
-        all_values = sheet.get_all_values()
-        header = all_values[0] if all_values else []
-
-        # 取得 symbol 欄位索引（C=index 2）
-        sym_col_idx = header.index('symbol') if 'symbol' in header else 2
-        src_col_idx = header.index('券商') if '券商' in header else (header.index('source') if 'source' in header else 1)
-
-        # 建立 schwab 現有列的 symbol → row_number 對應（1-indexed, skip header row 1）
-        existing_schwab = {}
-        for i, row in enumerate(all_values[1:], start=2):
-            if len(row) > src_col_idx and row[src_col_idx].lower() == 'schwab':
-                sym = row[sym_col_idx] if len(row) > sym_col_idx else ''
-                if sym:
-                    existing_schwab[sym] = i
-
-        # Upsert 每個 Schwab 持倉
+        # Upsert 模式：同 symbol 就更新，否則新增，並透過統一函數記錄已出清
+        from sheets_utils import sync_broker_positions_and_log_trades
+        
+        formatted_schwab_positions = []
         for p in positions_to_write:
-            row_data = [now_str, p['source'], p['symbol'], p['secType'], p['exchange'],
-                        p['currency'], p['position'], p['avgCost'], p['totalCost'],
-                        p['currentPrice'], p['marketValue'], p['unrealizedPnl'], p['position']]
-            if p['symbol'] in existing_schwab:
-                # 更新現有列（同 symbol 不重複）
-                row_num = existing_schwab[p['symbol']]
-                sheet.update(values=[row_data], range_name=f'A{row_num}')
-            else:
-                # 新 symbol → 新增一列
-                sheet.append_row(row_data)
-
-        # 刪除已不在持倉中的 schwab 列（從後往前刪避免 index 錯位）
-        current_symbols = {p['symbol'] for p in positions_to_write}
-        rows_to_delete = sorted(
-            [rn for sym, rn in existing_schwab.items() if sym not in current_symbols],
-            reverse=True
-        )
-        for rn in rows_to_delete:
-            sheet.delete_rows(rn)
+            formatted_schwab_positions.append({
+                'timestamp': now_str,
+                'broker': 'schwab',
+                'symbol': p['symbol'],
+                'secType': p['secType'],
+                'exchange': p['exchange'],
+                'currency': p['currency'],
+                'position': p['position'],
+                'avgCost': p['avgCost'],
+                'marketPrice': p['currentPrice'],
+                'marketValue': p['marketValue'],
+                'unrealizedPNL': p['unrealizedPnl'],
+                'sellable': p['position'],
+                'limitUp': 0,
+                'limitDown': 0
+            })
+            
+        ok = sync_broker_positions_and_log_trades('schwab', formatted_schwab_positions)
+        if not ok:
+            return jsonify({'status': 'error', 'message': '更新 broker_positions 失敗'}), 500
 
         logger.info(f"✅ Schwab 持倉已同步 broker_positions：{len(positions_to_write)} 筆")
 

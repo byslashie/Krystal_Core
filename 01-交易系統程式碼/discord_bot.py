@@ -85,55 +85,91 @@ def _build_daily_report() -> str:
     now = datetime.now(TZ).strftime("%Y-%m-%d %H:%M")
     lines = [f"📊 **Krystal 每日持倉報告** `{now}`", ""]
 
-    # 台股（元大 snapshot）
-    tw_data = _load_snapshot()
-    tw_positions = tw_data.get("positions", []) if tw_data else []
-    tw_total_mv  = float(tw_data.get("totalMarketValue", 0)) if tw_data else 0
-    tw_total_pnl = float(tw_data.get("totalUnrealizedPnL", 0)) if tw_data else 0
+    try:
+        from sheets_utils import read_sheet_data_with_cache
+        df = read_sheet_data_with_cache("broker_positions")
+        positions = df.to_dict('records') if not df.empty else []
+    except Exception as e:
+        return f"讀取持倉失敗: {e}"
 
+    if not positions:
+        lines.append("⚠️ 目前無持倉資料，請確認同步狀態。")
+        return "\n".join(lines)
+
+    usd_rate = 32.0
+    
+    # 依據 broker 分組
+    tw_positions = [p for p in positions if str(p.get("broker", "")).strip() == "元大"]
+    ib_positions = [p for p in positions if str(p.get("broker", "")).strip().upper() == "IB"]
+    schwab_positions = [p for p in positions if str(p.get("broker", "")).strip().lower() == "schwab"]
+    
+    # 台股（元大）
     if tw_positions:
         lines.append("🇹🇼 **台股（元大）**")
         lines.append("```")
         lines.append(f"{'代碼':<8} {'股數':>5}  {'均價':>7}  {'現價':>7}  {'損益':>9}  {'報酬率':>7}")
         lines.append("─" * 52)
+        tw_total_mv = 0.0
+        tw_total_pnl = 0.0
         for p in tw_positions:
             sym  = str(p.get("symbol", ""))
             qty  = int(float(p.get("position", 0)))
             avg  = float(p.get("avgCost", 0))
-            mkt  = float(p.get("currentPrice", 0))
-            pnl  = float(p.get("unrealizedPnL", 0))
+            mkt  = float(p.get("marketPrice", 0))
+            pnl  = float(p.get("unrealizedPNL", 0))
+            mv   = float(p.get("marketValue", 0))
+            tw_total_mv += mv
+            tw_total_pnl += pnl
             pct  = ((mkt - avg) / avg * 100) if avg > 0 else 0
             sign = "+" if pnl >= 0 else ""
             lines.append(f"{sym:<8} {qty:>5}  {avg:>7.2f}  {mkt:>7.2f}  {sign}{pnl:>8,.0f}  {sign}{pct:.1f}%")
         lines.append("─" * 52)
         pnl_sign = "+" if tw_total_pnl >= 0 else ""
         lines.append(f"{'合計':<8} {'':>5}  {'':>7}  {'':>7}  {pnl_sign}{tw_total_pnl:>8,.0f}")
-        lines.append(f"總市值 NT${tw_total_mv:,.0f}")
+        usd_val = tw_total_mv / usd_rate
+        lines.append(f"總市值 NT${tw_total_mv:,.0f} (${usd_val:,.0f})")
+        lines.append("```")
+        lines.append("")
+
+    # 美股（IB）
+    if ib_positions:
+        lines.append("🇺🇸 **美股（IB）**")
+        lines.append("```")
+        lines.append(f"{'代碼':<8} {'股數':>6}  {'均價':>8}  {'市值':>10}")
+        lines.append("─" * 40)
+        total_ib_mv_usd = 0.0
+        for p in ib_positions:
+            sym = str(p.get("symbol", ""))
+            qty = float(p.get("position", 0))
+            avg = float(p.get("avgCost", 0))
+            mv  = float(p.get("marketValue", 0))
+            total_ib_mv_usd += mv
+            lines.append(f"{sym:<8} {qty:>6.0f}  {avg:>8.2f}  ${mv:>9,.2f}")
+        lines.append("─" * 40)
+        twd_val = total_ib_mv_usd * usd_rate
+        lines.append(f"{'總市值':<8} {'':>6}  NT${twd_val:>8,.0f} (${total_ib_mv_usd:,.0f})")
         lines.append("```")
         lines.append("")
 
     # 美股（Schwab）
-    us_positions = _load_schwab_positions()
-    if us_positions:
+    if schwab_positions:
         lines.append("🇺🇸 **美股（Schwab）**")
         lines.append("```")
         lines.append(f"{'代碼':<8} {'股數':>6}  {'均價':>8}  {'市值':>10}")
         lines.append("─" * 40)
-        total_us_mv = 0.0
-        for p in us_positions:
-            sym = str(p.get("symbol", p.get("instrument", {}).get("symbol", "")))
-            qty = float(p.get("longQuantity", p.get("quantity", 0)))
-            avg = float(p.get("averagePrice", 0))
+        total_schwab_mv_usd = 0.0
+        for p in schwab_positions:
+            sym = str(p.get("symbol", ""))
+            qty = float(p.get("position", 0))
+            avg = float(p.get("avgCost", 0))
             mv  = float(p.get("marketValue", 0))
-            total_us_mv += mv
+            total_schwab_mv_usd += mv
             lines.append(f"{sym:<8} {qty:>6.0f}  {avg:>8.2f}  ${mv:>9,.2f}")
         lines.append("─" * 40)
-        lines.append(f"{'總市值':<8} {'':>6}  {'':>8}  ${total_us_mv:>9,.2f}")
+        twd_val = total_schwab_mv_usd * usd_rate
+        lines.append(f"{'總市值':<8} {'':>6}  NT${twd_val:>8,.0f} (${total_schwab_mv_usd:,.0f})")
         lines.append("```")
         lines.append("")
-
-    if not tw_positions and not us_positions:
-        lines.append("⚠️ 目前無持倉資料，請確認同步狀態。")
 
     # 今日 SOP 提示
     hour = datetime.now(TZ).hour

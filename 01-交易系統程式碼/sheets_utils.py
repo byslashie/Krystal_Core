@@ -278,22 +278,25 @@ def overwrite_trades(df: pd.DataFrame) -> bool:
 
 def read_daily_nav() -> pd.DataFrame:
     def _read():
-        sheet = get_sheet("daily_nav")
+        sheet = get_sheet("daily_nav_strategy")
         return _worksheet_to_df(sheet) if sheet else pd.DataFrame()
-    return _read_with_fallback("daily_nav", _read)
+    return _read_with_fallback("daily_nav_strategy", _read)
 
 
 def append_daily_nav(nav_dict: Dict[str, Any]) -> bool:
     try:
-        sheet = get_sheet("daily_nav")
+        sheet = get_sheet("daily_nav_strategy")
         if sheet is None:
             logger.warning("⚠️ Sheets disabled → skip append_daily_nav")
             return True
 
-        cols = ["日期", "策略", "NAV", "日報酬", "累積報酬"]
+        cols = [
+            "日期", "策略", "幣別", "起始資金", "value", "NAV", "日報酬", "累積報酬", 
+            "realized_pnl", "unrealized_pnl", "cash", "position_value", "broker", "account", "mode", "source", "備註", "更新時間"
+        ]
         row = [nav_dict.get(c, "") for c in cols]
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        logger.info("✅ daily_nav 新增成功")
+        logger.info("✅ daily_nav_strategy 新增成功")
         return True
     except Exception as e:
         logger.error(f"❌ daily_nav 新增失敗：{e}")
@@ -472,10 +475,30 @@ def overwrite_broker_positions(positions_list: List[Dict[str, Any]]) -> bool:
         # 簡單起見：目前的邏輯可能是全量替換，或按券商替換
         # 為了穩定，我們先實作「全量覆寫」，這要求傳入所有的持倉（包含 Yuanta, Schwab 等）
         # 如果只想替換 IB，需要更複雜的 logic。我們先實作全量寫入。
-        header = ["symbol", "broker", "position", "avgCost", "marketPrice", "marketValue", "unrealizedPNL", "currency", "timestamp"]
+        header = ["timestamp", "broker", "symbol", "secType", "exchange", "currency", "position", "avgCost", "marketPrice", "marketValue", "unrealizedPNL", "sellable", "limitUp", "limitDown"]
         rows = [header]
         for p in positions_list:
-            rows.append([p.get(c, "") for c in header])
+            # Map different naming conventions
+            cur_price = p.get("marketPrice", p.get("currentPrice", ""))
+            pnl = p.get("unrealizedPNL", p.get("unrealizedPnL", ""))
+            
+            row = [
+                p.get("timestamp", ""),
+                p.get("broker", ""),
+                p.get("symbol", ""),
+                p.get("secType", "STK"),
+                p.get("exchange", ""),
+                p.get("currency", "USD" if p.get("broker") == "IB" else "TWD"),
+                p.get("position", ""),
+                p.get("avgCost", ""),
+                cur_price,
+                p.get("marketValue", ""),
+                pnl,
+                p.get("sellable", ""),
+                p.get("limitUp", ""),
+                p.get("limitDown", "")
+            ]
+            rows.append(row)
         
         sheet.clear()
         sheet.update(rows, value_input_option="USER_ENTERED")
@@ -484,6 +507,85 @@ def overwrite_broker_positions(positions_list: List[Dict[str, Any]]) -> bool:
     except Exception as e:
         logger.error(f"❌ overwrite_broker_positions 失敗：{e}")
         return False
+
+def sync_broker_positions_and_log_trades(broker_name: str, new_positions: list) -> bool:
+    """
+    通用同步券商持倉函式：
+    1. 讀取現有 broker_positions
+    2. 找出同一券商已出清（或減少）的部位，寫入 trades
+    3. 全量覆寫 broker_positions（保留其他券商，更新指定券商）
+    """
+    try:
+        from sheets_utils import read_sheet_data_with_cache, append_trade
+        df = read_sheet_data_with_cache("broker_positions")
+        existing_positions = df.to_dict('records') if not df.empty else []
+        
+        # 找出該券商目前的舊部位
+        old_broker_pos = [p for p in existing_positions if str(p.get('broker', '')).strip().lower() == broker_name.lower()]
+        other_pos = [p for p in existing_positions if str(p.get('broker', '')).strip().lower() != broker_name.lower()]
+        
+        # 建立 new_positions 字典以供比對
+        new_map = {str(p.get('symbol', '')): p for p in new_positions if str(p.get('symbol', '')) != ''}
+        
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 檢查舊部位是否有變動或出清
+        for old_p in old_broker_pos:
+            sym = str(old_p.get('symbol', ''))
+            old_qty = float(old_p.get('position', 0))
+            if sym not in new_map:
+                # 已出清
+                logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已出清，寫入 trades。")
+                trade_record = {
+                    "id": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                    "日期": ts,
+                    "券商": broker_name,
+                    "標的": sym,
+                    "方向": "出清",
+                    "進場價": old_p.get('avgCost', ''),
+                    "出場價": old_p.get('marketPrice', old_p.get('currentPrice', '')),
+                    "數量": old_qty,
+                    "狀態": "已實現",
+                    "策略": "",
+                    "進場原因": "系統自動偵測",
+                    "出場原因": "系統自動偵測",
+                    "備註": "自 broker_positions 同步時自動記錄"
+                }
+                append_trade(trade_record)
+            else:
+                new_qty = float(new_map[sym].get('position', 0))
+                if new_qty < old_qty:
+                    # 部分出清
+                    logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 減少部位 ({old_qty} -> {new_qty})，寫入 trades。")
+                    trade_record = {
+                        "id": f"partial_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                        "日期": ts,
+                        "券商": broker_name,
+                        "標的": sym,
+                        "方向": "部分出清",
+                        "進場價": old_p.get('avgCost', ''),
+                        "出場價": new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', '')),
+                        "數量": old_qty - new_qty,
+                        "狀態": "已實現",
+                        "策略": "",
+                        "進場原因": "系統自動偵測",
+                        "出場原因": "系統自動偵測",
+                        "備註": "自 broker_positions 同步時自動記錄"
+                    }
+                    append_trade(trade_record)
+                elif new_qty > old_qty:
+                    # 增加部位
+                    logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 增加部位 ({old_qty} -> {new_qty})。")
+        
+        # 合併並覆寫
+        full_positions = other_pos + new_positions
+        return overwrite_broker_positions(full_positions)
+    except Exception as e:
+        logger.error(f"❌ sync_broker_positions_and_log_trades 失敗：{e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 
 
 # ======================

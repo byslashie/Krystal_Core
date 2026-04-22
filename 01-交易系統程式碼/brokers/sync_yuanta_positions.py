@@ -204,76 +204,31 @@ def _read_last_snapshot(sheet) -> str | None:
 
 def append_broker_positions(positions: List[dict]) -> int:
     """Upsert 元大庫存至 broker_positions（同 symbol 更新，新 symbol 新增，已出清刪除）"""
-    from sheets_utils import get_sheet
-
-    sheet = get_sheet("broker_positions")
-    if sheet is None:
-        print("無法取得 broker_positions 分頁（Sheets 可能停用或不存在）")
-        return 0
-
-    current_fp = _fingerprint(positions)
-    last_fp = _read_last_snapshot(sheet)
-
-    if last_fp is not None and current_fp == last_fp:
-        print("ℹ️ 庫存未變動，跳過寫入")
-        return 0
+    from sheets_utils import sync_broker_positions_and_log_trades
 
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # 讀取現有列，建立 元大 symbol → row_number 對應
-    all_values = sheet.get_all_values()
-    header = all_values[0] if all_values else []
-    sym_col_idx = header.index("symbol") if "symbol" in header else 2
-    src_col_idx = header.index("券商") if "券商" in header else 1
-
-    existing_yuanta = {}
-    for i, row in enumerate(all_values[1:], start=2):
-        if len(row) > src_col_idx and row[src_col_idx] == BROKER_NAME:
-            sym = row[sym_col_idx] if len(row) > sym_col_idx else ""
-            if sym:
-                existing_yuanta[sym] = i
-
-    written = 0
-    current_symbols = set()
+    formatted_positions = []
+    
     for p in positions:
-        sym = p.get("symbol", "")
-        if not sym:
-            continue
-        current_symbols.add(sym)
-        row_data = [
-            ts,
-            BROKER_NAME,
-            sym,
-            p.get("secType", "STK"),
-            p.get("exchange", "TWSE"),
-            p.get("currency", "TWD"),
-            p.get("position", 0),
-            p.get("avgCost", 0),
-            p.get("totalCost", 0),
-            p.get("currentPrice", 0),
-            p.get("marketValue", 0),
-            p.get("unrealizedPnL", 0),
-            p.get("sellable", p.get("position", 0)),
-            p.get("limitUp", 0),
-            p.get("limitDown", 0),
-        ]
-        if sym in existing_yuanta:
-            sheet.update(values=[row_data], range_name=f"A{existing_yuanta[sym]}")
-        else:
-            sheet.append_row(row_data, value_input_option="USER_ENTERED")
-        written += 1
-
-    # 刪除已出清的 symbol（從後往前刪避免 index 錯位）
-    to_delete = sorted(
-        [rn for sym, rn in existing_yuanta.items() if sym not in current_symbols],
-        reverse=True,
-    )
-    for rn in to_delete:
-        sheet.delete_rows(rn)
-        print(f"已刪除出清部位 row {rn}")
-
-    print(f"已 upsert {written} 筆元大庫存至 broker_positions")
-    return written
+        formatted_positions.append({
+            "timestamp": ts,
+            "broker": BROKER_NAME,
+            "symbol": p.get("symbol", ""),
+            "secType": p.get("secType", "STK"),
+            "exchange": p.get("exchange", "TWSE"),
+            "currency": p.get("currency", "TWD"),
+            "position": p.get("position", 0),
+            "avgCost": p.get("avgCost", 0),
+            "marketPrice": p.get("currentPrice", 0),
+            "marketValue": p.get("marketValue", 0),
+            "unrealizedPNL": p.get("unrealizedPnL", 0),
+            "sellable": p.get("sellable", p.get("position", 0)),
+            "limitUp": p.get("limitUp", 0),
+            "limitDown": p.get("limitDown", 0)
+        })
+        
+    ok = sync_broker_positions_and_log_trades(BROKER_NAME, formatted_positions)
+    return len(formatted_positions) if ok else 0
 
 
 # =========================

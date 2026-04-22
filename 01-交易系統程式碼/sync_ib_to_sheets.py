@@ -45,21 +45,9 @@ def sync_ib():
         }
         append_broker_snapshot(snapshot_data)
 
-        # B. 更新 Positions (保留其他券商，僅更新 IB 部分)
-        # 讀取現有持倉
-        existing_df = read_sheet_data_with_cache('broker_positions')
-        other_positions = []
-        if existing_df is not None and not existing_df.empty:
-            # 檢查 'broker' 欄位是否存在，避免 KeyError
-            if 'broker' in existing_df.columns:
-                # 過濾掉現有的 IB 持倉，保留 Yuanta, Schwab 等
-                mask = ~existing_df['broker'].astype(str).str.contains('IB', case=False, na=False)
-                other_positions = existing_df[mask].to_dict('records')
-            else:
-                # 假設如果沒有 broker 欄位，表示資料可能有問題或全都是舊版格式，暫時全部保留
-                other_positions = existing_df.to_dict('records')
+        # B. 更新 Positions 並記錄出清至 trades
+        from sheets_utils import sync_broker_positions_and_log_trades
 
-        # 新的 IB 持倉
         new_ib_positions = []
         for p in data.get('positions', []):
             new_ib_positions.append({
@@ -74,8 +62,7 @@ def sync_ib():
                 "timestamp": data.get('timestamp')
             })
         
-        full_positions = other_positions + new_ib_positions
-        overwrite_broker_positions(full_positions)
+        sync_broker_positions_and_log_trades("IB", new_ib_positions)
 
         logger.info(f"✅ IB 數據同步完成！(資產: ${snapshot_data['net_liquidation']}, 持倉數: {len(new_ib_positions)})")
         return True

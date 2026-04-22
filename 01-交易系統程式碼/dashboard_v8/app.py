@@ -771,10 +771,18 @@ def api_smart_sync_all():
     final = sync_from_google_sheets()
     result['sheets_to_db'] = final
 
+    # ── 5. 紀錄每日市值快照 ──
+    try:
+        nav_script = Path(__file__).parent.parent / 'brokers' / 'record_daily_nav.py'
+        if nav_script.exists():
+            subprocess.run([sys.executable, str(nav_script)], capture_output=True, timeout=30)
+    except Exception as e:
+        logger.error(f"自動紀錄每日市值失敗: {e}")
+
     live_count = sum(1 for b in ('schwab', 'ib', 'yuanta') if result[b].get('mode') == 'live')
     return jsonify({
         'status': 'success' if final.get('status') == 'success' else 'partial',
-        'summary': f'即時 {live_count}/3，Sheets 共 {final.get("count", 0)} 筆',
+        'summary': f'即時 {live_count}/3，Sheets 共 {final.get("count", 0)} 筆，已更新每日市值',
         'brokers': {k: result[k] for k in ('schwab', 'ib', 'yuanta')},
         'total_count': final.get('count', 0),
         'auto_closed': final.get('auto_closed', []),
