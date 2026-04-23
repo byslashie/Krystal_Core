@@ -114,8 +114,8 @@ def main() -> None:
     
     print(f"\n[OK] 已寫入 {today_str}：")
     print(f"  元大:   {y_mv:12.0f} TWD (PNL: {y_pnl:10.0f})")
-    print(f"  IB:     {i_mv:12.2f} USD (PNL: {i_pnl:10.2f})")
-    print(f"  Schwab: {s_mv:12.2f} USD (PNL: {s_pnl:10.2f})")
+    print(f"  IB:     {i_mv:12.2f} USD = {i_mv*USD_TWD_RATE:,.0f} TWD (PNL: {i_pnl:10.2f} USD)")
+    print(f"  Schwab: {s_mv:12.2f} USD = {s_mv*USD_TWD_RATE:,.0f} TWD (PNL: {s_pnl:10.2f} USD)")
     print(f"  --------------------------------------------------")
     print(f"  總計:   {total_mv_twd:12.0f} TWD (PNL: {total_pnl_twd:10.0f})")
     
