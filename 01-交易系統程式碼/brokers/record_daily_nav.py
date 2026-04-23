@@ -10,7 +10,6 @@ daily_nav 欄位：
 """
 from __future__ import annotations
 
-import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -139,7 +138,7 @@ def main() -> None:
     # Discord 通知
     try:
         from modules.notifier import notify_daily_nav
-        notify_daily_nav(today_str, y_mv, y_pnl, i_mv + s_mv, i_pnl + s_pnl)
+        notify_daily_nav(today_str, y_mv, y_pnl, i_mv, i_pnl, s_mv, s_pnl, USD_TWD_RATE)
     except Exception as e:
         print(f"[WARN] Discord 通知失敗: {e}")
 

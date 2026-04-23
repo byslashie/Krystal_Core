@@ -100,22 +100,26 @@ def notify_yuanta_update(positions: list[dict], total_mv: float,
 # ──────────────────────────────────────────────
 
 def notify_daily_nav(date_str: str, yuanta_mv: float, yuanta_pnl: float,
-                     ib_mv: float, ib_pnl: float) -> bool:
-    total_mv  = yuanta_mv + ib_mv
-    total_pnl = yuanta_pnl + ib_pnl
-    pnl_emoji = "📈" if total_pnl >= 0 else "📉"
-    sign = "+" if total_pnl >= 0 else ""
+                     ib_mv: float, ib_pnl: float,
+                     schwab_mv: float = 0.0, schwab_pnl: float = 0.0,
+                     usd_twd: float = 32.0) -> bool:
+    total_mv_twd  = yuanta_mv + (ib_mv + schwab_mv) * usd_twd
+    total_pnl_twd = yuanta_pnl + (ib_pnl + schwab_pnl) * usd_twd
+    pnl_emoji = "📈" if total_pnl_twd >= 0 else "📉"
+    sign = "+" if total_pnl_twd >= 0 else ""
 
     content = (
         f"{pnl_emoji} **每日市值記錄** `{date_str}`\n"
         f"```\n"
         f"{'元大 市值':<12} NT${yuanta_mv:>12,.0f}\n"
         f"{'元大 未實現':<11} {('+' if yuanta_pnl>=0 else '')}NT${abs(yuanta_pnl):>11,.0f}\n"
-        f"{'IB 市值':<12}   ${ib_mv:>12,.0f}\n"
-        f"{'IB 未實現':<12}  {('+' if ib_pnl>=0 else '')}${abs(ib_pnl):>11,.0f}\n"
-        f"{'─'*36}\n"
-        f"{'合計市值':<12} NT${total_mv:>12,.0f}\n"
-        f"{'合計未實現':<11} {sign}NT${abs(total_pnl):>11,.0f}\n"
+        f"{'IB 市值':<12}   ${ib_mv:>12,.2f} = NT${ib_mv*usd_twd:>10,.0f}\n"
+        f"{'IB 未實現':<12}  {('+' if ib_pnl>=0 else '')}${abs(ib_pnl):>11,.2f}\n"
+        f"{'Schwab 市值':<10}  ${schwab_mv:>12,.2f} = NT${schwab_mv*usd_twd:>10,.0f}\n"
+        f"{'Schwab 未實現':<8}  {('+' if schwab_pnl>=0 else '')}${abs(schwab_pnl):>11,.2f}\n"
+        f"{'─'*40}\n"
+        f"{'合計市值':<12} NT${total_mv_twd:>12,.0f}\n"
+        f"{'合計未實現':<11} {sign}NT${abs(total_pnl_twd):>11,.0f}\n"
         f"```"
     )
     return _send({"content": content})
