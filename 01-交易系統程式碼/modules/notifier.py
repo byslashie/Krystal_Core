@@ -21,7 +21,7 @@ try:
 except ImportError:
     _HAS_REQUESTS = False
     import urllib.request
-    import json as _json
+    import json as _json  # noqa: F401
 
 try:
     from dotenv import load_dotenv
@@ -106,20 +106,22 @@ def notify_daily_nav(date_str: str, yuanta_mv: float, yuanta_pnl: float,
     total_mv_twd  = yuanta_mv + (ib_mv + schwab_mv) * usd_twd
     total_pnl_twd = yuanta_pnl + (ib_pnl + schwab_pnl) * usd_twd
     pnl_emoji = "📈" if total_pnl_twd >= 0 else "📉"
-    sign = "+" if total_pnl_twd >= 0 else ""
+
+    def fmt_pnl(v): return f"{'+' if v>=0 else ''}{v:,.0f}"
+    def fmt_usd(v): return f"{'+' if v>=0 else ''}{v:,.2f}"
 
     content = (
         f"{pnl_emoji} **每日市值記錄** `{date_str}`\n"
         f"```\n"
-        f"{'元大 市值':<12} NT${yuanta_mv:>12,.0f}\n"
-        f"{'元大 未實現':<11} {('+' if yuanta_pnl>=0 else '')}NT${abs(yuanta_pnl):>11,.0f}\n"
-        f"{'IB 市值':<12}   ${ib_mv:>12,.2f} = NT${ib_mv*usd_twd:>10,.0f}\n"
-        f"{'IB 未實現':<12}  {('+' if ib_pnl>=0 else '')}${abs(ib_pnl):>11,.2f}\n"
-        f"{'Schwab 市值':<10}  ${schwab_mv:>12,.2f} = NT${schwab_mv*usd_twd:>10,.0f}\n"
-        f"{'Schwab 未實現':<8}  {('+' if schwab_pnl>=0 else '')}${abs(schwab_pnl):>11,.2f}\n"
-        f"{'─'*40}\n"
-        f"{'合計市值':<12} NT${total_mv_twd:>12,.0f}\n"
-        f"{'合計未實現':<11} {sign}NT${abs(total_pnl_twd):>11,.0f}\n"
+        f"券商     市值 (TWD)          未實現 (TWD)\n"
+        f"{'─'*44}\n"
+        f"元大     NT${yuanta_mv:>12,.0f}   {fmt_pnl(yuanta_pnl):>12}\n"
+        f"IB       ${ib_mv:>9,.2f} USD        {fmt_usd(ib_pnl):>9} USD\n"
+        f"         NT${ib_mv*usd_twd:>12,.0f}\n"
+        f"Schwab   ${schwab_mv:>9,.2f} USD        {fmt_usd(schwab_pnl):>9} USD\n"
+        f"         NT${schwab_mv*usd_twd:>12,.0f}\n"
+        f"{'─'*44}\n"
+        f"合計     NT${total_mv_twd:>12,.0f}   {fmt_pnl(total_pnl_twd):>12}\n"
         f"```"
     )
     return _send({"content": content})

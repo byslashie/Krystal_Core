@@ -109,7 +109,7 @@ def main() -> None:
         nav_sheet.insert_row(NAV_COLUMNS, 1)
         print("已建立 daily_nav Header")
 
-    nav_sheet.append_row(row, value_input_option="USER_ENTERED")
+    nav_sheet.append_row(row, value_input_option="RAW")
     
     print(f"\n[OK] 已寫入 {today_str}：")
     print(f"  元大:   {y_mv:12.0f} TWD (PNL: {y_pnl:10.0f})")
