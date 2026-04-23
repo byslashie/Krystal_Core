@@ -1,604 +1,687 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="dark">
+<html lang="zh-TW" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Krystal · Vision 2026</title>
+<title>Krystal · Soul & System 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
+:root {
+    --bg: #f8fafc;
+    --glass: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(0, 0, 0, 0.05);
+    --text: #1e293b;
+    --text-dim: #64748b;
+    --primary: #d4af37;
+    --primary-glow: rgba(212, 175, 55, 0.2);
+    --secondary: #9333ea;
+    --accent: #14b8a6;
+    --danger: #f43f5e;
+    --font-main: 'Outfit', 'Noto Sans TC', sans-serif;
+    --shadow-widget: 0 10px 30px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.02);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── THEME ── */
-[data-theme="dark"] {
-  --bg:       #090c17; --bg2: #0f1523; --bg3: #111827; --bg4: #141927;
-  --bd:       #1e2535; --bd2: #2a2f4a;
-  --tx:       #e8eaf0; --tx2: #9aa3b8; --tx3: #5a6480; --tx4: #333a50;
-  --gold:     #d4af37; --gdim: rgba(212,175,55,.12); --gbd: rgba(212,175,55,.3);
-  --shadow:   none;
-  --hbg:      linear-gradient(135deg,#12172b,#1e1040,#12172b);
-  --nav-bg:   rgba(9,12,23,.92);
-}
-[data-theme="light"] {
-  --bg:       #f0f3fa; --bg2: #ffffff; --bg3: #f7f9ff; --bg4: #eef1fa;
-  --bd:       #dde3f0; --bd2: #cdd4e8;
-  --tx:       #18203a; --tx2: #4a5570; --tx3: #8a93aa; --tx4: #b8c0d4;
-  --gold:     #9a6f00; --gdim: rgba(154,111,0,.08); --gbd: rgba(154,111,0,.25);
-  --shadow:   0 2px 12px rgba(0,0,0,.06);
-  --hbg:      linear-gradient(135deg,#e8eaf8,#ede8ff,#e8eaf8);
-  --nav-bg:   rgba(240,243,250,.92);
-}
-
 body {
-  background: var(--bg); color: var(--tx);
-  font-family: 'Segoe UI','PingFang TC',system-ui,sans-serif;
-  font-size: 15px; line-height: 1.6;
-  scroll-behavior: smooth;
+    background: var(--bg);
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(147, 51, 234, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: 0.3s;
 }
 
-/* ── TOP NAV ── */
+/* --- LAYOUT --- */
+.layout-wrapper {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    gap: 2.5rem;
+    align-items: flex-start;
+}
+.main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 380px;
+    position: sticky;
+    top: 2rem;
+    background: white;
+    border-radius: 2.5rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 4rem);
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 1.8rem 1.8rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafafa;
+}
+
+.action-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.action-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.weekly-controls {
+    margin-top: 1.2rem;
+}
+
+.weekly-select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    color: var(--text);
+    background: white;
+    margin-bottom: 12px;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.weekly-nav-btns {
+    display: flex;
+    gap: 12px;
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: 0.3s;
+}
+.nav-btn:hover {
+    background: #f8fafc;
+    color: var(--text);
+    border-color: #cbd5e1;
+}
+
+.sidebar-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.report-block {
+    background: var(--bg);
+    padding: 1.5rem;
+    border-radius: 1.2rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid #f1f5f9;
+}
+.report-block h4 {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.sidebar-content::-webkit-scrollbar { width: 6px; }
+.sidebar-content::-webkit-scrollbar-track { background: transparent; }
+.sidebar-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+@media (max-width: 1000px) {
+    .layout-wrapper { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; max-height: 800px; }
+}
+
+/* --- NAVIGATION --- */
 .nav {
-  position: sticky; top: 0; z-index: 90;
-  background: var(--nav-bg);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--bd);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 52px; gap: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 0; margin-bottom: 2rem;
 }
-.nav-links { display: flex; gap: 4px; overflow-x: auto; }
-.nav-links a {
-  font-size: 13px; color: var(--tx3); text-decoration: none;
-  padding: 6px 12px; border-radius: 8px; white-space: nowrap;
-  transition: background .15s, color .15s;
-}
-.nav-links a:hover { background: var(--gdim); color: var(--gold); }
-.nav-toggle {
-  background: var(--bg3); border: 1px solid var(--bd); border-radius: 24px;
-  padding: 5px 13px; cursor: pointer; font-size: 13px; color: var(--tx2);
-  display: flex; gap: 5px; align-items: center; flex-shrink: 0;
-  transition: border-color .2s;
-}
-.nav-toggle:hover { border-color: var(--gold); color: var(--gold); }
+.nav-logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
 
-.wrap { max-width: 920px; margin: 0 auto; padding: 28px 20px 60px; }
-.sec { margin-bottom: 44px; }
-.sec-label {
-  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--tx4); text-align: center; margin-bottom: 18px;
-}
-
-/* ── HERO ── */
+/* --- HERO SECTION --- */
 .hero {
-  background: var(--hbg); border: 1px solid var(--bd2);
-  border-radius: 20px; padding: 52px 28px 40px;
-  text-align: center; position: relative; overflow: hidden;
-}
-.hero::before {
-  content:''; position:absolute; top:-40%; left:-20%; width:140%; height:180%;
-  background: radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.06),transparent 65%);
-  pointer-events:none;
-}
-.hero-tag {
-  display: inline-block; background: var(--gdim); border: 1px solid var(--gbd);
-  color: var(--gold); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-  padding: 4px 16px; border-radius: 20px; margin-bottom: 18px;
-}
-.hero h1 {
-  font-size: clamp(30px,5vw,52px); font-weight: 800; color: var(--gold);
-  margin-bottom: 14px; letter-spacing: 2px;
-}
-[data-theme="dark"] .hero h1 {
-  background: linear-gradient(135deg,#d4af37,#f5e17a,#d4af37);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.hero-sub { font-size: 15px; color: var(--tx2); line-height: 1.9; max-width: 560px; margin: 0 auto 20px; }
-.hero-quote {
-  display: inline-block; background: var(--gdim); border: 1px solid var(--gbd);
-  border-radius: 12px; padding: 16px 26px; font-size: 15px; color: var(--gold);
-  max-width: 580px; line-height: 1.85;
+    text-align: center;
+    padding: 5rem 2rem;
+    background: white;
+    border-radius: 3rem;
+    margin-bottom: 4rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
 }
 
-/* ── MANDALA ── */
-.mandala {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
-}
-.cell {
-  background: var(--bg3); border: 1px solid var(--bd); border-radius: 16px;
-  padding: 20px 16px; box-shadow: var(--shadow);
-  position: relative; overflow: hidden;
-  transition: transform .2s, border-color .2s;
-}
-.cell:hover { transform: translateY(-3px); border-color: var(--accent); }
-.cell::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:4px;
-  background: var(--accent); border-radius: 16px 16px 0 0;
-}
-.health  { --accent:#e74c3c; } .career  { --accent:#3b82f6; }
-.finance { --accent:#d4af37; } .life    { --accent:#22c55e; }
-.partner { --accent:#ec4899; } .growth  { --accent:#a855f7; }
-.leisure { --accent:#14b8a6; } .impact  { --accent:#f97316; }
-.center  { --accent:#9333ea; background: var(--bg4); border-color: var(--bd2); }
-.center::before { background: linear-gradient(90deg,#d4af37,#9333ea,#d4af37); }
-.cell-icon { font-size: 24px; margin-bottom: 9px; }
-.cell-title {
-  font-size: 13.5px; font-weight: 700; color: var(--accent); margin-bottom: 11px;
-}
-.center .cell-title { color: var(--gold); font-size: 15px; }
-.cell ul { list-style: none; }
-.cell ul li {
-  font-size: 13px; color: var(--tx2); padding: 3px 0 3px 14px;
-  position: relative; line-height: 1.55;
-}
-.cell ul li::before {
-  content:'·'; position:absolute; left:0; color:var(--accent); font-size:18px; line-height:1.15;
-}
-.center ul li { color: var(--tx); }
+.hero-content { position: relative; z-index: 1; }
+.awakening { font-size: 1.2rem; font-weight: 800; color: var(--secondary); letter-spacing: 10px; text-transform: uppercase; margin-bottom: 1rem; }
+.hero h1 { font-size: 4.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary); text-shadow: 0 4px 10px var(--primary-glow); }
+.hero p { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 2.5rem; letter-spacing: 2px; }
 
-/* ── TIMELINE ── */
-.tl-item { display: grid; grid-template-columns: 58px 1fr; gap: 0 18px; margin-bottom: 4px; }
-.tl-left { display: flex; flex-direction: column; align-items: center; }
-.tl-dot {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 12px;
-  border: 2px solid var(--bd); background: var(--bg3); color: var(--tx3);
-}
-.tl-dot.now { border-color: var(--gold); color: var(--gold); background: var(--gdim); }
-.tl-dot.y3  { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,.1); }
-.tl-dot.y5  { border-color: #a855f7; color: #a855f7; background: rgba(168,85,247,.1); }
-.tl-line { width: 2px; flex: 1; min-height: 14px; background: var(--bd); margin: 4px 0; }
-.tl-card {
-  background: var(--bg3); border: 1px solid var(--bd); border-radius: 14px;
-  padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow);
-}
-.tl-card.y3 { border-left: 3px solid #3b82f6; }
-.tl-card.y5 { border-left: 3px solid #a855f7; }
-.tl-head {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 14px;
-}
-.tl-year { font-size: 20px; font-weight: 700; color: var(--tx); }
-.badge {
-  font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
-}
-.b-now { background:var(--gdim); color:var(--gold); border:1px solid var(--gbd); }
-.b-3y  { background:rgba(59,130,246,.1); color:#3b82f6; border:1px solid rgba(59,130,246,.3); }
-.b-5y  { background:rgba(168,85,247,.1); color:#a855f7; border:1px solid rgba(168,85,247,.3); }
-.b-mid { background:rgba(34,197,94,.1); color:#22c55e; border:1px solid rgba(34,197,94,.3); }
-.pills { display: flex; flex-wrap: wrap; gap: 10px; }
-.pill {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--bg2); border: 1px solid var(--bd);
-  border-radius: 10px; padding: 8px 12px; flex: 1; min-width: 155px;
-  font-size: 13px; color: var(--tx2);
-}
-.pill-i { font-size: 16px; flex-shrink: 0; }
-.pill strong { color: var(--tx); font-size: 13px; display: block; margin-bottom: 1px; }
-.pill span { color: var(--tx3); font-size: 12px; }
-
-/* ── COMPARE ── */
-.compare-grid {
-  display: grid; grid-template-columns: 1fr 48px 1fr;
-  background: var(--bg3); border: 1px solid var(--bd);
-  border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
-}
-.c-col { padding: 22px 20px; }
-.c-col.now { border-right: 1px solid var(--bd); }
-.c-arrow { display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--gold); }
-.c-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--tx3); margin-bottom: 14px; }
-.c-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 13.5px; }
-.c-row .ci { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-.c-row .ct { color: var(--tx2); line-height: 1.5; }
-.c-row .ct strong { color: var(--tx); display: block; }
-
-/* ── TWO COL ── */
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.card {
-  background: var(--bg3); border: 1px solid var(--bd);
-  border-radius: 16px; padding: 20px; box-shadow: var(--shadow);
-}
-.card-title {
-  font-size: 14px; font-weight: 700; color: var(--tx);
-  margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
-}
-.card-title span { color: var(--gold); }
-.tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.tag {
-  border-radius: 20px; padding: 5px 13px; font-size: 13px;
-  background: var(--bg2); border: 1px solid var(--bd); color: var(--tx2);
-}
-.tag.pink { border-color:rgba(236,72,153,.4); color:#ec4899; background:rgba(236,72,153,.07); }
-.tag.gold { border-color:var(--gbd); color:var(--gold); background:var(--gdim); }
-
-/* ── PRIORITY ── */
-.p-list { display: flex; flex-direction: column; gap: 11px; }
-.p-item {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: var(--bg3); border: 1px solid var(--bd);
-  border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow);
-}
-.p-num {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700;
-}
-.p1 { background:rgba(239,68,68,.15); color:#ef4444; }
-.p2 { background:rgba(59,130,246,.15); color:#3b82f6; }
-.p3 { background:rgba(212,175,55,.15); color:var(--gold); }
-.p-item strong { font-size: 15px; color: var(--tx); display: block; margin-bottom: 4px; }
-.p-item p { font-size: 13.5px; color: var(--tx3); line-height: 1.6; }
-
-/* ── ROADMAP ── */
-.roadmap { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
-.ms {
-  background: var(--bg3); border: 1px solid var(--bd); border-radius: 12px;
-  padding: 16px 10px; text-align: center; position: relative; box-shadow: var(--shadow);
-}
-.ms.now { border-color: #3b82f6; }
-.ms.now::before {
-  content:'現在'; position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-  background:#3b82f6; color:#fff; font-size:10px; padding:2px 9px; border-radius:10px;
-}
-.ms .yr { font-size: 11px; color: var(--tx3); margin-bottom: 5px; }
-.ms .amt { font-size: clamp(15px,2.2vw,21px); font-weight: 700; color: var(--gold); }
-.ms .lbl { font-size: 11px; color: var(--tx3); margin-top: 4px; }
-
-/* ── DIVIDER ── */
-.divider {
-  border: none; border-top: 1px solid var(--bd);
-  margin: 0 0 44px;
+.quote-box {
+    background: rgba(212, 175, 55, 0.05);
+    padding: 2rem;
+    border-radius: 2rem;
+    display: inline-block;
+    max-width: 800px;
+    border: 1px solid rgba(212, 175, 55, 0.1);
 }
 
-/* ── FOOTER ── */
-.footer { text-align:center; font-size:12px; color:var(--tx4); padding-top:20px; }
+/* --- SECTION HEADER --- */
+.section-header {
+    border-left: 6px solid var(--primary);
+    padding-left: 1.2rem;
+    margin-bottom: 2rem;
+    font-weight: 800; font-size: 1.5rem;
+}
 
-/* ── RESPONSIVE ── */
-@media(max-width:680px){
-  .mandala { grid-template-columns:1fr; }
-  .two-col { grid-template-columns:1fr; }
-  .roadmap { grid-template-columns:repeat(2,1fr); }
-  .compare-grid { grid-template-columns:1fr; }
-  .c-arrow { transform:rotate(90deg); padding:6px 0; }
-  .c-col.now { border-right:none; border-bottom:1px solid var(--bd); }
-  .tl-item { grid-template-columns:44px 1fr; gap:0 12px; }
+/* --- TABS --- */
+.tab-container { background: white; padding: 2.5rem; border-radius: 2.5rem; box-shadow: var(--shadow-widget); margin-bottom: 3rem; border: 1px solid var(--glass-border); }
+.tab-nav { display: flex; gap: 3rem; border-bottom: 1px solid #f1f5f9; margin-bottom: 2rem; }
+.tab-btn { background: none; border: none; padding: 1rem 0; font-weight: 800; font-size: 1rem; color: var(--text-dim); cursor: pointer; position: relative; transition: 0.3s; }
+.tab-btn.active { color: var(--primary); }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 4px; background: var(--primary); border-radius: 10px; }
+.tab-content { display: none; animation: fadeIn 0.5s ease; }
+.tab-content.active { display: block; }
+
+/* --- MANDALA & CHARTS --- */
+.chart-sec { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; }
+.chart-card { background: white; padding: 2.5rem; border-radius: 2.5rem; box-shadow: var(--shadow-widget); text-align: center; border: 1px solid var(--glass-border); }
+
+.mandala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+.cell { background: white; padding: 2rem; border-radius: 2rem; box-shadow: var(--shadow-widget); border: 1px solid var(--glass-border); transition: 0.3s; }
+.cell:hover { transform: translateY(-8px); border-color: var(--primary); }
+.cell-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px; color: var(--text); }
+.cell-content { list-style: none; font-size: 0.9rem; color: var(--text-dim); }
+.cell-content li { margin-bottom: 0.8rem; padding-left: 15px; position: relative; }
+.cell-content li::before { content: '→'; position: absolute; left: 0; color: var(--primary); font-weight: 800; }
+
+/* --- PIE SVG --- */
+.pie-wrap { position: relative; margin: 0 auto; width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; }
+.pie-svg { transform: rotate(-90deg); border-radius: 50%; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 2; }
+.slice { fill: none; stroke-width: 8; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+.slice:hover { stroke-width: 12; filter: drop-shadow(0 0 3px rgba(0,0,0,0.3)); }
+.pie-svg.interacting .slice:not(:hover) { opacity: 0.25; }
+
+.center-display {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    pointer-events: none;
+    transition: 0.3s;
+}
+.c-val { font-size: 2.2rem; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 5px; transition: color 0.3s; }
+.c-name { font-size: 0.85rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+.legend-list {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    text-align: left;
+    padding: 0 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* --- DEEP LESSONS CARD --- */
+.deep-card {
+    background: white; padding: 2rem; border-radius: 2rem; box-shadow: var(--shadow-widget); border: 1px solid var(--glass-border);
+    border-left: 8px solid var(--primary); margin-bottom: 1.5rem;
+}
+
+/* --- FOOTER --- */
+footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-size: 0.9rem; letter-spacing: 1px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 1000px) {
+    .chart-sec, .mandala-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 3rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-links">
-    <a href="#vision">核心願景</a>
-    <a href="#mandala">九宮格</a>
-    <a href="#timeline">三年五年</a>
-    <a href="#compare">現在vs未來</a>
-    <a href="#roadmap">財務里程碑</a>
-    <a href="#actions">行動清單</a>
-  </div>
-  <button class="nav-toggle" onclick="toggleTheme()">
-    <span id="ti">☀️</span><span id="tl">亮色</span>
-  </button>
-</nav>
+<div class="layout-wrapper">
+    <div class="main-content">
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-logo">KRYSTAL 2026</div>
+        <div style="font-weight: 600; color: var(--text-dim);">Soul Evolution Navigation</div>
+    </nav>
 
-<div class="wrap">
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="awakening">Awakening</div>
+            <h1>Soul & System</h1>
+            <p>不再死撐，開始傾聽靈魂的聲音</p>
+            <div class="quote-box">
+                <p style="font-size: 1.3rem; font-weight: 600; font-style: italic; color: var(--text);">
+                    「我不再靠意志力死撐，而是學會傾聽靈魂。<br>
+                    我建立系統，是為了守護自由；我保持紀律，是為了不再補位。」
+                </p>
+                <div style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: 3px;">
+                    — 我就是人生自己的鑰匙 —
+                </div>
+            </div>
+        </div>
+    </section>
 
-<!-- ── HERO ── -->
-<section class="sec" id="vision">
-  <div class="hero">
-    <div class="hero-tag">Krystal · Vision 2026</div>
-    <h1>Krystal</h1>
-    <p class="hero-sub">
-      系統型交易者 × 最美台股財經 KOL × 財務自由創造者<br>
-      用模型取代直覺，用紀律取代情緒，把資本複利成生命選擇權。
-    </p>
-    <div class="hero-quote">
-      「我不是靠意志力成功的人，而是靠系統、靠方向、靠紀律。<br>
-      2026 是十年難得一次的窗口。要衝，就是現在。」
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── MANDALA ── -->
-<section class="sec" id="mandala">
-  <p class="sec-label">曼陀羅九宮格</p>
-  <div class="mandala">
-
-    <div class="cell health">
-      <div class="cell-icon">💪</div>
-      <div class="cell-title">健康與體態</div>
-      <ul>
-        <li>體脂 31% → 22%（6個月計畫）</li>
-        <li>高蛋白碳循環 1,600 kcal</li>
-        <li>重訓 3x ＋ 有氧 3x ／週</li>
-        <li>每月 InBody 追蹤</li>
-        <li>抗發炎：魚油、鎂鈣鉀、水 3-5L</li>
-      </ul>
-    </div>
-
-    <div class="cell career">
-      <div class="cell-icon">📊</div>
-      <div class="cell-title">職業發展</div>
-      <ul>
-        <li>Q2：完成 Phase 1 剩餘 50%</li>
-        <li>Q3：策略系統全自動化</li>
-        <li>H2：評估全職轉換條件</li>
-        <li>量化作品集上線</li>
-        <li>長期：高雄分部發展</li>
-      </ul>
-    </div>
-
-    <div class="cell finance">
-      <div class="cell-icon">💰</div>
-      <div class="cell-title">財務自由</div>
-      <ul>
-        <li>2026：500萬 → 1,000萬</li>
-        <li>超越去年 YOY 94.18%</li>
-        <li>個人資本 ~440萬</li>
-        <li>2029：5,000萬</li>
-        <li>2033：1 億（終極目標）</li>
-      </ul>
-    </div>
-
-    <div class="cell life">
-      <div class="cell-icon">🏠</div>
-      <div class="cell-title">家庭與生活</div>
-      <ul>
-        <li>長期：高雄 / 南部定居</li>
-        <li>靠近爸媽，常相聚</li>
-        <li>每年出國 2 次（預算 15萬）</li>
-        <li>偶爾短期旅居海外 1-2 個月</li>
-        <li>地理自由，不被辦公室綁死</li>
-      </ul>
+    <!-- ENERGY PIE CHARTS -->
+    <div class="section-header">能量分配 / ENERGY ALLOCATION</div>
+    <div class="chart-sec">
+        <!-- Chart 1: Past -->
+        <div class="chart-card">
+            <p style="font-weight: 800; font-size: 1.1rem; color: var(--danger); margin-bottom: 1.5rem;">過去：能量掏空模式</p>
+            <div class="pie-wrap">
+                <div class="center-display">
+                    <div class="c-val" style="color: var(--danger);">100%</div>
+                    <div class="c-name">總耗損</div>
+                </div>
+                <svg class="pie-svg" viewBox="0 0 40 40">
+                    <circle class="slice" data-name="過度補位" data-val="45%" data-color="#f43f5e" r="15.9" cx="20" cy="20" stroke="#f43f5e" stroke-dasharray="45 100" />
+                    <circle class="slice" data-name="職業工作" data-val="30%" data-color="#3b82f6" r="15.9" cx="20" cy="20" stroke="#3b82f6" stroke-dasharray="30 100" stroke-dashoffset="-45" />
+                    <circle class="slice" data-name="健康運動" data-val="20%" data-color="#14b8a6" r="15.9" cx="20" cy="20" stroke="#14b8a6" stroke-dasharray="20 100" stroke-dashoffset="-75" />
+                    <circle class="slice" data-name="靈魂自我" data-val="5%" data-color="#d4af37" r="15.9" cx="20" cy="20" stroke="#d4af37" stroke-dasharray="5 100" stroke-dashoffset="-95" />
+                </svg>
+            </div>
+            <div class="legend-list">
+                <div class="legend-item"><div class="dot" style="background: #f43f5e;"></div> 補位 45%</div>
+                <div class="legend-item"><div class="dot" style="background: #3b82f6;"></div> 工作 30%</div>
+                <div class="legend-item"><div class="dot" style="background: #14b8a6;"></div> 運動 20%</div>
+                <div class="legend-item"><div class="dot" style="background: #d4af37;"></div> 自我 5%</div>
+            </div>
+        </div>
+        
+        <!-- Chart 2: Future -->
+        <div class="chart-card">
+            <p style="font-weight: 800; font-size: 1.1rem; color: var(--accent); margin-bottom: 1.5rem;">未來：能量取回模式</p>
+            <div class="pie-wrap">
+                <div class="center-display">
+                    <div class="c-val" style="color: var(--accent);">100%</div>
+                    <div class="c-name">總覺醒</div>
+                </div>
+                <svg class="pie-svg" viewBox="0 0 40 40">
+                    <circle class="slice" data-name="靈魂自我" data-val="35%" data-color="#d4af37" r="15.9" cx="20" cy="20" stroke="#d4af37" stroke-dasharray="35 100" />
+                    <circle class="slice" data-name="量化系統" data-val="30%" data-color="#9333ea" r="15.9" cx="20" cy="20" stroke="#9333ea" stroke-dasharray="30 100" stroke-dashoffset="-35" />
+                    <circle class="slice" data-name="健康體態" data-val="20%" data-color="#14b8a6" r="15.9" cx="20" cy="20" stroke="#14b8a6" stroke-dasharray="20 100" stroke-dashoffset="-65" />
+                    <circle class="slice" data-name="社交連結" data-val="10%" data-color="#f43f5e" r="15.9" cx="20" cy="20" stroke="#f43f5e" stroke-dasharray="10 100" stroke-dashoffset="-85" />
+                    <circle class="slice" data-name="留白空間" data-val="5%" data-color="#64748b" r="15.9" cx="20" cy="20" stroke="#64748b" stroke-dasharray="5 100" stroke-dashoffset="-95" />
+                </svg>
+            </div>
+            <div class="legend-list">
+                <div class="legend-item"><div class="dot" style="background: #d4af37;"></div> 靈魂 35%</div>
+                <div class="legend-item"><div class="dot" style="background: #9333ea;"></div> 系統 30%</div>
+                <div class="legend-item"><div class="dot" style="background: #14b8a6;"></div> 體態 20%</div>
+                <div class="legend-item"><div class="dot" style="background: #f43f5e;"></div> 連結 10%</div>
+            </div>
+        </div>
     </div>
 
-    <div class="cell center">
-      <div class="cell-icon">⭐</div>
-      <div class="cell-title">核心願景</div>
-      <ul>
-        <li>系統型交易者</li>
-        <li>最美台股財經 KOL</li>
-        <li>財務自由創造者</li>
-        <li>用系統取代直覺</li>
-        <li>財務自由是生命入場券</li>
-      </ul>
+
+    <!-- GOAL CENTER TABS -->
+    <div class="section-header">目標與願景 / GOAL & VISION</div>
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="openTab(event, 'yearly')">YEARLY 2026</button>
+            <button class="tab-btn" onclick="openTab(event, 'monthly')">MONTHLY 05</button>
+            <button class="tab-btn" onclick="openTab(event, 'weekly')">WEEKLY W17</button>
+        </div>
+        <div id="yearly" class="tab-content active">
+            <div class="mandala-grid" style="margin-bottom: 0;">
+                <div class="cell" style="border-top: 5px solid var(--primary);">
+                    <div class="cell-title">💰 財務戰略</div>
+                    <ul class="cell-content">
+                        <li>資產規模突破 1,000 萬</li>
+                        <li>建立穩定自動複利系統</li>
+                        <li>資產是生命的「選擇權」</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--accent);">
+                    <div class="cell-title">🌿 健康體態</div>
+                    <ul class="cell-content">
+                        <li>體脂穩定 22% </li>
+                        <li>順應體感，修復身心</li>
+                        <li>甲狀腺與腸胃深度療癒</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--secondary);">
+                    <div class="cell-title">✨ 自由人生</div>
+                    <ul class="cell-content">
+                        <li>地理自由：泰國與海外旅居</li>
+                        <li>KOL 影響力：分享量化作品</li>
+                        <li>主理人意識：我不只是功能</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="monthly" class="tab-content">
+            <div class="mandala-grid" style="margin-bottom: 0;">
+                <div class="cell" style="border-top: 5px solid var(--primary);">
+                    <div class="cell-title">🏝️ 重生之旅</div>
+                    <ul class="cell-content">
+                        <li>泰國獨旅：找回自己的節奏</li>
+                        <li>斷開舊能量，練習一個人的自由</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--accent);">
+                    <div class="cell-title">💻 系統正式化</div>
+                    <ul class="cell-content">
+                        <li>Phase 1 全自動化啟動</li>
+                        <li>完成 UAT 最終測試</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--danger);">
+                    <div class="cell-title">🛑 關係邊界</div>
+                    <ul class="cell-content">
+                        <li>尊重確定答案，終結內耗</li>
+                        <li>守住邊界，不再補位</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="weekly" class="tab-content">
+            <div class="mandala-grid" style="margin-bottom: 0;">
+                <div class="cell" style="border-top: 5px solid var(--danger);">
+                    <div class="cell-title">🛡️ 守住邊界</div>
+                    <ul class="cell-content">
+                        <li>拒絕威脅，尊重對方決定</li>
+                        <li>保持沈默，把主控權還給他</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--primary);">
+                    <div class="cell-title">🎨 願景重構</div>
+                    <ul class="cell-content">
+                        <li>完成 Dashboard 3.0 更新</li>
+                        <li>視覺化取回能量的進度</li>
+                    </ul>
+                </div>
+                <div class="cell" style="border-top: 5px solid var(--accent);">
+                    <div class="cell-title">📊 交易觀察</div>
+                    <ul class="cell-content">
+                        <li>台股波動機會捕捉</li>
+                        <li>優化波段倉位與心情</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="cell partner">
-      <div class="cell-icon">💗</div>
-      <div class="cell-title">伴侶關係</div>
-      <ul>
-        <li>一起重訓，共享健康生活</li>
-        <li>有閱讀習慣，持續成長</li>
-        <li>J 人，有計劃感</li>
-        <li>主動追我，不需要我推</li>
-        <li>身心合一，溝通貼心</li>
-      </ul>
+    <!-- MANDALA STRATEGY -->
+    <div class="section-header">曼陀羅戰略 / STRATEGY MANDALA</div>
+    <div class="mandala-grid">
+        <div class="cell">
+            <div class="cell-title">🌿 健康體態</div>
+            <ul class="cell-content">
+                <li>體脂穩定 22% 目標</li>
+                <li>不逼迫，順應體感</li>
+                <li>照顧甲狀腺與腸胃</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">📈 職業與量化</div>
+            <ul class="cell-content">
+                <li>策略系統全自動化</li>
+                <li>量化作品集上線</li>
+                <li>持續優化交易邏輯</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">💰 財務自由</div>
+            <ul class="cell-content">
+                <li>2026：1,000萬目標</li>
+                <li>資產是生命的選擇權</li>
+                <li>個人資本獨立運作</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">🧘 靈魂與自我</div>
+            <ul class="cell-content">
+                <li>情緒與身體覺察練習</li>
+                <li>建立健康的心理邊界</li>
+                <li>晚上不做重大決策</li>
+            </ul>
+        </div>
+        <div class="cell" style="border: 2px solid var(--primary); transform: scale(1.03); box-shadow: 0 10px 30px rgba(212,175,55,0.15);">
+            <div class="cell-title" style="color: var(--primary);">⭐ 核心課題</div>
+            <ul class="cell-content">
+                <li>我是人生自己的鑰匙</li>
+                <li>取回能量，終結補位</li>
+                <li>我是一個人，不是功能</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">🕊️ 關係狀態</div>
+            <ul class="cell-content">
+                <li>給予空間，看清真相</li>
+                <li>不需猜、不需追的關係</li>
+                <li>尊重彼此的生命決定</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">🧠 學習與成長</div>
+            <ul class="cell-content">
+                <li>探索 AI 協作技術</li>
+                <li>擴展交易策略邊界</li>
+                <li>保持知識的覆蓋率</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">🏝️ 生活與體驗</div>
+            <ul class="cell-content">
+                <li>泰國獨旅與心靈重置</li>
+                <li>評估海外旅居可能性</li>
+                <li>練習一個人的自由</li>
+            </ul>
+        </div>
+        <div class="cell">
+            <div class="cell-title">✨ 個人影響力</div>
+            <ul class="cell-content">
+                <li>整理並分享量化知識</li>
+                <li>建立自媒體專業形象</li>
+                <li>吸引同頻率的靈魂</li>
+            </ul>
+        </div>
     </div>
 
-    <div class="cell growth">
-      <div class="cell-icon">📚</div>
-      <div class="cell-title">自我成長</div>
-      <ul>
-        <li>每月 1 本交易書</li>
-        <li>Python ／ AI 工具雙軌</li>
-        <li>每週策略週記（補木弱）</li>
-        <li>每天記錄 3 件感激的事</li>
-        <li>晚上不做重大決策</li>
-      </ul>
+    <!-- DEEP AWAKENING -->
+    <div class="section-header" style="color: var(--secondary);">深度覺醒 / DEEP AWAKENING</div>
+    <div class="deep-card">
+        <p style="font-style: italic; color: var(--text);">「我不為他人的無能負責。當我學會說『我尊重你的決定』，我便拿回了人生的主控權。」</p>
+    </div>
+    <div class="deep-card" style="border-left-color: var(--accent);">
+        <p style="font-style: italic; color: var(--text);">「等量付出是關係的底線。我的時間非常珍貴，不再捐贈給拒絕長大的靈魂。」</p>
     </div>
 
-    <div class="cell leisure">
-      <div class="cell-icon">🧘</div>
-      <div class="cell-title">休閒與內在</div>
-      <ul>
-        <li>冥想 4x ／週</li>
-        <li>睡眠 7–8 小時</li>
-        <li>登山 1 次 ／月</li>
-        <li>每週耍廢半天</li>
-        <li>瑜伽 1x ／週</li>
-      </ul>
-    </div>
+    <footer>
+        Krystal Soul & System Evolution · 2026-04-23 · "Freedom is the only metric that matters."
+    </footer>
+    </div> <!-- End main-content -->
 
-    <div class="cell impact">
-      <div class="cell-icon">🌟</div>
-      <div class="cell-title">社會影響力</div>
-      <ul>
-        <li>AI 輔助 KOL 內容流程</li>
-        <li>每月 2–4 篇深度文章</li>
-        <li>幫人建立交易邏輯框架</li>
-        <li>財經品牌合作機會</li>
-        <li>長期：教育平台（2029+）</li>
-      </ul>
-    </div>
-
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── TIMELINE ── -->
-<section class="sec" id="timeline">
-  <p class="sec-label">三年五年路線圖</p>
-
-  <!-- 2026 -->
-  <div class="tl-item">
-    <div class="tl-left"><div class="tl-dot now">26</div><div class="tl-line"></div></div>
-    <div class="tl-card">
-      <div class="tl-head"><div class="tl-year">2026</div><span class="badge b-now">現在 · 爆發年</span></div>
-      <div class="pills">
-        <div class="pill"><span class="pill-i">💰</span><div><strong>500萬 → 1,000萬</strong><span>超越 YOY 94.18%</span></div></div>
-        <div class="pill"><span class="pill-i">📊</span><div><strong>Phase 1 完成 + 自動化啟動</strong><span>H2 評估全職條件</span></div></div>
-        <div class="pill"><span class="pill-i">💪</span><div><strong>體脂 31% → 22%</strong><span>6個月計畫執行</span></div></div>
-        <div class="pill"><span class="pill-i">🌟</span><div><strong>AI KOL 流程建立</strong><span>每月 2-4 篇深度文章</span></div></div>
-        <div class="pill"><span class="pill-i">💗</span><div><strong>釐清關係</strong><span>諮商進行，清楚自己要什麼</span></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2027 -->
-  <div class="tl-item">
-    <div class="tl-left"><div class="tl-dot">27</div><div class="tl-line"></div></div>
-    <div class="tl-card">
-      <div class="tl-head"><div class="tl-year">2027</div><span class="badge b-mid">加速年</span></div>
-      <div class="pills">
-        <div class="pill"><span class="pill-i">💰</span><div><strong>2,000萬</strong><span>YOY ≥ 50-70%</span></div></div>
-        <div class="pill"><span class="pill-i">📊</span><div><strong>全職交易者</strong><span>委託資金 &gt;100萬美金</span></div></div>
-        <div class="pill"><span class="pill-i">💪</span><div><strong>增肌期啟動</strong><span>體脂穩定 22% 以下</span></div></div>
-        <div class="pill"><span class="pill-i">🌟</span><div><strong>KOL 累積 100 篇</strong><span>財經品牌合作機會</span></div></div>
-        <div class="pill"><span class="pill-i">💗</span><div><strong>清晰的感情狀態</strong><span>不再混亂，方向確定</span></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2028 (3Y) -->
-  <div class="tl-item">
-    <div class="tl-left"><div class="tl-dot y3">3Y</div><div class="tl-line"></div></div>
-    <div class="tl-card y3">
-      <div class="tl-head"><div class="tl-year">2028</div><span class="badge b-3y">3年里程碑</span></div>
-      <div class="pills">
-        <div class="pill"><span class="pill-i">💰</span><div><strong>3,000萬方向</strong><span>年化穩定 ≥ 40%</span></div></div>
-        <div class="pill"><span class="pill-i">📊</span><div><strong>管理規模 &gt;300萬美金</strong><span>月報告制度建立</span></div></div>
-        <div class="pill"><span class="pill-i">💪</span><div><strong>體態循環第二輪</strong><span>運動是生活，不是任務</span></div></div>
-        <div class="pill"><span class="pill-i">🏠</span><div><strong>地理靈活性提升</strong><span>不被辦公室時間綁</span></div></div>
-        <div class="pill"><span class="pill-i">💗</span><div><strong>穩定的伴侶關係</strong><span>一起成長的人</span></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2029 -->
-  <div class="tl-item">
-    <div class="tl-left"><div class="tl-dot">29</div><div class="tl-line"></div></div>
-    <div class="tl-card">
-      <div class="tl-head"><div class="tl-year">2029</div><span class="badge b-mid">準自由年</span></div>
-      <div class="pills">
-        <div class="pill"><span class="pill-i">💰</span><div><strong>5,000萬</strong><span>被動收入覆蓋生活支出</span></div></div>
-        <div class="pill"><span class="pill-i">📊</span><div><strong>財務準自由</strong><span>工作是選擇，不是必須</span></div></div>
-        <div class="pill"><span class="pill-i">🏠</span><div><strong>高雄 / 南部定居</strong><span>靠近爸媽，自己的家</span></div></div>
-        <div class="pill"><span class="pill-i">🌟</span><div><strong>教育平台啟動</strong><span>課程或社群規劃</span></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2031 (5Y) -->
-  <div class="tl-item">
-    <div class="tl-left"><div class="tl-dot y5">5Y</div></div>
-    <div class="tl-card y5">
-      <div class="tl-head"><div class="tl-year">2031</div><span class="badge b-5y">5年目標</span></div>
-      <div class="pills">
-        <div class="pill"><span class="pill-i">💰</span><div><strong>8,000萬 ~ 1億方向</strong><span>KOL ＋ 交易雙軌收入</span></div></div>
-        <div class="pill"><span class="pill-i">📊</span><div><strong>最美台股財經 KOL</strong><span>有真實影響力的財經聲音</span></div></div>
-        <div class="pill"><span class="pill-i">💪</span><div><strong>體態是生活方式</strong><span>長期穩定，不需要努力維持</span></div></div>
-        <div class="pill"><span class="pill-i">🏠</span><div><strong>南部定居 · 每年出國 2+</strong><span>偶爾短期旅居海外</span></div></div>
-        <div class="pill"><span class="pill-i">💗</span><div><strong>身心合一的伴侶關係</strong><span>不需要猜，不需要追</span></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── COMPARE ── -->
-<section class="sec" id="compare">
-  <p class="sec-label">現在 vs 五年後</p>
-  <div class="compare-grid">
-    <div class="c-col now">
-      <div class="c-label">2026 現在</div>
-      <div class="c-row"><span class="ci">💰</span><div class="ct"><strong>資產 500萬</strong>上班族兼交易，年薪 77萬</div></div>
-      <div class="c-row"><span class="ci">📊</span><div class="ct"><strong>系統 50% 完成</strong>量化交易 PM，Phase 1 收尾</div></div>
-      <div class="c-row"><span class="ci">💪</span><div class="ct"><strong>體脂 31%</strong>6個月計畫剛啟動</div></div>
-      <div class="c-row"><span class="ci">🏠</span><div class="ct"><strong>台北</strong>長期想往南部走</div></div>
-      <div class="c-row"><span class="ci">💗</span><div class="ct"><strong>關係釐清中</strong>清楚自己要什麼，尋找方向</div></div>
-    </div>
-    <div class="c-arrow">→</div>
-    <div class="c-col">
-      <div class="c-label">2031 五年後</div>
-      <div class="c-row"><span class="ci">💰</span><div class="ct"><strong>資產 5,000萬+</strong>被動收入覆蓋生活，財務準自由</div></div>
-      <div class="c-row"><span class="ci">📊</span><div class="ct"><strong>全職交易者 + KOL</strong>系統全自動，有真實影響力</div></div>
-      <div class="c-row"><span class="ci">💪</span><div class="ct"><strong>體脂 22% 穩定</strong>運動是生活，不是任務</div></div>
-      <div class="c-row"><span class="ci">🏠</span><div class="ct"><strong>高雄定居</strong>靠近爸媽，地理自由</div></div>
-      <div class="c-row"><span class="ci">💗</span><div class="ct"><strong>身心合一的關係</strong>不需要追，不需要猜，就是在</div></div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── ROADMAP ── -->
-<section class="sec" id="roadmap">
-  <p class="sec-label">財務複利里程碑</p>
-  <div class="roadmap">
-    <div class="ms now"><div class="yr">2026 Q1</div><div class="amt">500萬</div><div class="lbl">現況基準</div></div>
-    <div class="ms"><div class="yr">2026 底</div><div class="amt">1,000萬</div><div class="lbl">全職評估點</div></div>
-    <div class="ms"><div class="yr">2027</div><div class="amt">2,000萬</div><div class="lbl">系統全自動</div></div>
-    <div class="ms"><div class="yr">2029</div><div class="amt">5,000萬</div><div class="lbl">財務準自由</div></div>
-    <div class="ms"><div class="yr">2033</div><div class="amt">1 億</div><div class="lbl">完全自由</div></div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── ACTIONS ── -->
-<section class="sec" id="actions">
-  <p class="sec-label">現在最重要的三件事</p>
-  <div class="p-list" style="margin-bottom:20px;">
-    <div class="p-item">
-      <div class="p-num p1">1</div>
-      <div><strong>完成 Phase 1 剩餘 50%（系統地基）</strong>
-      <p>3 套核心策略回測 + D1 決策引擎 + A1 資金配置器初版。沒有這個，2026 爆發年靠的是運氣，不是能力。</p></div>
-    </div>
-    <div class="p-item">
-      <div class="p-num p2">2</div>
-      <div><strong>建立 AI 輔助 KOL 內容流程（Q2 啟動）</strong>
-      <p>把交易洞察轉成有影響力的內容，不靠手動，靠系統。越早建立越早累積複利。</p></div>
-    </div>
-    <div class="p-item">
-      <div class="p-num p3">3</div>
-      <div><strong>諮商 + 釐清關係（進行中）</strong>
-      <p>情感的清晰度直接影響你的專注力和能量。交給對的人處理，不拖。</p></div>
-    </div>
-  </div>
-
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">💗 <span>理想伴侶條件</span></div>
-      <div class="tags">
-        <span class="tag pink">一起重訓運動</span>
-        <span class="tag pink">有閱讀習慣</span>
-        <span class="tag pink">主動追我</span>
-        <span class="tag pink">J人 ／ 計劃感</span>
-        <span class="tag pink">溝通順暢</span>
-        <span class="tag pink">貼心細膩</span>
-        <span class="tag pink">能一起出國旅居</span>
-        <span class="tag pink">財務獨立</span>
-        <span class="tag pink">身心合一</span>
-        <span class="tag pink">不說我給壓力</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">🎯 <span>2026-09 轉職評估條件</span></div>
-      <div class="tags">
-        <span class="tag gold">策略系統 ≥ 90%</span>
-        <span class="tag gold">連續 3 月正獲利</span>
-        <span class="tag gold">AI KOL 流程建立</span>
-        <span class="tag gold">個人資本 ≥ 400萬</span>
-        <span class="tag gold">主觀仍想轉職</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="footer">Krystal Vision 2026 · 2026-03-12 · 建議每半年回顧更新一次</div>
-
-</div><!-- /wrap -->
+    <!-- SIDEBAR FOR WEEKLY REPORTS -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.2rem; color: var(--text); font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #10b981; font-size: 1.4rem;">☑️</span> 週報 (Weekly Report)
+                </h3>
+                <button class="action-btn">
+                    🔄 更新週報 & Issue 狀態
+                </button>
+            </div>
+            
+            <div class="weekly-controls">
+                <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                    📅 切換歷史週報：
+                </div>
+                <select class="weekly-select" id="weeklySelect">
+                    <option value="w17">Weekly Report 2026-W17 (0420-0426)</option>
+                    <option value="w16">Weekly Report 2026-W16 (0413-0419)</option>
+                    <option value="w15">Weekly Report 2026-W15 (0406-0412)</option>
+                </select>
+                <div class="weekly-nav-btns">
+                    <button class="nav-btn" onclick="prevWeek()">◀ 往回看 (上週)</button>
+                    <button class="nav-btn" onclick="nextWeek()">往後看 (下週) ▶</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-content" id="weeklyContent">
+            <!-- JS will inject content here -->
+        </div>
+    </aside>
+</div>
 
 <script>
-function toggleTheme(){
-  const h=document.documentElement, dark=h.getAttribute('data-theme')==='dark';
-  h.setAttribute('data-theme',dark?'light':'dark');
-  document.getElementById('ti').textContent=dark?'🌙':'☀️';
-  document.getElementById('tl').textContent=dark?'深色':'亮色';
+// --- TAB LOGIC ---
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].className = tabcontent[i].className.replace(" active", "");
+    }
+    tablinks = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).className += " active";
+    evt.currentTarget.className += " active";
 }
+
+// --- INTERACTIVE PIE CHART LOGIC ---
+document.querySelectorAll('.pie-wrap').forEach(wrap => {
+    const svg = wrap.querySelector('.pie-svg');
+    const slices = wrap.querySelectorAll('.slice');
+    const cVal = wrap.querySelector('.c-val');
+    const cName = wrap.querySelector('.c-name');
+    
+    // Store defaults
+    const defaultVal = cVal.innerText;
+    const defaultName = cName.innerText;
+    const defaultColor = cVal.style.color;
+
+    slices.forEach(slice => {
+        slice.addEventListener('mouseenter', (e) => {
+            svg.classList.add('interacting');
+            cVal.innerText = e.target.getAttribute('data-val');
+            cName.innerText = e.target.getAttribute('data-name');
+            cVal.style.color = e.target.getAttribute('data-color');
+        });
+    });
+
+    svg.addEventListener('mouseleave', () => {
+        svg.classList.remove('interacting');
+        cVal.innerText = defaultVal;
+        cName.innerText = defaultName;
+        cVal.style.color = defaultColor;
+    });
+});
+
+// --- WEEKLY REPORT SIDEBAR LOGIC ---
+const weeklyData = {
+    "w17": [
+        { title: "🛡️ 守住邊界", color: "var(--danger)", items: ["拒絕威脅，尊重對方決定", "保持沈默，把主控權還給自己", "接受「沒有對方好像會好點」的覺察"] },
+        { title: "🎨 願景與生活", color: "var(--primary)", items: ["泰國行前準備與心情重置", "完成 Dashboard 3.0 更新", "視覺化取回能量的進度"] },
+        { title: "💻 系統開發", color: "var(--accent)", items: ["量化積木自動下單 Phase 1 UAT", "台股波動機會捕捉"] }
+    ],
+    "w16": [
+        { title: "💻 系統開發", color: "var(--accent)", items: ["串接 KGI API 基礎測試", "優化歷史數據回測模組"] },
+        { title: "🌿 身心狀態", color: "var(--primary)", items: ["開始執行十天戒斷計畫", "重拾運動習慣，體脂目標 22%"] }
+    ],
+    "w15": [
+        { title: "💰 財務戰略", color: "var(--primary)", items: ["第一季投資績效覆盤", "重新配置資產比例"] },
+        { title: "🧠 學習成長", color: "var(--secondary)", items: ["研究 AI Agent 開發框架", "規劃 2026 個人技術藍圖"] }
+    ]
+};
+
+let currentWeekIdx = 0;
+const weekKeys = ["w17", "w16", "w15"];
+
+function renderWeeklyReport(weekKey) {
+    const contentDiv = document.getElementById("weeklyContent");
+    contentDiv.innerHTML = "";
+    
+    if(!weeklyData[weekKey]) return;
+    
+    weeklyData[weekKey].forEach(block => {
+        let html = `<div class="report-block" style="animation: fadeIn 0.3s ease;">
+            <h4 style="color: ${block.color}; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">${block.title}</h4>
+            <ul class="cell-content">`;
+        block.items.forEach(item => {
+            html += `<li>${item}</li>`;
+        });
+        html += `</ul></div>`;
+        contentDiv.innerHTML += html;
+    });
+}
+
+document.getElementById('weeklySelect').addEventListener('change', function(e) {
+    const selectedKey = e.target.value;
+    currentWeekIdx = weekKeys.indexOf(selectedKey);
+    renderWeeklyReport(selectedKey);
+});
+
+function prevWeek() {
+    if(currentWeekIdx < weekKeys.length - 1) {
+        currentWeekIdx++;
+        const key = weekKeys[currentWeekIdx];
+        document.getElementById('weeklySelect').value = key;
+        renderWeeklyReport(key);
+    }
+}
+
+function nextWeek() {
+    if(currentWeekIdx > 0) {
+        currentWeekIdx--;
+        const key = weekKeys[currentWeekIdx];
+        document.getElementById('weeklySelect').value = key;
+        renderWeeklyReport(key);
+    }
+}
+
+// Initial render
+renderWeeklyReport(weekKeys[0]);
 </script>
+
 </body>
 </html>

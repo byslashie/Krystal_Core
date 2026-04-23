@@ -2,36 +2,36 @@
   "source": "live",
   "indicators": {
     "us_cpi": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--text-muted)",
+      "value": "3.3%",
+      "label": "3.3% → 偏高",
+      "signal": "3.3% — 通膨超標",
+      "signal_color": "var(--red)",
       "source": "FRED: CPIAUCSL",
-      "analysis": "無法取得 CPI 數據。"
+      "analysis": "當前 3.3%，高於 Fed 目標 2%，通膨黏著。服務業通膨（房租、薪資）是主要黏著項目，難以快速降至目標。Fed 降息時程因此延後，高利率環境持續，成長股估值承壓。"
     },
     "nfp": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--red)",
+      "value": "+178K",
+      "label": "+178K → 強勁",
+      "signal": "+178K — 就業強勁",
+      "signal_color": "var(--green)",
       "source": "FRED: PAYEMS (非農就業人數月增)",
-      "analysis": "無法取得 NFP 數據。"
+      "analysis": "當前 +178K，就業市場穩健，接近健康增長水準。就業溫和增長有利消費，Fed 可能在通膨受控後啟動降息。整體為市場中性偏正面訊號。"
     },
     "fed_rate": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--text-muted)",
+      "value": "3.64%",
+      "label": "3.64% → 維持",
+      "signal": "3.64% — 利率正常化",
+      "signal_color": "var(--yellow)",
       "source": "FRED: FEDFUNDS",
-      "analysis": "無法取得 Fed 利率數據。"
+      "analysis": "當前 3.64%，利率已正常化至中性水準附近。資金成本下降，有利股市估值擴張，尤其科技、成長股。台美利差縮小，有助外資回流台股。"
     },
     "real_rate": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--text-muted)",
+      "value": "1.92%",
+      "label": "1.92% → 偏高",
+      "signal": "1.92% — 實質利率中性偏緊",
+      "signal_color": "var(--yellow)",
       "source": "FRED: DFII10 (10年期TIPS實質利率)",
-      "analysis": "無法取得實質利率數據。"
+      "analysis": "當前 1.92%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。"
     },
     "vix": {
       "value": "18.9",
@@ -42,17 +42,17 @@
       "analysis": "當前 18.9，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
     },
     "usd_twd": {
-      "value": "31.48",
-      "label": "31.48 TWD/USD",
-      "signal": "31.48 — 台幣偏強",
+      "value": "31.54",
+      "label": "31.54 TWD/USD",
+      "signal": "31.54 — 台幣偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: TWD=X",
-      "analysis": "當前 31.48，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
+      "analysis": "當前 31.54，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
     },
     "jp_usdjpy": {
-      "value": "159.4",
-      "label": "159.4 JPY/USD",
-      "signal": "159.4 — 日圓偏弱",
+      "value": "159.6",
+      "label": "159.6 JPY/USD",
+      "signal": "159.6 — 日圓偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: JPY=X"
     },
@@ -71,44 +71,44 @@
       "source": "FRED: IRSTCB01JPM156N"
     },
     "eu_eurusd": {
-      "value": "1.1714",
-      "label": "1.1714 EUR/USD",
-      "signal": "1.1714 — 歐元偏強",
+      "value": "1.1712",
+      "label": "1.1712 EUR/USD",
+      "signal": "1.1712 — 歐元偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: EURUSD=X"
     },
     "eu_cpi": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--text-muted)",
+      "value": "1.9%",
+      "label": "1.9% → 受控",
+      "signal": "1.9% — 通膨受控",
+      "signal_color": "var(--green)",
       "source": "FRED: CP0000EZ19M086NEST (歐元區CPI)"
     },
     "eu_rate": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
+      "value": "2.40%",
+      "label": "2.40% → ECB",
+      "signal": "2.40% — ECB 降息",
       "signal_color": "var(--yellow)",
       "source": "FRED: ECBMLFR (ECB主要再融資利率)"
     },
     "cn_usdcny": {
-      "value": "6.8208",
-      "label": "6.8208 CNY/USD",
-      "signal": "6.8208 — 人民幣穩定",
+      "value": "6.8282",
+      "label": "6.8282 CNY/USD",
+      "signal": "6.8282 — 人民幣穩定",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X"
     },
     "cn_cpi": {
-      "value": "N/A",
-      "label": "N/A",
-      "signal": "N/A",
-      "signal_color": "var(--green)",
+      "value": "-0.1%",
+      "label": "-0.1% → 通縮",
+      "signal": "-0.1% — 通縮壓力",
+      "signal_color": "var(--red)",
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1478",
-      "label": "1478 KRW/USD",
-      "signal": "1478 — 韓元偏弱",
+      "value": "1480",
+      "label": "1480 KRW/USD",
+      "signal": "1480 — 韓元偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: KRW=X"
     },
@@ -121,79 +121,77 @@
     },
     "ism_pmi": {
       "value": "49.0",
-      "label": "49.0 → 收縮",
+      "label": "49.0",
       "signal": "49.0 — 製造業輕微收縮",
       "signal_color": "var(--yellow)",
-      "source": "手動更新 (2026-02)",
+      "source": "Google Sheets: macro_manual (2026-02)",
       "is_manual": true
     },
     "tw_pmi": {
       "value": "51.8",
-      "label": "51.8 → 擴張",
+      "label": "51.8",
       "signal": "51.8 — 連續擴張",
       "signal_color": "var(--green)",
-      "source": "手動更新 (2026-03)",
+      "source": "Google Sheets: macro_manual (2026-03)",
       "is_manual": true
     },
     "tw_light": {
       "value": "🔴 紅燈",
-      "label": "39分 → 紅燈",
+      "label": "🔴 紅燈",
       "signal": "39分 — 景氣熱絡",
       "signal_color": "var(--red)",
-      "source": "手動更新 (2026-03)",
+      "source": "Google Sheets: macro_manual (2026-03)",
       "is_manual": true
     },
     "tw_rate": {
       "value": "2.00%",
-      "label": "2.00% → 維持不變",
+      "label": "2.00%",
       "signal": "2.00% — 央行維持利率",
       "signal_color": "var(--yellow)",
-      "source": "手動更新 (2025-12)",
+      "source": "Google Sheets: macro_manual (2025-12)",
       "is_manual": true
     },
     "jp_tankan": {
       "value": "14",
-      "label": "14 → 正面",
+      "label": "14",
       "signal": "14 — 製造業樂觀",
       "signal_color": "var(--green)",
-      "source": "手動更新 (2025-Q4)",
+      "source": "Google Sheets: macro_manual (2025-Q4)",
       "is_manual": true
     },
     "eu_pmi": {
       "value": "48.9",
-      "label": "48.9 → 收縮",
+      "label": "48.9",
       "signal": "48.9 — 製造業仍收縮",
       "signal_color": "var(--red)",
-      "source": "手動更新 (2026-03)",
+      "source": "Google Sheets: macro_manual (2026-03)",
       "is_manual": true
     },
     "cn_pmi": {
       "value": "50.2",
-      "label": "50.2 → 擴張",
+      "label": "50.2",
       "signal": "50.2 — 官方 PMI 持穩",
       "signal_color": "var(--green)",
-      "source": "手動更新 (2026-03)",
+      "source": "Google Sheets: macro_manual (2026-03)",
       "is_manual": true
     },
     "cn_rate": {
       "value": "3.10%",
-      "label": "3.10% → 寬鬆",
+      "label": "3.10%",
       "signal": "3.10% — PBoC 維持",
       "signal_color": "var(--yellow)",
-      "source": "手動更新 (2026-02)",
+      "source": "Google Sheets: macro_manual (2026-02)",
       "is_manual": true
     },
     "kr_export": {
       "value": "+5.3%",
-      "label": "+5.3% → 成長",
+      "label": "+5.3%",
       "signal": "+5.3% YoY — 出口回溫",
       "signal_color": "var(--green)",
-      "source": "手動更新 (2026-03)",
+      "source": "Google Sheets: macro_manual (2026-03)",
       "is_manual": true
     }
   },
-  "errors": [
-    "FRED_API_KEY 未設定，跳過 FRED 指標"
-  ],
-  "cached_at": "2026-04-23T08:46:36.835783"
+  "errors": [],
+  "cached_at": "2026-04-23T14:47:26.939341"
 }
