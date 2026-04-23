@@ -35,17 +35,24 @@ def _get_broker_summary(df, broker_name):
     aliases = [broker_name.lower()]
     if broker_name.lower() == 'yuanta': aliases.append('元大')
     if broker_name.lower() == 'ib': aliases.extend(['ibkr', 'interactive brokers'])
-    
-    subset = df[df['broker'].str.lower().isin(aliases)]
+
+    subset = df[df['broker'].apply(lambda x: str(x).lower() if str(x) not in ('元大',) else x).isin(aliases) | df['broker'].isin(aliases)]
     if subset.empty:
         return 0.0, 0.0, 0
     
     def safe_float(v):
-        try: return float(v) if v and str(v) != 'nan' else 0.0
-        except: return 0.0
+        try:
+            if not v or str(v) in ('nan', ''):
+                return 0.0
+            # 去除貨幣符號如 "USD $7,730.53" → 7730.53
+            cleaned = str(v).replace(',', '').replace('USD', '').replace('NT$', '').replace('$', '').strip()
+            return float(cleaned)
+        except:
+            return 0.0
 
+    pnl_col = 'unrealizedPNL' if 'unrealizedPNL' in subset.columns else 'unrealizedPnL'
     mv  = sum(safe_float(v) for v in subset['marketValue'])
-    pnl = sum(safe_float(v) for v in subset['unrealizedPnL'])
+    pnl = sum(safe_float(v) for v in subset[pnl_col])
     return round(mv, 2), round(pnl, 2), len(subset)
 
 def main() -> None:
