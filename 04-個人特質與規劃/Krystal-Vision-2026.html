@@ -36,17 +36,69 @@ body {
 }
 
 /* --- LAYOUT --- */
+.view { display: none; animation: fadeIn 0.5s ease; }
+.view.active { display: block; }
+
 .layout-wrapper {
     display: flex;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 7rem 2rem 2rem;
     gap: 2.5rem;
     align-items: flex-start;
 }
 .main-content {
     flex: 1;
     min-width: 0;
+}
+
+/* --- NAVIGATION --- */
+.nav-container {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 5rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+}
+
+.nav-link:hover {
+    color: var(--primary);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.nav-link.active {
+    color: var(--primary);
+    background: rgba(212, 175, 55, 0.1);
 }
 
 /* --- SIDEBAR --- */
@@ -152,9 +204,42 @@ body {
 .sidebar-content::-webkit-scrollbar-track { background: transparent; }
 .sidebar-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-@media (max-width: 1000px) {
-    .layout-wrapper { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; position: static; max-height: 800px; }
+/* --- WEEKLY CENTER VIEW --- */
+.weekly-center-view {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 7rem 2rem 4rem;
+}
+
+.weekly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+}
+
+.weekly-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 3rem;
+    align-items: flex-start;
+}
+
+.weekly-selector-card {
+    position: sticky;
+    top: 7rem;
+}
+
+.report-grid-expanded {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .weekly-grid { grid-template-columns: 1fr; }
+    .report-grid-expanded { grid-template-columns: 1fr; }
+    .weekly-selector-card { position: static; }
 }
 
 /* --- NAVIGATION --- */
@@ -268,6 +353,36 @@ body {
     border-left: 8px solid var(--primary); margin-bottom: 1.5rem;
 }
 
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+.checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--primary);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+.checkbox.checked {
+    background: var(--primary);
+    color: white;
+}
+.checklist-text.checked {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
 /* --- FOOTER --- */
 footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-size: 0.9rem; letter-spacing: 1px; }
 
@@ -281,13 +396,20 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
 </head>
 <body>
 
-<div class="layout-wrapper">
-    <div class="main-content">
-    <!-- NAV -->
-    <nav class="nav">
+<div class="nav-container">
+    <div class="nav-inner">
         <div class="nav-logo">KRYSTAL 2026</div>
-        <div style="font-weight: 600; color: var(--text-dim);">Soul Evolution Navigation</div>
-    </nav>
+        <div class="nav-links">
+            <a class="nav-link active" onclick="showView('vision', this)">Vision Dash</a>
+            <a class="nav-link" onclick="showView('weekly', this)">Weekly Center</a>
+        </div>
+        <div style="font-weight: 600; color: var(--text-dim); font-size: 0.8rem;">Soul Evolution</div>
+    </div>
+</div>
+
+<div id="vision-view" class="view active">
+    <div class="layout-wrapper">
+        <div class="main-content">
 
     <!-- HERO -->
     <section class="hero">
@@ -537,42 +659,70 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         Krystal Soul & System Evolution · 2026-04-23 · "Freedom is the only metric that matters."
     </footer>
     </div> <!-- End main-content -->
+    </div> <!-- End layout-wrapper -->
+</div> <!-- End vision-view -->
 
-    <!-- SIDEBAR FOR WEEKLY REPORTS -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                <h3 style="font-size: 1.2rem; color: var(--text); font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #10b981; font-size: 1.4rem;">☑️</span> 週報 (Weekly Report)
-                </h3>
-                <button class="action-btn">
-                    🔄 更新週報 & Issue 狀態
-                </button>
+<!-- WEEKLY CENTER VIEW -->
+<div id="weekly-view" class="view">
+    <div class="weekly-center-view">
+        <div class="weekly-header">
+            <div>
+                <h1 style="font-size: 3rem; font-weight: 800; color: var(--text);">Weekly Center</h1>
+                <p style="color: var(--text-dim); font-size: 1.1rem; letter-spacing: 2px;">系統化覆盤與能量校準</p>
             </div>
-            
-            <div class="weekly-controls">
-                <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 5px;">
-                    📅 切換歷史週報：
+            <button class="action-btn" style="padding: 12px 24px; font-size: 1rem;">
+                🔄 同步最新數據
+            </button>
+        </div>
+
+        <div class="weekly-grid">
+            <!-- Left: Selector -->
+            <div class="weekly-selector-card glass-card" style="padding: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">📅 歷史存檔</h3>
+                <div class="weekly-controls" style="margin: 0;">
+                    <select class="weekly-select" id="weeklySelect" style="margin-bottom: 1.5rem;">
+                        <option value="w17">Weekly Report 2026-W17 (0420-0426)</option>
+                        <option value="w16">Weekly Report 2026-W16 (0413-0419)</option>
+                        <option value="w15">Weekly Report 2026-W15 (0406-0412)</option>
+                    </select>
+                    <div class="weekly-nav-btns">
+                        <button class="nav-btn" onclick="prevWeek()">◀ 上一週</button>
+                        <button class="nav-btn" onclick="nextWeek()">下一週 ▶</button>
+                    </div>
                 </div>
-                <select class="weekly-select" id="weeklySelect">
-                    <option value="w17">Weekly Report 2026-W17 (0420-0426)</option>
-                    <option value="w16">Weekly Report 2026-W16 (0413-0419)</option>
-                    <option value="w15">Weekly Report 2026-W15 (0406-0412)</option>
-                </select>
-                <div class="weekly-nav-btns">
-                    <button class="nav-btn" onclick="prevWeek()">◀ 往回看 (上週)</button>
-                    <button class="nav-btn" onclick="nextWeek()">往後看 (下週) ▶</button>
+                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #f1f5f9;">
+                    <div style="font-size: 0.85rem; color: var(--text-dim); font-weight: 700; margin-bottom: 1rem;">本週摘要統計</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">12</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">COMPLETED</div>
+                        </div>
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">85%</div>
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">FOCUS</div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Right: Content -->
+            <div class="report-grid-expanded" id="weeklyContent">
+                <!-- JS will inject expanded blocks here -->
             </div>
         </div>
-        
-        <div class="sidebar-content" id="weeklyContent">
-            <!-- JS will inject content here -->
-        </div>
-    </aside>
+    </div>
 </div>
 
 <script>
+// --- VIEW MANAGEMENT ---
+function showView(viewId, el) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId + '-view').classList.add('active');
+    
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+}
+
 // --- TAB LOGIC ---
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
@@ -620,9 +770,36 @@ document.querySelectorAll('.pie-wrap').forEach(wrap => {
 // --- WEEKLY REPORT SIDEBAR LOGIC ---
 const weeklyData = {
     "w17": [
-        { title: "🛡️ 守住邊界", color: "var(--danger)", items: ["拒絕威脅，尊重對方決定", "保持沈默，把主控權還給自己", "接受「沒有對方好像會好點」的覺察"] },
-        { title: "🎨 願景與生活", color: "var(--primary)", items: ["泰國行前準備與心情重置", "完成 Dashboard 3.0 更新", "視覺化取回能量的進度"] },
-        { title: "💻 系統開發", color: "var(--accent)", items: ["量化積木自動下單 Phase 1 UAT", "台股波動機會捕捉"] }
+        { 
+            title: "🛡️ 關係與心理邊界", 
+            color: "var(--danger)", 
+            items: [
+                "[x] 接受「沒有對方好像會好點」的覺察",
+                "[x] 練習課題分離，不為對方情緒負責",
+                "[ ] 停損思維：評估等待是否有清晰的終點",
+                "[x] 停止過度付出，收回能量給自己"
+            ] 
+        },
+        { 
+            title: "💻 系統開發 (Krystal Core)", 
+            color: "var(--accent)", 
+            items: [
+                "[x] 量化積木自動下單 Phase 1 UAT 測試計畫",
+                "[x] Dashboard 3.0 Sidebar 週報與切換功能",
+                "[ ] KGI Signal Consistency 官方文件整理",
+                "[x] 優化核心能量分配圖互動邏輯"
+            ] 
+        },
+        { 
+            title: "🏝️ 生活、財務與充電", 
+            color: "var(--primary)", 
+            items: [
+                "[x] 泰國行程規劃確認（與朋友同行）",
+                "[ ] 注意飲食抗發炎：減少乳製品攝取",
+                "[ ] 台股波動機會持續觀察",
+                "[x] Schwab 持倉同步驗證"
+            ] 
+        }
     ],
     "w16": [
         { title: "💻 系統開發", color: "var(--accent)", items: ["串接 KGI API 基礎測試", "優化歷史數據回測模組"] },
@@ -644,13 +821,26 @@ function renderWeeklyReport(weekKey) {
     if(!weeklyData[weekKey]) return;
     
     weeklyData[weekKey].forEach(block => {
-        let html = `<div class="report-block" style="animation: fadeIn 0.3s ease;">
-            <h4 style="color: ${block.color}; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">${block.title}</h4>
-            <ul class="cell-content">`;
+        let html = `<div class="glass-card" style="padding: 2.5rem; animation: fadeIn 0.3s ease;">
+            <h4 style="color: ${block.color}; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">${block.title}</h4>
+            <div class="checklist-container">`;
+        
         block.items.forEach(item => {
-            html += `<li>${item}</li>`;
+            const isChecked = item.startsWith("[x]");
+            const isChecklist = item.startsWith("[ ]") || item.startsWith("[x]");
+            const text = isChecklist ? item.substring(3).trim() : item;
+            
+            if (isChecklist) {
+                html += `
+                    <div class="checklist-item">
+                        <div class="checkbox ${isChecked ? 'checked' : ''}">${isChecked ? '✓' : ''}</div>
+                        <div class="checklist-text ${isChecked ? 'checked' : ''}">${text}</div>
+                    </div>`;
+            } else {
+                html += `<div class="cell-content"><li>${text}</li></div>`;
+            }
         });
-        html += `</ul></div>`;
+        html += `</div></div>`;
         contentDiv.innerHTML += html;
     });
 }

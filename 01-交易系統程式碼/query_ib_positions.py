@@ -9,7 +9,7 @@ import sys
 import logging
 from datetime import datetime
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stderr)
 logger = logging.getLogger(__name__)
 
 try:

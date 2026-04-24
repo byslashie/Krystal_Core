@@ -752,11 +752,24 @@ def api_smart_sync_all():
     try:
         py32 = Path(__file__).parent.parent / '.venv_yuanta32' / 'Scripts' / 'python.exe'
         script = Path(__file__).parent.parent / 'brokers' / 'sync_yuanta_positions.py'
+        upload_script = Path(__file__).parent.parent / 'brokers' / 'upload_yuanta_to_sheets.py'
         if py32.exists() and script.exists():
+            # Step1：32-bit 抓資料存 snapshot
             proc = subprocess.run([str(py32), str(script)], capture_output=True, timeout=120,
                                   cwd=str(Path(__file__).parent.parent))
             if proc.returncode == 0:
-                result['yuanta'] = {'mode': 'live', 'message': '元大即時 API 同步成功'}
+                # Step2：64-bit 上傳 snapshot 到 Sheets
+                if upload_script.exists():
+                    proc2 = subprocess.run([sys.executable, str(upload_script)],
+                                           capture_output=True, timeout=60,
+                                           cwd=str(Path(__file__).parent.parent))
+                    if proc2.returncode == 0:
+                        result['yuanta'] = {'mode': 'live', 'message': '元大即時 API 同步成功'}
+                    else:
+                        err2 = (proc2.stderr or b'').decode('utf-8', errors='replace')
+                        result['yuanta'] = {'mode': 'live', 'message': '元大 Step1 OK，Step2 上傳失敗', 'reason': err2[:200]}
+                else:
+                    result['yuanta'] = {'mode': 'live', 'message': '元大即時 API 同步成功（無 Step2）'}
             else:
                 err = (proc.stderr or b'').decode('utf-8', errors='replace')
                 result['yuanta'] = {'mode': 'sheets_fallback', 'reason': err[:200] or '元大腳本失敗'}
@@ -1380,7 +1393,7 @@ def api_schwab_summary():
                 qty  = float(p.get('longQuantity', p.get('quantity', 0)) or 0)
                 avg  = float(p.get('averagePrice', 0) or 0)
                 mv   = float(p.get('marketValue', qty * avg) or 0)
-                pnl  = float(p.get('currentDayProfitLoss', p.get('unrealizedProfitLoss', 0)) or 0)
+                pnl  = float(p.get('longOpenProfitLoss', p.get('unrealizedProfitLoss', p.get('currentDayProfitLoss', 0))) or 0)
                 total_pnl += pnl
                 all_positions.append({'symbol': sym, 'position': qty, 'avgCost': avg,
                     'marketValue': mv, 'unrealizedPnL': pnl, 'broker': 'Schwab',
@@ -1481,8 +1494,10 @@ def api_ib_sync():
                     'avgCost':        avg,
                     'totalCost':      cost,
                     'currentPrice':   p.get('marketPrice', ''),
+                    'marketPrice':    p.get('marketPrice', ''),
                     'marketValue':    p.get('marketValue', ''),
                     'unrealizedPnL':  p.get('unrealizedPNL', ''),
+                    'unrealizedPNL':  p.get('unrealizedPNL', ''),
                 }
                 for k, v in mapping.items():
                     if k in header:
@@ -1550,7 +1565,7 @@ def api_schwab_sync():
                 qty  = float(p.get('longQuantity', p.get('quantity', 0)) or 0)
                 avg  = float(p.get('averagePrice', 0) or 0)
                 mv   = float(p.get('marketValue', qty * avg) or 0)
-                pnl  = float(p.get('currentDayProfitLoss', p.get('unrealizedProfitLoss', 0)) or 0)
+                pnl  = float(p.get('longOpenProfitLoss', p.get('unrealizedProfitLoss', p.get('currentDayProfitLoss', 0))) or 0)
                 mkt  = mv / qty if qty else avg
                 positions.append({
                     'symbol': sym, 'position': qty, 'avgCost': avg,

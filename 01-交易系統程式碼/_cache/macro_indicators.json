@@ -34,25 +34,25 @@
       "analysis": "當前 1.92%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。"
     },
     "vix": {
-      "value": "18.9",
-      "label": "18.9 → 平靜",
-      "signal": "18.9 — 市場平靜",
+      "value": "19.0",
+      "label": "19.0 → 平靜",
+      "signal": "19.0 — 市場平靜",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: ^VIX",
-      "analysis": "當前 18.9，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
+      "analysis": "當前 19.0，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
     },
     "usd_twd": {
-      "value": "31.54",
-      "label": "31.54 TWD/USD",
-      "signal": "31.54 — 台幣偏強",
+      "value": "31.49",
+      "label": "31.49 TWD/USD",
+      "signal": "31.49 — 台幣偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: TWD=X",
-      "analysis": "當前 31.54，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
+      "analysis": "當前 31.49，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
     },
     "jp_usdjpy": {
-      "value": "159.6",
-      "label": "159.6 JPY/USD",
-      "signal": "159.6 — 日圓偏弱",
+      "value": "159.7",
+      "label": "159.7 JPY/USD",
+      "signal": "159.7 — 日圓偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: JPY=X"
     },
@@ -71,9 +71,9 @@
       "source": "FRED: IRSTCB01JPM156N"
     },
     "eu_eurusd": {
-      "value": "1.1712",
-      "label": "1.1712 EUR/USD",
-      "signal": "1.1712 — 歐元偏強",
+      "value": "1.1695",
+      "label": "1.1695 EUR/USD",
+      "signal": "1.1695 — 歐元偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: EURUSD=X"
     },
@@ -92,9 +92,9 @@
       "source": "FRED: ECBMLFR (ECB主要再融資利率)"
     },
     "cn_usdcny": {
-      "value": "6.8282",
-      "label": "6.8282 CNY/USD",
-      "signal": "6.8282 — 人民幣穩定",
+      "value": "6.8337",
+      "label": "6.8337 CNY/USD",
+      "signal": "6.8337 — 人民幣穩定",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X"
     },
@@ -106,9 +106,9 @@
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1480",
-      "label": "1480 KRW/USD",
-      "signal": "1480 — 韓元偏弱",
+      "value": "1483",
+      "label": "1483 KRW/USD",
+      "signal": "1483 — 韓元偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: KRW=X"
     },
@@ -193,5 +193,5 @@
     }
   },
   "errors": [],
-  "cached_at": "2026-04-23T14:47:26.939341"
+  "cached_at": "2026-04-24T16:26:10.420831"
 }
