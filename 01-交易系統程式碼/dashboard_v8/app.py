@@ -3758,7 +3758,7 @@ if __name__ == '__main__':
     print("\n" + "="*60)
     print("[*] Krystal AI Dashboard v8 - Flask Server")
     print("="*60)
-    print("[+] Access: http://127.0.0.1:9000")
+    print("[+] Access: http://127.0.0.1:8888")
     print("="*60 + "\n")
 
     # 檢查依賴
@@ -3781,4 +3781,4 @@ if __name__ == '__main__':
             print(f"    {rule.rule} [{methods}]")
     print()
 
-    app.run(host='127.0.0.1', port=9000, debug=False, use_reloader=False)
+    app.run(host='127.0.0.1', port=8888, debug=False, use_reloader=False)

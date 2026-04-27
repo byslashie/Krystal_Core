@@ -6720,7 +6720,7 @@ async function loadMarketIndices() {
       if (badge) badge.textContent = '🔴 載入失敗';
     }
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Flask 未連線（localhost:8889）</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Flask 未連線（localhost:8888）</td></tr>';
     if (badge) badge.textContent = '🔴 連線失敗';
   }
 }
@@ -6788,8 +6788,9 @@ const API_BASE = (
   window.location.protocol === 'file:' ||
   window.location.origin === 'null' ||
   window.location.port === '5000' ||
-  window.location.port === '8080'
-) ? 'http://127.0.0.1:9000' : window.location.origin;
+  window.location.port === '8080' ||
+  window.location.port === '8889'
+) ? 'http://127.0.0.1:8888' : window.location.origin;
 
 // ── Open Trades / 當前持倉 (p6) — 從 broker_positions DB 抓取 ──────
 let allOpenTrades = [];   // 實際存放 broker positions

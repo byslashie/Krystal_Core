@@ -6,7 +6,7 @@ async function loadCompassData() {
   try {
     console.log('[Compass] 正在加載宏觀指標 API...');
     
-    const API_BASE = window.API_BASE || 'http://localhost:8889';
+    const API_BASE = window.API_BASE || 'http://localhost:8888';
     const response = await fetch(`${API_BASE}/api/macro-compass`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
@@ -84,7 +84,7 @@ setInterval(loadCompassData, 5 * 60 * 1000);
 
 async function loadTwIndicators() {
   try {
-    const API_BASE = window.API_BASE || 'http://localhost:8889';
+    const API_BASE = window.API_BASE || 'http://localhost:8888';
     const resp = await fetch(`${API_BASE}/api/tw-indicators`, {
       headers: { 'Accept': 'application/json' }
     });
