@@ -66,6 +66,20 @@ def _get_broker_summary(df, broker_name):
     pnl_col = 'unrealizedPNL' if 'unrealizedPNL' in subset.columns else 'unrealizedPnL'
     mv  = sum(_safe_float(v) for v in subset['marketValue'])
     pnl = sum(_safe_float(v) for v in subset[pnl_col]) if pnl_col in subset.columns else 0.0
+
+    # 若 PNL 為 0 但 marketValue 和 avgCost 都有值，改用 (現價-均價)×股數 補算
+    if pnl == 0.0 and 'avgCost' in subset.columns and 'position' in subset.columns:
+        calc_pnl = 0.0
+        for _, row in subset.iterrows():
+            mv_val  = _safe_float(row.get('marketValue', 0))
+            avg     = _safe_float(row.get('avgCost', 0))
+            qty     = _safe_float(row.get('position', 0))
+            if avg > 0 and qty > 0:
+                # marketValue = 現價 × 股數，成本 = avgCost × 股數
+                calc_pnl += mv_val - avg * qty
+        if calc_pnl != 0.0:
+            pnl = calc_pnl
+
     return round(mv, 2), round(pnl, 2)
 
 
@@ -91,34 +105,116 @@ def main() -> None:
     except:
         vals = []
 
-    # ── 1. 讀取 broker_positions ──────────────────────────────
-    df = read_sheet_data_with_cache("broker_positions")
-    if df is None or df.empty:
-        print("[ERROR] 無法從 broker_positions 讀取數據")
-        sys.exit(1)
+    # ── 1. 元大：從 JSON snapshot 取持倉，再用 yfinance 抓即時現價重算 ──
+    y_mv, y_pnl = 0.0, 0.0
+    _yuanta_snapshot = PROJECT_ROOT / "data" / "yuanta_positions_snapshot.json"
+    if _yuanta_snapshot.exists():
+        try:
+            import json as _json_local
+            import yfinance as _yf
+            _snap = _json_local.loads(_yuanta_snapshot.read_text(encoding="utf-8"))
+            _positions = _snap.get("positions", [])
+            _snap_ts   = _snap.get("timestamp", "")
 
-    if '券商' in df.columns:
-        df.rename(columns={'券商': 'broker'}, inplace=True)
-    if 'unrealizedPNL' not in df.columns and 'unrealizedPnL' in df.columns:
-        df.rename(columns={'unrealizedPnL': 'unrealizedPNL'}, inplace=True)
+            if _positions:
+                # 抓即時現價（台股代號加 .TW）
+                _symbols_tw = [p["symbol"] + ".TW" for p in _positions]
+                try:
+                    _prices_df = _yf.download(
+                        _symbols_tw, period="1d", interval="1m",
+                        progress=False, auto_adjust=True
+                    )
+                    _last_prices = _prices_df["Close"].iloc[-1] if not _prices_df.empty else {}
+                    print(f"[元大]   yfinance 即時報價取得 {len(_last_prices)} 檔")
+                except Exception as _e:
+                    print(f"[元大]   yfinance 失敗: {_e}，使用 snapshot 舊價")
+                    _last_prices = {}
 
-    y_mv, y_pnl = _get_broker_summary(df, 'yuanta')
-    i_mv, i_pnl = _get_broker_summary(df, 'ib')
-    s_mv, s_pnl = _get_broker_summary(df, 'schwab')
+                import math as _math
+                _total_mv = 0.0
+                _total_pnl = 0.0
+                for p in _positions:
+                    sym_tw = p["symbol"] + ".TW"
+                    qty    = float(p.get("position", 0) or 0)
+                    avg    = float(p.get("avgCost", 0) or 0)
+                    # yfinance 即時價（nan 或缺失則 fallback snapshot 舊價）
+                    _yf_price = _last_prices.get(sym_tw)
+                    if _yf_price is None or (isinstance(_yf_price, float) and _math.isnan(_yf_price)):
+                        price = float(p.get("currentPrice", 0) or 0)
+                        _src  = "snapshot"
+                    else:
+                        price = float(_yf_price)
+                        _src  = "live"
+                    mv     = round(price * qty, 2)
+                    pnl    = round((price - avg) * qty, 2)
+                    _total_mv  += mv
+                    _total_pnl += pnl
+                    print(f"   {p['symbol']:<7} qty={qty:.0f}  avg={avg:.2f}  now={price:.2f} [{_src}]  MV={mv:,.0f}  PNL={pnl:+,.0f}")
 
-    # ── 2. Schwab PNL：從本地 DB 讀（API 同步後才準確）──────
+                y_mv  = round(_total_mv,  2)
+                y_pnl = round(_total_pnl, 2)
+                print(f"[元大]   即時重算完成 (snapshot {_snap_ts})  MV: {y_mv:,.0f}  PNL: {y_pnl:+,.0f}")
+            else:
+                # snapshot 沒有 positions，用總計欄位
+                y_mv  = float(_snap.get("totalMarketValue", 0) or 0)
+                y_pnl = float(_snap.get("totalUnrealizedPnL", 0) or 0)
+                print(f"[元大]   snapshot 無持倉明細，用總計 MV: {y_mv:,.0f}")
+        except Exception as e:
+            print(f"[元大]   snapshot 處理失敗: {e}，改從 Sheets")
+
+    # 若仍無資料，退回 Sheets
+    if y_mv == 0.0:
+        df = read_sheet_data_with_cache("broker_positions")
+        if df is not None and not df.empty:
+            if '券商' in df.columns:
+                df.rename(columns={'券商': 'broker'}, inplace=True)
+            if 'unrealizedPNL' not in df.columns and 'unrealizedPnL' in df.columns:
+                df.rename(columns={'unrealizedPnL': 'unrealizedPNL'}, inplace=True)
+            y_mv, y_pnl = _get_broker_summary(df, 'yuanta')
+            print(f"[元大]   Sheets fallback  MV: {y_mv:,.0f}  PNL: {y_pnl:+,.0f}")
+        else:
+            print("[WARN] 元大 Sheets 也無資料")
+
+    # IB / Schwab 從 Sheets 讀（作為基底，下面再覆蓋）
+    i_mv, i_pnl = 0.0, 0.0
+    s_mv, s_pnl = 0.0, 0.0
+    try:
+        df2 = read_sheet_data_with_cache("broker_positions")
+        if df2 is not None and not df2.empty:
+            if '券商' in df2.columns:
+                df2.rename(columns={'券商': 'broker'}, inplace=True)
+            if 'unrealizedPNL' not in df2.columns and 'unrealizedPnL' in df2.columns:
+                df2.rename(columns={'unrealizedPnL': 'unrealizedPNL'}, inplace=True)
+            i_mv, i_pnl = _get_broker_summary(df2, 'ib')
+            s_mv, s_pnl = _get_broker_summary(df2, 'schwab')
+    except Exception as e:
+        print(f"[Sheets] IB/Schwab 讀取失敗: {e}")
+
+    # ── 2. Schwab：從本地 DB 讀（僅在 PNL 不為 NULL 時才覆蓋）──
     try:
         _db = PROJECT_ROOT / "dashboard_v8" / "broker_positions.db"
         if _db.exists():
             conn = sqlite3.connect(str(_db))
             c = conn.cursor()
-            c.execute("SELECT SUM(unrealizedPnL), SUM(marketValue) FROM broker_positions WHERE lower(broker)='schwab'")
+            # 只加總 unrealizedPnL 不為 NULL 的列
+            c.execute("""SELECT SUM(unrealizedPnL), SUM(marketValue),
+                                COUNT(*), SUM(CASE WHEN unrealizedPnL IS NOT NULL THEN 1 ELSE 0 END)
+                         FROM broker_positions WHERE lower(broker)='schwab'""")
             row = c.fetchone()
             conn.close()
             if row and row[1]:
-                s_pnl = round(float(row[0] or 0), 2)
-                s_mv  = round(float(row[1] or s_mv), 2)
-                print(f"[Schwab] DB PNL: ${s_pnl:,.2f}  MV: ${s_mv:,.2f}")
+                db_mv       = round(float(row[1] or 0), 2)
+                db_pnl_cnt  = row[3] or 0   # 有 PNL 的列數
+                db_pnl      = round(float(row[0] or 0), 2) if row[0] is not None else None
+                # 市值：DB 有就用（更即時）
+                if db_mv > 0:
+                    s_mv = db_mv
+                # PNL：只有當所有列都有值時才覆蓋（避免 NULL 拉低總和）
+                if db_pnl is not None and db_pnl_cnt == row[2]:
+                    s_pnl = db_pnl
+                    print(f"[Schwab] DB  MV: ${s_mv:,.2f}  PNL: ${s_pnl:,.2f}")
+                else:
+                    print(f"[Schwab] DB  MV: ${s_mv:,.2f}  PNL: Sheets值 ${s_pnl:,.2f}（DB有{db_pnl_cnt}/{row[2]}筆PNL）")
     except Exception as e:
         print(f"[Schwab] DB 查詢失敗: {e}")
 

@@ -4216,7 +4216,7 @@ async function loadBrokerPositions() {
 
       const fmt  = (v, prefix='NT$') => `${prefix}${Math.round(Math.abs(v)).toLocaleString()}`;
       const fmtS = (v, prefix='NT$') => `${v>=0?'+':'-'}${fmt(v,prefix)}`;
-      const setEl = (id, txt, cls) => { const el=document.getElementById(id); if(el){el.textContent=txt; if(cls!==undefined) el.className='kpi-val '+(cls||'');} };
+      const setEl = (id, txt, cls) => { const el=document.getElementById(id); if(el){el.textContent=txt; if(cls!==undefined){el.classList.remove('green','red','yellow','blue','purple'); if(cls)el.classList.add(cls);}} };
 
       // 持倉數 = 三家各自去重後的數量相加
       const totalCount = yuanta.length + ibPosArr.length + schwabPos.length;
@@ -4959,7 +4959,7 @@ async function loadRiskPage() {
     const maxW = totalMV_TWD > 0 ? (getMV_TWD(sorted_TWD[0]) / totalMV_TWD * 100) : 0;
     const overLimit = sorted_TWD.filter(p => totalMV_TWD > 0 && getMV_TWD(p)/totalMV_TWD*100 > 10).length;
     const latestTs = all.reduce((s,p) => { const t=p['時間']||''; return t>s?t:s; }, '');
-    const setEl = (id,v,cls) => { const el=document.getElementById(id); if(el){el.textContent=v; if(cls)el.className='kpi-val '+cls;} };
+    const setEl = (id,v,cls) => { const el=document.getElementById(id); if(el){el.textContent=v; if(cls!==undefined){el.classList.remove('green','red','yellow','blue','purple'); if(cls)el.classList.add(cls);}} };
     setEl('p5-max-weight', maxW > 0 ? maxW.toFixed(1)+'%' : '--', maxW > 15 ? 'red' : maxW > 10 ? 'yellow' : 'green');
     setEl('p5-over-limit', overLimit, overLimit > 0 ? 'yellow' : 'green');
     setEl('p5-total-count', dedupAll.length, '');
@@ -10142,6 +10142,18 @@ async function uploadStrategyCSV() {
     setEl('kpi-ev',           kpis.ev.toFixed(2));
     setEl('kpi-profit-factor',kpis.profitFactor.toFixed(2));
     setEl('kpi-net-profit',   kpis.netProfit.toFixed(0));
+    // 平均獲利/損失 % + 尾部風險（從 csv 較準，否則 xlsx）
+    const _kpiStat = kpisCsv || kpisXlsx;
+    if (_kpiStat) {
+      setEl('kpi-avg-win',    (_kpiStat.avgWinPct  * 100).toFixed(2) + '%');
+      setEl('kpi-avg-loss',   (_kpiStat.avgLossPct * 100).toFixed(2) + '%');
+      setEl('kpi-var',        (_kpiStat.var95       * 100).toFixed(2) + '%');
+      setEl('kpi-cvar',       (_kpiStat.cvar95      * 100).toFixed(2) + '%');
+      setEl('kpi-skew',       (_kpiStat.skewness    || 0).toFixed(2));
+      setEl('kpi-kurtosis',   (_kpiStat.kurtosis    || 0).toFixed(2));
+      setEl('kpi-tail-right', (_kpiStat.tailRight   || 0).toFixed(2) + '%');
+      setEl('kpi-tail-left',  (_kpiStat.tailLeft    || 0).toFixed(2) + '%');
+    }
     const ar = document.getElementById('analysis-results');
     if (ar) ar.style.display = 'block';
 
