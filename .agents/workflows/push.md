@@ -10,21 +10,19 @@ description: Git Push - 將本地變更推送至遠端倉庫
 
 ```bash
 git status
-git add .
+git add -A
 ```
 
-2. 建立新分支（依據當前時間自動動態產生）
-
-```bash
-BRANCH_NAME="feat/update-$(date +'%Y%m%d-%H%M')"
-git checkout -b $BRANCH_NAME
-```
-
-3. 提交變更並推送至遠端倉庫
+2. 提交變更（若已有未推送 commit 則跳過此步驟）
 
 ```bash
 git commit -m "feat: update $(date +'%Y-%m-%d %H:%M')"
-git push -u origin $BRANCH_NAME
+```
+
+3. 推送至遠端（直接推送當前分支，不建立新分支）
+
+```bash
+git push origin HEAD
 ```
 
 4. 確認推送結果
