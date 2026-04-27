@@ -7471,6 +7471,7 @@ let currentChartDisplay = 'equity';
 function setupStrategyDropZone() {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
+  if (!dropZone || !fileInput) return;
 
   dropZone.addEventListener('click', () => {
     fileInput.click();

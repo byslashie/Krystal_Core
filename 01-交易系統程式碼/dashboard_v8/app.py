@@ -802,6 +802,51 @@ def api_smart_sync_all():
     })
 
 
+@app.route('/api/daily-performance', methods=['GET'])
+def api_daily_performance():
+    """每日損益數據（從 trades 表彙整已實現損益）"""
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        c = conn.cursor()
+        c.execute("""
+            SELECT date(exit_date) as d, broker,
+                   SUM(CASE WHEN status='closed' THEN COALESCE(pnl,0) ELSE 0 END) as realized
+            FROM trades
+            WHERE exit_date IS NOT NULL AND exit_date != ''
+            GROUP BY date(exit_date), broker
+            ORDER BY d ASC
+        """)
+        rows = c.fetchall()
+        conn.close()
+
+        by_date = {}
+        for d, broker, realized in rows:
+            if not d:
+                continue
+            if d not in by_date:
+                by_date[d] = {'ib': 0, 'schwab': 0, 'yuanta': 0}
+            b = str(broker or '').lower()
+            if b == 'ib':
+                by_date[d]['ib'] += realized or 0
+            elif b == 'schwab':
+                by_date[d]['schwab'] += realized or 0
+            elif b in ('元大', 'yuanta'):
+                by_date[d]['yuanta'] += realized or 0
+
+        dates = sorted(by_date.keys())
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'dates': dates,
+                'ib_realized': [by_date[d]['ib'] for d in dates],
+                'schwab_realized': [by_date[d]['schwab'] for d in dates],
+                'yuanta_realized': [by_date[d]['yuanta'] for d in dates],
+            }
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e), 'data': {'dates': [], 'ib_realized': [], 'schwab_realized': [], 'yuanta_realized': []}})
+
+
 @app.route('/api/broker-positions', methods=['GET'])
 def api_broker_positions():
     """獲取持倉數據"""
