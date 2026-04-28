@@ -74,4 +74,5 @@ def sync_ib():
         return False
 
 if __name__ == "__main__":
-    sync_ib()
+    success = sync_ib()
+    sys.exit(0 if success else 1)

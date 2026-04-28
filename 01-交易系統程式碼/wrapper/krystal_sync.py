@@ -7,9 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT = Path("h:/我的雲端硬碟/Krystal_完整系統/01-交易系統程式碼")
-PYTHON64 = r"C:\Users\jrenw\AppData\Local\Programs\Python\Python311\python.exe"
-PYTHON32 = str(PROJECT / ".venv_yuanta32_new/Scripts/python.exe")
+PROJECT = Path("C:/Projects/Krystal_完整系統/01-交易系統程式碼")
+PYTHON64 = r"C:\Users\krystalchen\AppData\Local\Programs\Python\Python311\python.exe"
+PYTHON32 = str(PROJECT / ".venv_yuanta32/Scripts/python.exe")
 SYNC_SCRIPT  = str(PROJECT / "brokers/sync_yuanta_positions.py")
 UPLOAD_SCRIPT = str(PROJECT / "brokers/upload_yuanta_to_sheets.py")
 

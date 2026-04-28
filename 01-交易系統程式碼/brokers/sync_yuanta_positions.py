@@ -259,7 +259,7 @@ def _log_sync(added: int) -> None:
 # main
 # =========================
 
-def main() -> None:
+def main() -> bool:
     print("=" * 50)
     print(f"  元大庫存同步  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 50)
@@ -289,7 +289,7 @@ def main() -> None:
     if not ok:
         print("庫存查詢指令多次發送失敗")
         _log_sync(0)
-        return
+        return False
 
     # 3) 等待非同步回應
     print(f"等待 {WAIT_SECONDS} 秒接收庫存回應...")
@@ -303,7 +303,7 @@ def main() -> None:
     if not raw_list:
         print("未收到任何庫存回應")
         _log_sync(0)
-        return
+        return False
 
     print(f"收到 {len(raw_list)} 筆原始庫存資料")
 
@@ -360,6 +360,9 @@ def main() -> None:
     except Exception as e:
         print(f"\n[WARN] Google Sheets 寫入失敗（{e}），已存 JSON snapshot，請執行 upload_yuanta_to_sheets.py")
 
+    return True
+
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)

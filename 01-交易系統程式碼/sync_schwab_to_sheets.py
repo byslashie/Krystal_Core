@@ -40,8 +40,13 @@ def main():
 
     token = load_token(DEFAULT_TOKEN_PATH)
     if not has_valid_token(token):
-        logger.error("❌ Schwab token 無效或已過期，請執行 init_schwab_oauth.py 重新授權")
-        return False
+        logger.info("Token 已過期，嘗試自動 refresh...")
+        from brokers.schwab_api import _force_refresh_token
+        new_access = _force_refresh_token(DEFAULT_TOKEN_PATH)
+        if not new_access:
+            logger.error("❌ Schwab token 無效且 refresh 失敗，請執行 init_schwab_oauth.py 重新授權")
+            return False
+        logger.info("Token refresh 成功")
 
     try:
         accounts_resp = get_schwab_accounts()

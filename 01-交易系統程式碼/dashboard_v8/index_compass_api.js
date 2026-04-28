@@ -6,8 +6,8 @@ async function loadCompassData() {
   try {
     console.log('[Compass] 正在加載宏觀指標 API...');
     
-    const API_BASE = window.API_BASE || 'http://localhost:8888';
-    const response = await fetch(`${API_BASE}/api/macro-compass`, {
+    const apiBase = window.API_BASE || 'http://127.0.0.1:8888';
+    const response = await fetch(`${apiBase}/api/macro-compass`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
@@ -84,8 +84,8 @@ setInterval(loadCompassData, 5 * 60 * 1000);
 
 async function loadTwIndicators() {
   try {
-    const API_BASE = window.API_BASE || 'http://localhost:8888';
-    const resp = await fetch(`${API_BASE}/api/tw-indicators`, {
+    const apiBase = window.API_BASE || 'http://127.0.0.1:8888';
+    const resp = await fetch(`${apiBase}/api/tw-indicators`, {
       headers: { 'Accept': 'application/json' }
     });
     if (!resp.ok) return;
@@ -131,9 +131,9 @@ async function loadTwIndicators() {
  * @param {number} score - NDC 分數 (0~45)
  */
 async function updateTwLight(score) {
-  const API_BASE = window.API_BASE || 'http://localhost:8889';
+  const apiBase = window.API_BASE || 'http://127.0.0.1:8888';
   try {
-    const resp = await fetch(`${API_BASE}/api/tw-indicators/update`, {
+    const resp = await fetch(`${apiBase}/api/tw-indicators/update`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: 'tw_light', value: String(score) })

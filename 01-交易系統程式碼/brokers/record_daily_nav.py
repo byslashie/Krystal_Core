@@ -27,7 +27,6 @@ NAV_COLUMNS = [
     "記錄時間",
     "總市值(台幣)", "總未實現損益(台幣)", "總未實現損益%",
     "每日損益(台幣)",
-    "YTD損益(台幣)", "YTD%",
     "IB市值(USD)", "IB未實現損益(USD)", "IB未實現損益%",
     "Schwab市值(USD)", "Schwab未實現損益(USD)", "Schwab未實現損益%",
     "元大市值(台幣)", "元大未實現損益(台幣)", "元大未實現損益%",
@@ -244,16 +243,16 @@ def main() -> None:
     schwab_unrealized_pct = round(s_pnl / (s_mv - s_pnl) * 100, 2) if (s_mv - s_pnl) else 0.0
     yuanta_unrealized_pct = round(y_pnl / yuanta_cost * 100, 2) if yuanta_cost else 0.0
 
-    # ── 5. 每日損益（今 - 昨市值）────────────────────────────
+    # ── 5. 每日損益（今未實現損益 - 昨未實現損益，排除出入金影響）──
     daily_pnl_twd = 0.0
     try:
         prev_rows = [r for r in vals[1:] if r and r[0] and not r[0].startswith(today_str)]
         if prev_rows:
             hdr = vals[0]
-            mv_idx = hdr.index('總市值(台幣)') if '總市值(台幣)' in hdr else 1
-            prev_mv = _safe_float(prev_rows[-1][mv_idx])
-            daily_pnl_twd = round(total_mv_twd - prev_mv, 0)
-            print(f"[每日損益] {daily_pnl_twd:+,.0f} TWD  (昨 {prev_mv:,.0f} → 今 {total_mv_twd:,.0f})")
+            pnl_idx = hdr.index('總未實現損益(台幣)') if '總未實現損益(台幣)' in hdr else 2
+            prev_pnl = _safe_float(prev_rows[-1][pnl_idx])
+            daily_pnl_twd = round(total_unrealized_twd - prev_pnl, 0)
+            print(f"[每日損益] {daily_pnl_twd:+,.0f} TWD  (昨未實現 {prev_pnl:,.0f} → 今 {total_unrealized_twd:,.0f})")
     except Exception as e:
         print(f"[每日損益] 計算失敗: {e}")
 
@@ -277,14 +276,14 @@ def main() -> None:
         print(f"[YTD]      計算失敗: {e}")
 
     # ── 7. 組 row ──────────────────────────────────────────────
+    def nt(v): return f"NT${v:,.0f}"
     row = [
         now_dt,
-        total_mv_twd, total_unrealized_twd, total_unrealized_pct,
-        daily_pnl_twd,
-        ytd_pnl_twd, ytd_pct,
+        nt(total_mv_twd), nt(total_unrealized_twd), total_unrealized_pct,
+        nt(daily_pnl_twd),
         i_mv, i_pnl, ib_unrealized_pct,
         s_mv, s_pnl, schwab_unrealized_pct,
-        y_mv, y_pnl, yuanta_unrealized_pct,
+        nt(y_mv), nt(y_pnl), yuanta_unrealized_pct,
         USD_TWD_RATE,
     ]
 

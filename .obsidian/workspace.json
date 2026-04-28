@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "04-個人特質與規劃/00-Vision-Board.md",
+                "file": "03-XScript知識庫/[Example] XQ_Scripts_StockSelection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00-Vision-Board"
+              "title": "[Example] XQ_Scripts_StockSelection"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "wei",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,7 +74,8 @@
               "title": "書籤"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -94,7 +95,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "04-個人特質與規劃/00-Vision-Board.md",
+                "file": "03-XScript知識庫/[Example] XQ_Scripts_StockSelection.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +105,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "00-Vision-Board 的反向連結"
+              "title": "[Example] XQ_Scripts_StockSelection 的反向連結"
             }
           },
           {
@@ -113,12 +114,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "04-個人特質與規劃/00-Vision-Board.md",
+                "file": "03-XScript知識庫/[Example] XQ_Scripts_StockSelection.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "00-Vision-Board 的對外連結"
+              "title": "[Example] XQ_Scripts_StockSelection 的對外連結"
             }
           },
           {
@@ -142,13 +143,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "04-個人特質與規劃/00-Vision-Board.md",
+                "file": "03-XScript知識庫/[Example] XQ_Scripts_StockSelection.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "00-Vision-Board 的大綱"
+              "title": "[Example] XQ_Scripts_StockSelection 的大綱"
             }
           }
         ]
@@ -169,19 +170,21 @@
       "bases:建立新的 base": false
     }
   },
-  "active": "554404b646b596c1",
+  "active": "25e9a56bae394b10",
   "lastOpenFiles": [
-    "01-交易系統程式碼/dashboard_v8/temp_uploads/260424_-_VIX.csv",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022880656",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022859703",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022854251",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022840889",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022828891",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022816526",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022782095",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022775155",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022770021",
-    "01-交易系統程式碼/dashboard_v8/index.html.tmp.63776.1777022764084",
+    "01-交易系統程式碼/sync_schwab_to_sheets.py.tmp.28604.1777375877008",
+    "01-交易系統程式碼/dashboard_v8/broker_positions.db-journal",
+    "01-交易系統程式碼/update_yuanta_scheduler.ps1",
+    "01-交易系統程式碼/update_yuanta_scheduler.ps1.tmp.28604.1777374839234",
+    "01-交易系統程式碼/run_yuanta_sync.bat",
+    "01-交易系統程式碼/run_yuanta_sync.bat.tmp.28604.1777374828715",
+    "01-交易系統程式碼/update_scheduler.ps1",
+    "01-交易系統程式碼/update_scheduler.ps1.tmp.28604.1777374319781",
+    "01-交易系統程式碼/setup_daily_nav_scheduler.ps1.tmp.28604.1777374187636",
+    "01-交易系統程式碼/setup_daily_nav_scheduler.ps1.tmp.28604.1777374179770",
+    "01-交易系統程式碼/setup_daily_nav_scheduler.ps1.tmp.28604.1777374158097",
+    "03-XScript知識庫/[Example] XQ_Scripts_Functions.md",
+    "04-個人特質與規劃/00-Vision-Board.md",
     "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/終極談判草稿_與他的對話.md",
     "04-個人特質與規劃/心靈成長/03-專業諮商紀錄/諮商課題整理總覽.md",
     "04-個人特質與規劃/心靈成長/03-專業諮商紀錄/諮商準備_0506.md",
@@ -204,8 +207,6 @@
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/諮商提問小卡.md",
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/情緒勒索與過度承擔辨析報告.md",
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/諮商主題優先序清單.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/黏人行為深度分析報告.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/關係課題與戒斷指南.md",
-    "04-個人特質與規劃/日記/2026-04/journal_2026-04-21.md"
+    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/黏人行為深度分析報告.md"
   ]
 }

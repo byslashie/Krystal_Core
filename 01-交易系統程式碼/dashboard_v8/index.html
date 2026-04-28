@@ -441,8 +441,8 @@ td.green{color:var(--green)}td.red{color:var(--red)}td.yellow{color:var(--yellow
 .bc-toggle.collapsed{transform:rotate(180deg)}
 .broker-accordion .kpi-grid{margin-bottom:0;padding:8px 12px}
 .broker-accordion .kpi-card{padding:8px 12px}
-.broker-accordion .kpi-val{font-size:18px;line-height:1.2}
-#p4 .kpi-grid .kpi-val{font-size:22px;line-height:1.2}
+.broker-accordion .kpi-val{font-size:24px;line-height:1.2}
+#p4 .kpi-grid .kpi-val{font-size:28px;line-height:1.2}
 #p4 .kpi-grid .kpi-card{padding:14px 16px}
 .broker-accordion .kpi-label{font-size:11px}
 .broker-accordion .kpi-sub{font-size:11px}
@@ -878,6 +878,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
               <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:7px">
                 <img src="https://flagcdn.com/20x15/jp.png" title="日本" alt="JP" style="border-radius:2px;cursor:default">
                 <img src="https://flagcdn.com/20x15/de.png" title="歐元區/德國" alt="EU" style="border-radius:2px;cursor:default">
+                <img src="https://flagcdn.com/20x15/tw.png" title="台灣" alt="TW" style="border-radius:2px;cursor:default">
               </div>
             </div>
             <div class="compass-cell expansion active-quadrant" id="q-expansion" onclick="setQuadrant('expansion')">
@@ -898,6 +899,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
               <div class="compass-cell-assets">現金/黃金<br>公債/防禦</div>
               <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:7px">
                 <img src="https://flagcdn.com/20x15/cn.png" title="中國" alt="CN" style="border-radius:2px;cursor:default">
+                <img src="https://flagcdn.com/20x15/tw.png" title="台灣" alt="TW" style="border-radius:2px;cursor:default">
               </div>
             </div>
             <div class="compass-cell recovery" id="q-recovery" onclick="setQuadrant('recovery')">
@@ -908,6 +910,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
               <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:7px">
                 <img src="https://flagcdn.com/20x15/kr.png" title="韓國" alt="KR" style="border-radius:2px;cursor:default">
                 <img src="https://flagcdn.com/20x15/au.png" title="澳洲" alt="AU" style="border-radius:2px;cursor:default">
+                <img src="https://flagcdn.com/20x15/tw.png" title="台灣" alt="TW" style="border-radius:2px;cursor:default">
               </div>
             </div>
           </div>
@@ -6269,7 +6272,7 @@ async function initEquityChart() {
 const INDICATOR_DATA = {
   ism_pmi: {
     title: '🇺🇸 ISM 製造業採購經理人指數',
-    label: 'ISM Manufacturing PMI', value: '52.8', signal: '▲ 擴張', signalColor: 'var(--green)',
+    label: 'ISM Manufacturing PMI', value: '52.7', signal: '▲ 擴張', signalColor: 'var(--green)',
     sourceUrl: 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/current-month/', sourceName: 'ISM World (ismworld.org)',
     bannerBg: 'var(--green-soft)', bannerBorder: 'hsla(152,68%,48%,0.25)',
     desc: 'ISM（美國供應管理協會）每月調查製造業採購經理人對新訂單、生產、就業、交貨時間、庫存的評估，是全球最受關注的景氣先行指標之一，每月第一個工作日發布。',
@@ -6280,7 +6283,7 @@ const INDICATOR_DATA = {
       { label: '45 ~ 49.9', meaning: '溫和收縮，製造業趨弱', color: 'var(--yellow)' },
       { label: '< 45', meaning: '顯著收縮，景氣衰退訊號', color: 'var(--red)' },
     ],
-    analysis: '當前 52.8，連續維持在擴張區間。新訂單分項維持強勁，表示企業需求回升，庫存消化接近尾聲。整體顯示美國製造業處於溫和擴張期，支持 GDP 正成長。',
+    analysis: '當前 52.7，較 2 月份的 52.4 微幅上升，顯示美國製造業連續維持在擴張區間。新訂單分項維持強勁，表示企業需求持續回升，庫存去化進入尾聲。整體顯示美國製造業處於溫和擴張期，支持 GDP 穩定成長。',
     trade: '• 工業、材料、機械等順循環類股受惠<br>• 美元走強有利（製造業強 = 經濟強）<br>• 支持風險偏好，有利股票多頭倉位<br>• 若連續兩個月下滑至 50 以下，需提高警戒',
   },
   us_cpi: {
@@ -6363,7 +6366,7 @@ const INDICATOR_DATA = {
   },
   tw_pmi: {
     title: '🇹🇼 台灣製造業 PMI',
-    label: 'Taiwan Manufacturing PMI', value: '51.2', signal: '▲ 擴張', signalColor: 'var(--green)',
+    label: 'Taiwan Manufacturing PMI', value: '55.4', signal: '▲ 強勁', signalColor: 'var(--green)',
     sourceUrl: 'https://www.cier.edu.tw/pmi', sourceName: '中華經濟研究院 PMI (cier.edu.tw)',
     bannerBg: 'var(--green-soft)', bannerBorder: 'hsla(152,68%,48%,0.25)',
     desc: '由中華經濟研究院調查發布，衡量台灣製造業採購經理人對景氣的判斷。台灣製造業以電子、半導體、機械為主，與全球科技景氣高度連動。',
@@ -6373,7 +6376,7 @@ const INDICATOR_DATA = {
       { label: '50', meaning: '榮枯分界線', color: 'var(--text-muted)' },
       { label: '< 50', meaning: '製造業收縮，科技股壓力', color: 'var(--red)' },
     ],
-    analysis: '當前 51.2，受 AI 伺服器供應鏈需求帶動，台灣製造業維持溫和擴張。CoWoS 封裝、HBM 記憶體等 AI 相關訂單是主要驅動力，但傳統消費電子仍疲軟。',
+    analysis: '當前 55.4，顯示台灣製造業處於強勁擴張狀態。受惠於 AI 伺服器供應鏈需求爆發，以及半導體先進製程（CoWoS 等）產能持續擴充。雖然傳統產業復甦較緩，但電子資訊類股動能極強，帶動整體 PMI 持續上揚。',
     trade: '• AI 供應鏈受惠：台積電（2330）、日月光（2311）、京元電（2449）<br>• 傳統電子（消費型）仍需觀望<br>• PMI 持續 > 52 → 可加碼電子族群<br>• 留意：台灣 PMI 滯後美國 ISM 約 1~2 個月',
   },
   tw_cpi: {

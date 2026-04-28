@@ -204,10 +204,13 @@ def _delete_broker_rows(sheet, broker_name: str) -> None:
             return
 
         header = values[0]
-        try:
-            broker_col = header.index("券商")
-        except ValueError:
-            print("[WARN] 找不到「券商」欄位，略過刪除舊行")
+        broker_col = None
+        for candidate in ("broker", "券商"):
+            if candidate in header:
+                broker_col = header.index(candidate)
+                break
+        if broker_col is None:
+            print("[WARN] 找不到 broker/券商 欄位，略過刪除舊行")
             return
 
         # 從後往前找，避免 row index 偏移

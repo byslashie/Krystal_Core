@@ -29,6 +29,15 @@ import numpy as np
 from dotenv import load_dotenv
 import yfinance as yf
 
+# 導入總經羅盤與數據模組
+sys.path.append(str(Path(__file__).parent.parent))
+try:
+    from macro_compass_api import MacroCompassAPI
+    from macro_data import get_indicators
+except ImportError:
+    MacroCompassAPI = None
+    get_indicators = None
+
 
 # 載入環境變數
 load_dotenv(Path(__file__).parent.parent / '.env')
@@ -1911,62 +1920,96 @@ def api_schwab_sync_filled():
 
 @app.route('/api/macro-indicators', methods=['GET'])
 def api_macro_indicators():
-
-    """宏觀指標 - 經濟數據和匯率"""
+    """宏觀指標 - 經濟數據和匯率 (對接 macro_data 真實數據)"""
     try:
-        import yfinance as yf
+        from macro_data import get_indicators
+        data = get_indicators()
+        inds = data.get('indicators', {})
 
-        # 定義要查詢的主要指標
-        indicators = {
-            'ism_pmi': '^GSPC',  # S&P 500（作為市場代理）
-            'us_cpi': '^IRX',    # 3-Month Treasury Bill
-            'nfp': '^INDY',      # Invesco QQQ (Tech)
-            'fed_rate': '^TNX',  # 10-Year Treasury
-            'vix': '^VIX',       # Volatility Index
-            'usd_twd': 'USDTWD=X', # USD/TWD 匯率
-            'eu_eurusd': 'EURUSD=X', # 歐元匯率
+        # 轉換為前端需要的格式
+        formatted = {}
+        # 對應關係：前端 Key -> macro_data Key
+        mapping = {
+            'ism_pmi': 'ism_pmi',
+            'us_cpi': 'us_cpi',
+            'nfp': 'nfp',
+            'fed_rate': 'fed_rate',
+            'vix': 'vix',
+            'usd_twd': 'usd_twd',
+            'eu_eurusd': 'eu_eurusd',
+            'real_rate': 'real_rate',
+            'tw_light': 'tw_light'
         }
 
-        indicators_data = {}
-
-        for key, symbol in indicators.items():
-            try:
-                ticker = yf.Ticker(symbol)
-                hist = ticker.history(period='1d')
-
-                if not hist.empty:
-                    price = hist['Close'].iloc[-1]
-                    indicators_data[key] = {
-                        'value': round(float(price), 2),
-                        'symbol': symbol,
-                        'signal': 'neutral'  # 簡化，實際應根據 MA 等計算
-                    }
-                else:
-                    indicators_data[key] = {'value': None, 'signal': 'N/A'}
-            except:
-                indicators_data[key] = {'value': None, 'signal': 'Error'}
+        for frontend_key, macro_key in mapping.items():
+            item = inds.get(macro_key, {})
+            formatted[frontend_key] = {
+                'value': item.get('value', 'N/A'),
+                'label': item.get('label', 'N/A'),
+                'signal': item.get('signal', 'neutral'),
+                'signal_color': item.get('signal_color', 'var(--text-muted)'),
+                'analysis': item.get('analysis', '')
+            }
 
         return jsonify({
             'status': 'success',
-            'indicators': indicators_data,
-            'source': 'live',
-            'cached_at': datetime.now().isoformat(),
-            'updated': datetime.now().isoformat()
+            'indicators': formatted,
+            'source': data.get('source', 'cache'),
+            'updated': data.get('cached_at', datetime.now().isoformat())
         })
     except Exception as e:
         sys.stderr.write(f"[ERROR] 宏觀指標查詢失敗: {e}")
+        # Fallback 模擬數據
         return jsonify({
             'status': 'success',
             'indicators': {
-                'usd_twd': 32.35,
-                'eu_eurusd': 1.08,
-                'vix': 14.5,
-                'tnx': 4.35,
-                'dxy': 104.2
+                'usd_twd': {'value': '32.35', 'signal': 'neutral'},
+                'eu_eurusd': {'value': '1.08', 'signal': 'neutral'},
+                'vix': {'value': '14.5', 'signal': 'neutral'},
+                'fed_rate': {'value': '5.25%', 'signal': 'neutral'}
             },
-            'source': 'fallback',
-            'note': str(e)
+            'source': 'fallback'
         })
+
+@app.route('/api/macro-compass', methods=['GET'])
+def api_macro_compass():
+    """總經羅盤數據 - 包含象限判斷與指標細節"""
+    if not MacroCompassAPI:
+        return jsonify({'status': 'error', 'message': 'MacroCompassAPI not found'})
+    try:
+        compass = MacroCompassAPI()
+        # 使用非同步轉同步執行
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        data = loop.run_until_complete(compass.get_compass_data())
+        loop.close()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+@app.route('/api/tw-indicators', methods=['GET'])
+def api_tw_indicators():
+    """台灣特定經濟指標 (景氣燈號, PMI, 融資餘額等)"""
+    try:
+        from macro_data import get_indicators
+        data = get_indicators()
+        inds = data.get('indicators', {})
+        
+        tw_keys = ['tw_light', 'tw_pmi', 'tw_rate', 'usd_twd', 'export_orders', 'tw_margin_balance']
+        result = {}
+        for k in tw_keys:
+            if k in inds:
+                result[k] = inds[k]
+        
+        return jsonify({
+            'status': 'success',
+            'indicators': result,
+            'updated': data.get('cached_at', datetime.now().isoformat())
+        })
+    except Exception as e:
+        sys.stderr.write(f"[ERROR] 台灣指標查詢失敗: {e}")
+        return jsonify({'status': 'error', 'message': str(e)})
 
 # 全局緩存，避免 API 超時導致頁面空白
 MARKET_CACHE = {
@@ -1985,6 +2028,8 @@ def api_market_indices():
             {'id': 'spx',    'label': 'S&P 500',   'ticker': '^GSPC', 'flag': 'us', 'country': '美國'},
             {'id': 'nasdaq', 'label': '納斯達克',   'ticker': '^IXIC', 'flag': 'us', 'country': '美國'},
             {'id': 'twii',   'label': '台灣加權',   'ticker': '^TWII', 'flag': 'tw', 'country': '台灣'},
+            {'id': 'otc',    'label': '櫃買指數',   'ticker': '^TWOII', 'flag': 'tw', 'country': '台灣'},
+            {'id': 'tsmc',   'label': '台積電',     'ticker': '2330.TW', 'flag': 'tw', 'country': '台灣'},
             {'id': 'n225',   'label': '日經 225',   'ticker': '^N225', 'flag': 'jp', 'country': '日本'},
             {'id': 'hsi',    'label': '恆生指數',   'ticker': '^HSI',  'flag': 'hk', 'country': '香港'},
             {'id': 'stoxx50', 'label': '歐洲 STOXX 50', 'ticker': '^STOXX50E', 'flag': 'eu', 'country': '歐洲'},
@@ -2058,7 +2103,7 @@ def api_market_indices():
                     'ema20': e20, 'ema50': e50, 'ema200': e200,
                     'score': score, 'status': status, 'badge': badge})
             except Exception as ex:
-                print(f"⚠️ {meta['ticker']} 失敗: {ex}")
+                sys.stderr.write(f"⚠️ {meta['ticker']} ({meta['label']}) 抓取失敗: {ex}\n")
 
         # 更新緩存
         if indices_data:
@@ -2082,12 +2127,13 @@ def api_market_indices():
             
         # 最後的保底：返回模擬數據，避免「載入失敗」
         MOCK_FALLBACK = [
-            {'id': 'dji', 'label': '道瓊工業', 'price': '39,127', 'change_pct': 0.12, 'status': '強勢多頭', 'badge': 'badge-bull'},
-            {'id': 'spx', 'label': 'S&P 500', 'price': '5,211', 'change_pct': -0.05, 'status': '強勢多頭', 'badge': 'badge-bull'},
-            {'id': 'nasdaq', 'label': '納斯達克', 'price': '16,277', 'change_pct': -0.41, 'status': '偏多整理', 'badge': 'badge-bull-soft'},
-            {'id': 'twii', 'label': '台灣加權', 'price': '20,222', 'change_pct': 0.35, 'status': '強勢多頭', 'badge': 'badge-bull'},
-            {'id': 'stoxx50', 'label': '歐洲 STOXX 50', 'price': '5,088', 'change_pct': 0.08, 'status': '強勢多頭', 'badge': 'badge-bull'},
-            {'id': 'daxi', 'label': '德國 DAX', 'price': '18,356', 'change_pct': -0.15, 'status': '強勢多頭', 'badge': 'badge-bull'},
+            {'id': 'dji', 'label': '道瓊工業', 'ticker': '^DJI', 'price': '49,168', 'change_pct': -0.13, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'us', 'pos52w': 90, 'pos52w_label': '歷史高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 91},
+            {'id': 'spx', 'label': 'S&P 500', 'ticker': '^GSPC', 'price': '6,021', 'change_pct': 0.12, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'us', 'pos52w': 88, 'pos52w_label': '歷史高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 89},
+            {'id': 'nasdaq', 'label': '納斯達克', 'ticker': '^IXIC', 'price': '19,277', 'change_pct': -0.41, 'status': '偏多整理', 'badge': 'badge-bull-soft', 'flag': 'us', 'pos52w': 85, 'pos52w_label': '近年高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 82},
+            {'id': 'twii', 'label': '台灣加權', 'ticker': '^TWII', 'price': '23,561', 'change_pct': 0.35, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'tw', 'pos52w': 82, 'pos52w_label': '近年高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 85},
+            {'id': 'otc', 'label': '櫃買指數', 'ticker': '^TWOII', 'price': '271.5', 'change_pct': 0.21, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'tw', 'pos52w': 78, 'pos52w_label': '近年高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 80},
+            {'id': 'stoxx50', 'label': '歐洲 STOXX 50', 'ticker': '^STOXX50E', 'price': '5,088', 'change_pct': 0.08, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'eu', 'pos52w': 75, 'pos52w_label': '近年高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 78},
+            {'id': 'daxi', 'label': '德國 DAX', 'ticker': '^GDAXI', 'price': '19,356', 'change_pct': -0.15, 'status': '強勢多頭', 'badge': 'badge-bull', 'flag': 'de', 'pos52w': 72, 'pos52w_label': '近年高位', 'ema20': 'bull', 'ema50': 'bull', 'ema200': 'bull', 'score': 76},
         ]
         return jsonify({
             'status': 'success', 

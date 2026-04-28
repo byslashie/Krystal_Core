@@ -28,10 +28,10 @@ CACHE_TTL_HOURS = 6
 
 # 本地 fallback：無免費 API 的指標預設值（Google Sheets 讀取失敗時使用）
 MANUAL_OVERRIDES = {
-    "ism_pmi":  {"value": "49.0", "label": "49.0 → 收縮", "signal": "49.0 — 製造業輕微收縮", "signal_color": "var(--yellow)", "updated": "2026-02"},
-    "tw_pmi":   {"value": "51.8", "label": "51.8 → 擴張", "signal": "51.8 — 連續擴張", "signal_color": "var(--green)", "updated": "2026-03"},
-    "tw_light": {"value": "🔴 紅燈", "label": "39分 → 紅燈", "signal": "39分 — 景氣熱絡", "signal_color": "var(--red)", "updated": "2026-03"},
-    "tw_rate":  {"value": "2.00%", "label": "2.00% → 維持不變", "signal": "2.00% — 央行維持利率", "signal_color": "var(--yellow)", "updated": "2025-12"},
+    "ism_pmi":  {"value": "52.7", "label": "52.7 → 擴張", "signal": "52.7 — 製造業溫和擴張", "signal_color": "var(--green)", "updated": "2026-03"},
+    "tw_pmi":   {"value": "55.4", "label": "55.4 → 強勁", "signal": "55.4 — 製造業強勁擴張", "signal_color": "var(--green)", "updated": "2026-03"},
+    "tw_light": {"value": "🔴 紅燈", "label": "39分 → 紅燈", "signal": "39分 — 景氣熱絡 (連四紅)", "signal_color": "var(--red)", "updated": "2026-03"},
+    "tw_rate":  {"value": "2.00%", "label": "2.00% → 維持不變", "signal": "2.00% — 央行維持利率", "signal_color": "var(--yellow)", "updated": "2026-03"},
     "jp_tankan": {"value": "14", "label": "14 → 正面", "signal": "14 — 製造業樂觀", "signal_color": "var(--green)", "updated": "2025-Q4"},
     "eu_pmi":    {"value": "48.9", "label": "48.9 → 收縮", "signal": "48.9 — 製造業仍收縮", "signal_color": "var(--red)", "updated": "2026-03"},
     "cn_pmi":    {"value": "50.2", "label": "50.2 → 擴張", "signal": "50.2 — 官方 PMI 持穩", "signal_color": "var(--green)", "updated": "2026-03"},
