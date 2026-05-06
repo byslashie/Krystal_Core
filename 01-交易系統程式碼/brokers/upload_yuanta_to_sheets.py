@@ -28,11 +28,11 @@ except Exception:
 SNAPSHOT_PATH = PROJECT_ROOT / "data" / "yuanta_positions_snapshot.json"
 BROKER_NAME = "元大"
 
-# broker_positions 欄位順序
+# broker_positions 欄位順序（對應 Google Sheets header）
 COLUMNS = [
-    "時間", "券商", "symbol", "secType", "exchange", "currency",
-    "position", "avgCost", "totalCost",
-    "currentPrice", "marketValue", "unrealizedPnL",
+    "timestamp", "broker", "symbol", "secType", "exchange", "currency",
+    "position", "avgCost", "marketPrice",
+    "marketValue", "unrealizedPNL",
     "sellable", "limitUp", "limitDown",
 ]
 
@@ -175,7 +175,6 @@ def main() -> None:
             p.get("currency", "TWD"),
             p.get("position", 0),
             p.get("avgCost", 0),
-            p.get("totalCost", 0),
             p.get("currentPrice", 0),
             p.get("marketValue", 0),
             p.get("unrealizedPnL", 0),

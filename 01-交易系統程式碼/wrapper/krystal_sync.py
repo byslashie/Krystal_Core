@@ -29,6 +29,27 @@ logging.basicConfig(
 )
 log = logging.getLogger()
 
+# ── 台股交易日判斷 ──────────────────────────────────────────
+def is_tw_trading_day() -> bool:
+    try:
+        import exchange_calendars as xcals
+        cal = xcals.get_calendar("XTAI")
+        today = datetime.now().strftime("%Y-%m-%d")
+        return cal.is_session(today)
+    except Exception:
+        return True  # 無法判斷時預設繼續執行
+
+today_str = datetime.now().strftime("%Y-%m-%d")
+if not is_tw_trading_day():
+    log.info(f"=== {today_str} 台股休市，跳過同步 ===")
+    sys.path.insert(0, str(PROJECT))
+    try:
+        from modules.notifier import notify_sync_event
+        notify_sync_event("元大同步", f"{today_str} 台股休市，今日跳過", ok=True)
+    except Exception:
+        pass
+    sys.exit(0)
+
 log.info("=== 元大庫存同步開始 ===")
 
 # Step 1: 32-bit Python 抓庫存
