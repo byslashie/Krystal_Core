@@ -10,7 +10,7 @@ try:
 except Exception:
     pass
 
-PORT = 9000
+PORT = 9999
 
 # 清理佔用 port 的舊進程
 def kill_port(port):

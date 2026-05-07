@@ -2,58 +2,58 @@
   "source": "live",
   "indicators": {
     "us_cpi": {
-      "value": "3.3%",
-      "label": "3.3% → 偏高",
-      "signal": "3.3% — 通膨超標",
-      "signal_color": "var(--red)",
-      "source": "FRED: CPIAUCSL",
-      "analysis": "當前 3.3%，高於 Fed 目標 2%，通膨黏著。服務業通膨（房租、薪資）是主要黏著項目，難以快速降至目標。Fed 降息時程因此延後，高利率環境持續，成長股估值承壓。"
-    },
-    "nfp": {
-      "value": "+178K",
-      "label": "+178K → 強勁",
-      "signal": "+178K — 就業強勁",
-      "signal_color": "var(--green)",
-      "source": "FRED: PAYEMS (非農就業人數月增)",
-      "analysis": "當前 +178K，就業市場穩健，接近健康增長水準。就業溫和增長有利消費，Fed 可能在通膨受控後啟動降息。整體為市場中性偏正面訊號。"
-    },
-    "fed_rate": {
-      "value": "3.64%",
-      "label": "3.64% → 維持",
-      "signal": "3.64% — 利率正常化",
-      "signal_color": "var(--yellow)",
-      "source": "FRED: FEDFUNDS",
-      "analysis": "當前 3.64%，利率已正常化至中性水準附近。資金成本下降，有利股市估值擴張，尤其科技、成長股。台美利差縮小，有助外資回流台股。"
-    },
-    "real_rate": {
-      "value": "1.95%",
-      "label": "1.95% → 偏高",
-      "signal": "1.95% — 實質利率中性偏緊",
-      "signal_color": "var(--yellow)",
-      "source": "FRED: DFII10 (10年期TIPS實質利率)",
-      "analysis": "當前 1.95%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。"
-    },
-    "vix": {
       "value": "N/A",
       "label": "N/A",
       "signal": "N/A",
       "signal_color": "var(--text-muted)",
-      "source": "Yahoo Finance: ^VIX",
-      "analysis": "無法取得 VIX 數據。"
+      "source": "FRED: CPIAUCSL",
+      "analysis": "無法取得 CPI 數據。"
     },
-    "usd_twd": {
-      "value": "17.38",
-      "label": "17.38 TWD/USD",
-      "signal": "17.38 — 台幣偏強",
-      "signal_color": "var(--green)",
-      "source": "Yahoo Finance: TWD=X",
-      "analysis": "當前 17.38，台幣偏強，有利外資回流台股。台幣升值環境下，外資持有台股的美元計價報酬改善。進口商受益，出口科技業匯兌收益減少，但通常基本面更重要。"
-    },
-    "jp_usdjpy": {
+    "nfp": {
       "value": "N/A",
       "label": "N/A",
       "signal": "N/A",
+      "signal_color": "var(--red)",
+      "source": "FRED: PAYEMS (非農就業人數月增)",
+      "analysis": "無法取得 NFP 數據。"
+    },
+    "fed_rate": {
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--text-muted)",
+      "source": "FRED: FEDFUNDS",
+      "analysis": "無法取得 Fed 利率數據。"
+    },
+    "real_rate": {
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--text-muted)",
+      "source": "FRED: DFII10 (10年期TIPS實質利率)",
+      "analysis": "無法取得實質利率數據。"
+    },
+    "vix": {
+      "value": "17.5",
+      "label": "17.5 → 平靜",
+      "signal": "17.5 — 市場平靜",
       "signal_color": "var(--green)",
+      "source": "Yahoo Finance: ^VIX",
+      "analysis": "當前 17.5，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
+    },
+    "usd_twd": {
+      "value": "31.38",
+      "label": "31.38 TWD/USD",
+      "signal": "31.38 — 台幣偏強",
+      "signal_color": "var(--green)",
+      "source": "Yahoo Finance: TWD=X",
+      "analysis": "當前 31.38，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
+    },
+    "jp_usdjpy": {
+      "value": "156.4",
+      "label": "156.4 JPY/USD",
+      "signal": "156.4 — 日圓偏弱",
+      "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: JPY=X"
     },
     "jp_cpi": {
@@ -71,44 +71,44 @@
       "source": "FRED: IRSTCB01JPM156N"
     },
     "eu_eurusd": {
-      "value": "1.1727",
-      "label": "1.1727 EUR/USD",
-      "signal": "1.1727 — 歐元偏強",
+      "value": "1.1777",
+      "label": "1.1777 EUR/USD",
+      "signal": "1.1777 — 歐元偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: EURUSD=X"
     },
     "eu_cpi": {
-      "value": "2.5%",
-      "label": "2.5% → 偏高",
-      "signal": "2.5% — 通膨偏高",
-      "signal_color": "var(--yellow)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--text-muted)",
       "source": "FRED: CP0000EZ19M086NEST (歐元區CPI)"
     },
     "eu_rate": {
-      "value": "2.40%",
-      "label": "2.40% → ECB",
-      "signal": "2.40% — ECB 降息",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
       "signal_color": "var(--yellow)",
       "source": "FRED: ECBMLFR (ECB主要再融資利率)"
     },
     "cn_usdcny": {
-      "value": "6.8184",
-      "label": "6.8184 CNY/USD",
-      "signal": "6.8184 — 人民幣穩定",
+      "value": "6.8009",
+      "label": "6.8009 CNY/USD",
+      "signal": "6.8009 — 人民幣穩定",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X"
     },
     "cn_cpi": {
-      "value": "-0.1%",
-      "label": "-0.1% → 通縮",
-      "signal": "-0.1% — 通縮壓力",
-      "signal_color": "var(--red)",
+      "value": "N/A",
+      "label": "N/A",
+      "signal": "N/A",
+      "signal_color": "var(--green)",
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1456",
-      "label": "1456 KRW/USD",
-      "signal": "1456 — 韓元偏弱",
+      "value": "1451",
+      "label": "1451 KRW/USD",
+      "signal": "1451 — 韓元偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: KRW=X"
     },
@@ -192,6 +192,8 @@
       "is_manual": true
     }
   },
-  "errors": [],
-  "cached_at": "2026-05-06T10:06:24.479910"
+  "errors": [
+    "FRED 初始化失敗: No module named 'fredapi'"
+  ],
+  "cached_at": "2026-05-07T17:55:05.362346"
 }

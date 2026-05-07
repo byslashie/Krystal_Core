@@ -758,7 +758,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
         <div class="sysinfo-row"><span class="sysinfo-label">最後更新</span><span class="sysinfo-val" id="sb-time">--:--</span></div>
         <div class="sysinfo-row"><span class="sysinfo-label">數據層</span><span class="sysinfo-val">v2.4</span></div>
         <div class="sysinfo-row"><span class="sysinfo-label">Ship監測</span><span class="sysinfo-val">正常</span></div>
-        <div class="sysinfo-row"><span class="sysinfo-label">Port</span><span class="sysinfo-val">9000</span></div>
+        <div class="sysinfo-row"><span class="sysinfo-label">Port</span><span class="sysinfo-val">9999</span></div>
       </div>
     </div>
     <div class="sidebar-section">
@@ -3621,9 +3621,10 @@ if (window.Chart) Chart.register(pieValuePlugin);
 
 const SYMBOL_NAMES = {
   // 台股
-  '6208': '富邦台50', '6515': '穎崴', '50': '元大台灣50', '0050': '元大台灣50', 
+  '6208': '富邦台50', '6515': '穎崴', '50': '元大台灣50', '0050': '元大台灣50',
   '2360': '致茂', '3037': '欣興', '00631L': '台灣50正2', '2330': '台積電',
   '2317': '鴻海', '2454': '聯發科', '2382': '廣達', '2603': '長榮', '2303': '聯電',
+  '2337': '旺宏', '2383': '台光電', '8046': '南電',
   // 美股
   'AAPL': '蘋果', 'MSFT': '微軟', 'GOOGL': 'Google', 'AMZN': '亞馬遜',
   'NVDA': '輝達', 'TSLA': '特斯拉', 'META': 'Meta', 'TSM': '台積電ADR',
@@ -5182,8 +5183,8 @@ async function loadBrokerCardIB() {
   const setTs  = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
 
   try {
-    // ⚠️ 跳過 IB API（503 SERVICE UNAVAILABLE），直接使用 Google Sheets 緩存
-    const res = await fetch(`${API_BASE}/api/query-ib`, {signal: AbortSignal.timeout(2000)}).catch(() => null);
+    // IB API 連線+回應約需 5-10 秒，給 12 秒 timeout
+    const res = await fetch(`${API_BASE}/api/query-ib`, {signal: AbortSignal.timeout(12000)}).catch(() => null);
     const json = res ? await res.json().catch(() => ({})) : {};
 
     if (res?.ok && json.status === 'success') {
@@ -6785,15 +6786,15 @@ async function fetchPTTSentiment() {
 // 動態獲取 API 基礎 URL
 // 若從 file:// 開啟（origin = "null"），fallback 到 Flask 後端
 // 動態判斷 Flask 後端 URL
-// file:// 或從靜態 HTTP Server (port 5000) 訪問 → 指向 Flask (port 9000)
-// 若直接由 Flask 托管 (port 9000) → 使用相對路徑
+// file:// 或從靜態 HTTP Server (port 5000) 訪問 → 指向 Flask (port 9999)
+// 若直接由 Flask 托管 (port 9999) → 使用相對路徑
 const API_BASE = (
   window.location.protocol === 'file:' ||
   window.location.origin === 'null' ||
   window.location.port === '5000' ||
   window.location.port === '8080' ||
   window.location.port === '8889'
-) ? 'http://127.0.0.1:8888' : window.location.origin;
+) ? 'http://127.0.0.1:9999' : window.location.origin;
 
 // ── Open Trades / 當前持倉 (p6) — 從 broker_positions DB 抓取 ──────
 let allOpenTrades = [];   // 實際存放 broker positions
@@ -6812,17 +6813,43 @@ async function loadOpenTrades() {
       renderOpenTrades(positions, {});
 
       // 非同步取 Yahoo Finance 即時價更新未實現損益（美股/台股）
-      const syms = [...new Set(positions.map(p => p.symbol).filter(Boolean))];
-      if (syms.length > 0) {
+      // 台股代碼補 .TW 後綴給 yfinance（短代碼如 50 補成 0050.TW）
+      const isTwSym = (s, broker) =>
+        broker === '元大' || /^\d{2,6}[A-Z]?$/.test(s);
+      const toYfSym = (s, broker) => {
+        if (!isTwSym(s, broker)) return s;
+        return s.padStart(4, '0').replace(/\.TW$/, '') + '.TW';
+      };
+      const symMap = {};
+      positions.forEach(p => {
+        if (p.symbol) symMap[toYfSym(p.symbol, p.broker)] = p.symbol;
+      });
+      const yfSyms = Object.keys(symMap);
+      if (yfSyms.length > 0) {
         try {
-          const yRes  = await fetch(`${API_BASE}/api/yahoo-proxy?symbols=${syms.join(',')}`, {signal: AbortSignal.timeout(10000)});
+          const yRes  = await fetch(`${API_BASE}/api/yahoo-proxy?symbols=${yfSyms.join(',')}`, {signal: AbortSignal.timeout(10000)});
           const yJson = await yRes.json();
           if (yJson.status === 'success' && yJson.data) {
-            Object.entries(yJson.data).forEach(([sym, d]) => { if (d.price) globalPriceMap[sym] = d.price; });
+            window._dailyChg = window._dailyChg || {};
+            Object.entries(yJson.data).forEach(([yfSym, d]) => {
+              const origSym = symMap[yfSym] || yfSym;
+              if (d.price) globalPriceMap[origSym] = d.price;
+              if (d.change_pct != null) window._dailyChg[origSym] = d.change_pct;
+            });
             renderOpenTrades(allOpenTrades, globalPriceMap);
           }
         } catch(eY) { console.warn("loadOpenTrades Yahoo fetch failed:", eY); }
       }
+
+      // 非同步取 RS 相對強度（較慢，算完後重渲染）
+      try {
+        const rsRes  = await fetch(`${API_BASE}/api/rs-scores`, {signal: AbortSignal.timeout(30000)});
+        const rsJson = await rsRes.json();
+        if (rsJson.status === 'success') {
+          window._rsScores = rsJson.data;
+          renderOpenTrades(allOpenTrades, globalPriceMap);
+        }
+      } catch(eRS) { console.warn("RS fetch failed:", eRS); }
     } else if (json.status === 'success') {
       container.innerHTML = '<div class="empty-state">📭 目前無持倉資料（請先執行同步）</div>';
     } else {
@@ -6850,6 +6877,27 @@ function renderOpenTrades(positions, priceMap) {
     container.innerHTML = '<div class="empty-state">📭 目前無持倉</div>';
     return;
   }
+  // 千分位格式化（保留指定小數位）
+  const fmt = (n, dec=0) => {
+    const v = Number(n);
+    if (!isFinite(v)) return '—';
+    return v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  };
+
+  // ── 集中度計算：全組合台幣總市值 ──
+  const USD_TWD = 32.0;
+  const isTwSymStrict = (s) => /^\d{2,6}[A-Z]?$/.test(s || '');
+  const mvInTwd = (p, livePx) => {
+    const qty = parseFloat(p.position || 0);
+    const avg = parseFloat(p.avgCost  || 0);
+    const dbMV = parseFloat(p.marketValue || 0);
+    const mv  = livePx ? livePx * qty : (dbMV || avg * qty);
+    const isTw = (p.broker === '元大' || p.broker === 'yuanta' || isTwSymStrict(p.symbol));
+    return isTw ? mv : mv * USD_TWD;
+  };
+  const portfolioTwdTotal = positions.reduce((sum, p) => {
+    return sum + mvInTwd(p, priceMap[p.symbol]);
+  }, 0);
 
   positions.forEach(p => { _posMap[p.id] = p; });
 
@@ -6877,7 +6925,7 @@ function renderOpenTrades(positions, priceMap) {
   console.log('[renderOpenTrades] groups:', Object.keys(groups), 'counts:', Object.fromEntries(Object.entries(groups).map(([k,v])=>[k,v.length])));
   container.innerHTML = brokers.map(broker => {
     const ps   = groups[broker];
-    const pTW  = ps.every(p => /^\d{4}/.test(p.symbol));
+    const pTW  = (broker === '元大' || broker.toLowerCase() === 'yuanta');
     const curr = pTW ? 'NT$' : '$';
     const dec  = pTW ? 0 : 2;
 
@@ -6909,6 +6957,8 @@ function renderOpenTrades(positions, priceMap) {
 
       const dbMV  = parseFloat(p.marketValue || 0);
       const mktMV = livePx ? livePx * qty : (dbMV || usePx * qty);
+      const mktMvTwd = pTW ? mktMV : mktMV * USD_TWD;
+      const concPct  = portfolioTwdTotal > 0 ? (mktMvTwd / portfolioTwdTotal * 100) : 0;
 
       const dbPnl = parseFloat(p.unrealizedPnL || p.unrealizedPNL || 0);
       let pnlAmt, pnlPct;
@@ -6928,19 +6978,56 @@ function renderOpenTrades(positions, priceMap) {
         ? `<span style="font-size:9px;color:var(--green);margin-left:3px">●</span>`
         : `<span style="font-size:9px;color:var(--border);margin-left:3px">○</span>`;
 
-      return `<tr data-id="${p.id}">
+      const rsData  = (window._rsScores || {})[sym];
+      const rsVal   = rsData?.rs;
+      const rsCell  = rsVal == null
+        ? `<span style="color:var(--text-muted)">—</span>`
+        : (() => {
+            const cls   = rsVal >= 1 ? 'green' : 'red';
+            const tip   = rsData ? `title="個股: ${rsData.stock_ret}% / 0050: ${rsData.bench_ret}% (進場日 ${rsData.entry_date})"` : '';
+            const badge = rsVal >= 1.5 ? '🔥' : rsVal >= 1 ? '▲' : rsVal >= 0.5 ? '▼' : '⚠';
+            return `<span class="${cls}" style="font-weight:700" ${tip}>${badge} ${rsVal.toFixed(2)}</span>`;
+          })();
+
+      const rsSortVal = rsVal == null ? -999 : rsVal;
+      // 集中度 cell
+      const concColor = concPct >= 30 ? 'var(--err)'
+                      : concPct >= 15 ? 'var(--yellow)'
+                      : concPct >= 5  ? 'var(--text-primary)'
+                      :                 'var(--accent)';
+      const concWeight = concPct >= 15 ? '700' : '500';
+      const concCell = `<span style="color:${concColor};font-weight:${concWeight}" title="佔全組合台幣換算後總市值">${concPct.toFixed(1)}%</span>`;
+      const dayChg    = (window._dailyChg || {})[sym];
+      const dayCell   = (dayChg == null)
+        ? `<span style="color:var(--text-muted)">—</span>`
+        : `<span class="${dayChg >= 0 ? 'green' : 'red'}" style="font-weight:600">${dayChg >= 0 ? '+' : ''}${dayChg.toFixed(2)}%</span>`;
+      const dayChgSort = dayChg == null ? -999 : dayChg;
+      return `<tr data-id="${p.id}"
+        data-s0="${sym}"
+        data-s1="${qty}"
+        data-s2="${avgCost}"
+        data-s3="${usePx}"
+        data-s4="${mktMV}"
+        data-s5="${concPct}"
+        data-s6="${pnlAmt}"
+        data-s7="${isNaN(pnlPct) ? -999 : pnlPct}"
+        data-s8="${dayChgSort}"
+        data-s9="${rsSortVal}">
         <td style="min-width:90px">
           <span class="bold">${sym}</span>${dot}
+          ${(SYMBOL_NAMES[sym] || SYMBOL_NAMES[sym.replace(/^0+/,'')] || SYMBOL_NAMES[sym.padStart(4,'0')]) ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${SYMBOL_NAMES[sym] || SYMBOL_NAMES[sym.replace(/^0+/,'')] || SYMBOL_NAMES[sym.padStart(4,'0')]}</div>` : ''}
           ${strategy ? `<div style="font-size:11px;color:var(--accent);margin-top:1px">${strategy}</div>` : ''}
           ${notes    ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${notes}">${notes}</div>` : ''}
         </td>
-        <td class="num">${qty % 1 === 0 ? qty : qty.toFixed(3)}</td>
-        <td class="num">${avgCost > 0 ? rCurr + avgCost.toFixed(rDec) : '—'}</td>
-        <td class="num">${usePx > 0 ? rCurr + usePx.toFixed(rDec) : '—'}</td>
-        <td class="num">${mktMV > 0 ? rCurr + mktMV.toFixed(rDec) : '—'}</td>
-        <td class="num ${pnlCls}">${pnlSign}${rCurr}${Math.abs(pnlAmt).toFixed(rDec)}</td>
+        <td class="num">${qty % 1 === 0 ? fmt(qty, 0) : fmt(qty, 3)}</td>
+        <td class="num">${avgCost > 0 ? rCurr + fmt(avgCost, rDec === 0 ? 2 : rDec) : '—'}</td>
+        <td class="num">${usePx > 0 ? rCurr + fmt(usePx, rDec === 0 ? 2 : rDec) : '—'}</td>
+        <td class="num">${mktMV > 0 ? rCurr + fmt(mktMV, rDec) : '—'}</td>
+        <td class="num">${concCell}</td>
+        <td class="num ${pnlCls}">${pnlSign}${rCurr}${fmt(Math.abs(pnlAmt), rDec)}</td>
         <td class="num ${pnlCls}">${isNaN(pnlPct) ? '—' : pnlSign + Math.abs(pnlPct).toFixed(1) + '%'}</td>
-        <td class="num" style="color:var(--text-muted)">--</td>
+        <td class="num">${dayCell}</td>
+        <td class="num">${rsCell}</td>
         <td style="white-space:nowrap;text-align:right;padding-right:4px">
           <button class="btn" style="font-size:11px;padding:3px 8px" title="編輯策略/備註"
             onclick="_posEditMeta(${p.id})">✏️</button>
@@ -6958,21 +7045,33 @@ function renderOpenTrades(positions, priceMap) {
         <span style="font-size:14px;font-weight:800;color:var(--text-primary)">${brokerLabel}</span>
         <div style="display:flex;align-items:center;gap:16px;font-size:13px">
           <span style="color:var(--text-muted)">${ps.length} 筆持倉</span>
-          <span style="color:var(--text-muted)">市值 <b>${totalMV > 0 ? curr + totalMV.toFixed(dec) : '—'}</b></span>
-          <span class="${totCls}" style="font-weight:700">${totSign}${curr}${Math.abs(totalPnl).toFixed(dec)}</span>
+          <span style="color:var(--text-muted)">市值 <b>${totalMV > 0 ? curr + fmt(totalMV, dec) : '—'}</b></span>
+          <span class="${totCls}" style="font-weight:700">${totSign}${curr}${fmt(Math.abs(totalPnl), dec)}</span>
         </div>
       </div>
-      <table style="width:100%;border-collapse:collapse">
+      <table id="open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}" style="width:100%;border-collapse:collapse">
         <thead>
           <tr>
-            <th style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:left">代碼</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">股數</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">均價</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">現價</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">市值</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">未實現</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">損益%</th>
-            <th class="num" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">今日</th>
+            <th data-sort-col="sym" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',0,'str')" style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:left">代碼<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="qty" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',1,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">股數<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="avg" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',2,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">均價<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="px" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',3,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">現價<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="mv" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',4,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">市值<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="conc" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',5,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">
+              佔比<span class="sort-icon">⇅</span>
+              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--purple-soft);color:var(--purple);font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:help;margin-left:3px;vertical-align:middle"
+                onclick="event.stopPropagation()"
+                title="佔比 = 個股市值（換算台幣）÷ 全組合總市值（換算台幣）&#10;美股以 USD/TWD = 32 換算&#10;&#10;🔴 ≥30% 過度集中&#10;🟡 15~30% 主力持倉&#10;⚪  5~15% 健康&#10;🔵 <5% 觀察倉位">i</span>
+            </th>
+            <th class="num" data-sort-col="pnl" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',6,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">未實現<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="pct" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',7,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">損益%<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="day" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',8,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">今日<span class="sort-icon">⇅</span></th>
+            <th class="num" data-sort-col="rs" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',9,'num')" style="font-size:10px;font-weight:800;color:var(--purple);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">
+              RS vs ${pTW ? '0050' : 'SPY'}<span class="sort-icon">⇅</span>
+              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--purple-soft);color:var(--purple);font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:help;margin-left:3px;vertical-align:middle"
+                onclick="event.stopPropagation()"
+                title="RS 相對強度計算方式：&#10;① 用均價反推推算進場日（找歷史上收盤價最接近均價的交易日）&#10;② 取同日基準指數價格（台股=0050，美股=SPY）&#10;③ RS = 個股漲幅 ÷ 基準指數漲幅&#10;&#10;🔥 RS > 1.5　超強勢，可考慮加碼&#10;▲ RS 1~1.5　跑贏大盤，持有&#10;▼ RS 0.5~1　跑輸大盤，觀察&#10;⚠ RS < 0.5　嚴重落後，考慮換倉">i</span>
+            </th>
             <th style="width:88px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft)"></th>
           </tr>
         </thead>
@@ -9983,15 +10082,17 @@ let currentMonteCarloData = null;
 // 初始化拖拽區域（只執行一次）
 let dragDropInitialized = false;
 
-function initDragAndDrop() {
+function initDragAndDrop(retryCount = 0) {
   if (dragDropInitialized) return;
 
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
 
   if (!dropZone || !fileInput) {
-    console.warn('Strategy upload elements not found, retrying...');
-    setTimeout(initDragAndDrop, 500);
+    if (retryCount < 5) {
+      setTimeout(() => initDragAndDrop(retryCount + 1), 500);
+    }
+    // 元素不存在（可能該頁面沒用此功能），靜默放棄
     return;
   }
 

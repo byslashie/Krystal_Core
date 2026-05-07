@@ -26,14 +26,14 @@ echo ✓ 檢查成功，開始啟動系統...
 echo.
 
 REM 0. 清除舊有的卡住 Port
-echo ⏳ 0/3 正在清理舊有的連線 (Port 5000, 9000)...
+echo ⏳ 0/3 正在清理舊有的連線 (Port 5000, 9999)...
 for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":5000 " ^| findstr LISTENING') do (taskkill /F /PID %%a >nul 2>nul)
-for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":9000 " ^| findstr LISTENING') do (taskkill /F /PID %%a >nul 2>nul)
+for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":9999 " ^| findstr LISTENING') do (taskkill /F /PID %%a >nul 2>nul)
 timeout /t 1 /nobreak >nul
 
 
-REM 1. 啟動 Flask 後端（dashboard_v8/start.py，Port 9000）
-echo ⏳ 1/2 啟動 Flask 後端伺服器 (Port 9000)...
+REM 1. 啟動 Flask 後端（dashboard_v8/start.py，Port 9999）
+echo ⏳ 1/2 啟動 Flask 後端伺服器 (Port 9999)...
 start /d "%~dp0dashboard_v8" "Dashboard v8 Flask Server" cmd /k "python start.py"
 timeout /t 3 /nobreak
 
@@ -45,17 +45,17 @@ REM 3. 打開瀏覽器
 echo.
 echo ✓ 系統已啟動！正在打開瀏覽器...
 echo.
-start "" "http://localhost:9000"
+start "" "http://localhost:9999"
 
 echo.
 echo ════════════════════════════════════════════════════
 echo ✓ 啟動完成！
 echo.
 echo 📍 訪問地址:
-echo    http://localhost:9000
+echo    http://localhost:9999
 echo.
 echo 📋 運行的服務:
-echo    ✓ Flask 後端伺服器 (埠口 9000)
+echo    ✓ Flask 後端伺服器 (埠口 9999)
 echo.
 echo 🎯 功能列表:
 echo    📊 Dashboard - 完整的量化交易儀表板

@@ -172,17 +172,18 @@
   },
   "active": "25e9a56bae394b10",
   "lastOpenFiles": [
-    "01-交易系統程式碼/_logs/yuanta_intraday.log",
-    "01-交易系統程式碼/fix_schedulers.ps1",
-    "01-交易系統程式碼/fix_schedulers.ps1.tmp.28604.1778034284681",
-    "01-交易系統程式碼/setup_all_schedulers.ps1",
-    "01-交易系統程式碼/setup_all_schedulers.ps1.tmp.28604.1778034104119",
     "01-交易系統程式碼/dashboard_v8/broker_positions.db-journal",
-    "01-交易系統程式碼/wrapper/krystal_sync.py.tmp.28604.1778033849949",
-    "01-交易系統程式碼/logs/yuanta_sync_20260506_100549.log",
-    "01-交易系統程式碼/brokers/upload_yuanta_to_sheets.py.tmp.28604.1778033141763",
-    "01-交易系統程式碼/brokers/upload_yuanta_to_sheets.py.tmp.28604.1778033130139",
-    "01-交易系統程式碼/logs/yuanta_sync_20260506_095709.log",
+    "01-交易系統程式碼/START_DASHBOARD_V8.bat.tmp.28604.1778135155444",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778135146653",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.28604.1778135144726",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.28604.1778135141667",
+    "01-交易系統程式碼/dashboard_v8/start.py.tmp.28604.1778135140138",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778134981513",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778134962356",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778134950587",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778134941596",
+    "04-個人特質與規劃/Krystal-Vision-2026.html.tmp.28604.1778134934524",
+    "04-個人特質與規劃/週目標/weekly_2026-W19.md",
     "03-XScript知識庫/[Example] XQ_Scripts_Functions.md",
     "04-個人特質與規劃/00-Vision-Board.md",
     "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/終極談判草稿_與他的對話.md",
@@ -206,7 +207,6 @@
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/十年關係情緒勒索演化史.md",
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/諮商提問小卡.md",
     "04-個人特質與規劃/心靈成長/02-療癒與系統修復/情緒勒索與過度承擔辨析報告.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/諮商主題優先序清單.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/黏人行為深度分析報告.md"
+    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/諮商主題優先序清單.md"
   ]
 }

@@ -2320,6 +2320,85 @@ def api_yahoo_proxy():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # ============================================================================
+# RS 相對強度 API
+# ============================================================================
+@app.route('/api/rs-scores', methods=['GET'])
+def api_rs_scores():
+    """
+    計算每檔持倉的 RS（相對強度）
+    台股 vs 0050.TW，美股 vs SPY
+    用均價反推進場日：找歷史上個股收盤價最接近均價的交易日，
+    取該日基準指數作為比較，算兩者從進場到今天的漲幅比值。
+    RS = 個股漲幅 / 基準指數漲幅
+    """
+    try:
+        positions = get_db_positions()
+        all_pos = [p for p in positions if p.get('avgCost') and float(p.get('avgCost') or 0) > 0]
+        if not all_pos:
+            return jsonify({'status': 'success', 'data': {}})
+
+        # 預先下載兩個基準指數歷史
+        bench_tw   = yf.download('0050.TW', period='2y', progress=False, auto_adjust=True)['Close'].squeeze()
+        bench_us   = yf.download('SPY',     period='2y', progress=False, auto_adjust=True)['Close'].squeeze()
+        bench_tw_today = float(bench_tw.iloc[-1])
+        bench_us_today = float(bench_us.iloc[-1])
+
+        def calc_rs(sym, avg, broker):
+            is_tw = (broker == '元大')
+            if is_tw:
+                # 元大有些代碼是純數字，可能 2 位（50）或 4-6 位
+                sym_yf = sym.zfill(4) + '.TW'
+            else:
+                sym_yf = sym
+            bench       = bench_tw if is_tw else bench_us
+            bench_today = bench_tw_today if is_tw else bench_us_today
+            bench_name  = '0050' if is_tw else 'SPY'
+
+            hist = yf.download(sym_yf, period='2y', progress=False, auto_adjust=True)
+            if hist.empty:
+                return None
+            closes = hist['Close'].squeeze()
+            today_px = float(closes.iloc[-1])
+
+            # 找歷史上最接近均價的交易日（推算進場日）
+            entry_idx      = (closes - avg).abs().idxmin()
+            entry_px_stock = float(closes[entry_idx])
+            bench_at_entry = float(bench.asof(entry_idx))
+
+            stock_ret = (today_px - entry_px_stock) / entry_px_stock if entry_px_stock else 0
+            bench_ret = (bench_today - bench_at_entry) / bench_at_entry if bench_at_entry else 0
+            rs = round(stock_ret / bench_ret, 2) if bench_ret != 0 else None
+
+            return {
+                'rs': rs,
+                'stock_ret':  round(stock_ret * 100, 1),
+                'bench_ret':  round(bench_ret * 100, 1),
+                'benchmark':  bench_name,
+                'entry_date': str(entry_idx.date()) if hasattr(entry_idx, 'date') else str(entry_idx),
+                'entry_px_bench': round(bench_at_entry, 2),
+            }
+
+        results = {}
+        for p in all_pos:
+            sym = p.get('symbol', '')
+            avg = float(p.get('avgCost') or 0)
+            broker = _normalize_broker(p.get('broker', ''))
+            if not sym:
+                continue
+            try:
+                r = calc_rs(sym, avg, broker)
+                if r:
+                    results[sym] = r
+            except Exception as e:
+                results[sym] = {'rs': None, 'error': str(e)}
+
+        return jsonify({'status': 'success', 'data': results})
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ============================================================================
 # 交易記錄寫入 API
 # ============================================================================
 @app.route('/api/trades/add', methods=['POST'])

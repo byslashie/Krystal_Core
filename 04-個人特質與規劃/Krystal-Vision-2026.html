@@ -487,7 +487,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         <div class="tab-nav">
             <button class="tab-btn active" onclick="openTab(event, 'yearly')">YEARLY 2026</button>
             <button class="tab-btn" onclick="openTab(event, 'monthly')">MONTHLY 05</button>
-            <button class="tab-btn" onclick="openTab(event, 'weekly')">WEEKLY W17</button>
+            <button class="tab-btn" onclick="openTab(event, 'weekly')">WEEKLY W19</button>
         </div>
         <div id="yearly" class="tab-content active">
             <div class="mandala-grid" style="margin-bottom: 0;">
@@ -670,7 +670,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <h1 style="font-size: 3rem; font-weight: 800; color: var(--text);">Weekly Center</h1>
                 <p style="color: var(--text-dim); font-size: 1.1rem; letter-spacing: 2px;">系統化覆盤與能量校準</p>
             </div>
-            <button class="action-btn" style="padding: 12px 24px; font-size: 1rem;">
+            <button class="action-btn" style="padding: 12px 24px; font-size: 1rem;" onclick="syncWeeklyData(this)">
                 🔄 同步最新數據
             </button>
         </div>
@@ -681,6 +681,8 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">📅 歷史存檔</h3>
                 <div class="weekly-controls" style="margin: 0;">
                     <select class="weekly-select" id="weeklySelect" style="margin-bottom: 1.5rem;">
+                        <option value="w19">Weekly Report 2026-W19 (0504-0510)</option>
+                        <option value="w18">Weekly Report 2026-W18 (0427-0503)</option>
                         <option value="w17">Weekly Report 2026-W17 (0420-0426)</option>
                         <option value="w16">Weekly Report 2026-W16 (0413-0419)</option>
                         <option value="w15">Weekly Report 2026-W15 (0406-0412)</option>
@@ -694,11 +696,11 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                     <div style="font-size: 0.85rem; color: var(--text-dim); font-weight: 700; margin-bottom: 1rem;">本週摘要統計</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">12</div>
+                            <div id="stat-completed" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">--</div>
                             <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">COMPLETED</div>
                         </div>
                         <div style="background: #f8fafc; padding: 1rem; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">85%</div>
+                            <div id="stat-focus" style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">--</div>
                             <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">FOCUS</div>
                         </div>
                     </div>
@@ -769,6 +771,82 @@ document.querySelectorAll('.pie-wrap').forEach(wrap => {
 
 // --- WEEKLY REPORT SIDEBAR LOGIC ---
 const weeklyData = {
+    "w19": [
+        {
+            title: "🤖 交易系統 (Krystal Core)",
+            color: "var(--accent)",
+            items: [
+                "[x] Dashboard v8 RS 相對強度功能 (vs 0050 / SPY)",
+                "[x] Dashboard v8 集中度欄位 + 風險分級顏色",
+                "[x] Dashboard v8 表格千分位 + 全欄位排序",
+                "[x] 中文股票名 + 今日漲跌欄位",
+                "[x] TaskScheduler 中文路徑亂碼修復",
+                "[x] 每日 NAV 寫入 DB 路徑修正 (broker_positions.db)",
+                "[x] 清除模擬數據，從 5/7 開始累積真實 equity",
+                "[x] IB 同步 timeout 從 2s → 12s",
+                "[ ] Schwab Token 重新授權 (MFA 收不到驗證碼)"
+            ]
+        },
+        {
+            title: "🛡️ 關係與心理邊界",
+            color: "var(--danger)",
+            items: [
+                "[ ] 預約下次諮商時間",
+                "[ ] 每日晨間問句：「我的注意力在自己身上嗎？」",
+                "[ ] 重讀 4/14 諮商日記 (連續 3 週擱置)",
+                "[ ] 恢復晚間 22:00 反思時間"
+            ]
+        },
+        {
+            title: "✍️ 內容創作",
+            color: "var(--secondary)",
+            items: [
+                "[ ] 覺察文章大綱 (W16 規劃，已延 3 週)",
+                "[ ] 從 4/14 日記挑 1 個切角",
+                "[ ] 週六 14:00–16:00 創作時段"
+            ]
+        },
+        {
+            title: "🏝️ 生活、財務與充電",
+            color: "var(--primary)",
+            items: [
+                "[x] 帳戶總市值 NT$2,380,463 (+39.1%)",
+                "[x] YTD +NT$324,690 (+16.6%)",
+                "[ ] 訓練 ≥ 3 次 (落後)",
+                "[ ] 飲食抗發炎，減少乳製品"
+            ]
+        }
+    ],
+    "w18": [
+        {
+            title: "🤖 交易系統 (firefighting 週)",
+            color: "var(--accent)",
+            items: [
+                "[x] Yuanta Step2 RC=1 失敗排除",
+                "[x] 元大重複寫入 broker_positions 修復",
+                "[x] daily_nav_account 數字格式錯誤修正",
+                "[x] 每日損益計算邏輯改為未實現損益差",
+                "[x] Schwab token 自動 refresh 修復",
+                "[x] Discord 假日誤報修復 (台股交易日判斷)"
+            ]
+        },
+        {
+            title: "🛡️ 關係與心理邊界",
+            color: "var(--danger)",
+            items: [
+                "[ ] 週報 / 日記空缺 — 技術問題擠壓反思空間",
+                "[ ] 心理覺察工作暫停"
+            ]
+        },
+        {
+            title: "🏝️ 生活、財務與充電",
+            color: "var(--primary)",
+            items: [
+                "[x] daily_nav_account 加現金備檔欄位 NT$60 萬",
+                "[ ] 五一連假台股休市跳過同步驗證"
+            ]
+        }
+    ],
     "w17": [
         { 
             title: "🛡️ 關係與心理邊界", 
@@ -812,14 +890,30 @@ const weeklyData = {
 };
 
 let currentWeekIdx = 0;
-const weekKeys = ["w17", "w16", "w15"];
+const weekKeys = ["w19", "w18", "w17", "w16", "w15"];
 
 function renderWeeklyReport(weekKey) {
     const contentDiv = document.getElementById("weeklyContent");
     contentDiv.innerHTML = "";
-    
+
     if(!weeklyData[weekKey]) return;
-    
+
+    // 計算 completed / focus
+    let total = 0, done = 0;
+    weeklyData[weekKey].forEach(block => {
+        block.items.forEach(item => {
+            if (item.startsWith('[x]') || item.startsWith('[ ]')) {
+                total++;
+                if (item.startsWith('[x]')) done++;
+            }
+        });
+    });
+    const focus = total > 0 ? Math.round(done / total * 100) : 0;
+    const elDone = document.getElementById('stat-completed');
+    const elFocus = document.getElementById('stat-focus');
+    if (elDone)  elDone.textContent = done;
+    if (elFocus) elFocus.textContent = focus + '%';
+
     weeklyData[weekKey].forEach(block => {
         let html = `<div class="glass-card" style="padding: 2.5rem; animation: fadeIn 0.3s ease;">
             <h4 style="color: ${block.color}; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">${block.title}</h4>
@@ -869,8 +963,61 @@ function nextWeek() {
     }
 }
 
+// 同步最新數據：從 dashboard API 抓最新績效，更新 W19 的財務 block
+async function syncWeeklyData(btn) {
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '⏳ 同步中...'; btn.disabled = true; }
+    try {
+        const r = await fetch('http://127.0.0.1:9999/api/equity-history?days=30', {
+            signal: AbortSignal.timeout(8000)
+        });
+        const json = await r.json();
+        if (json.status !== 'success' || !json.data?.length) throw new Error('no data');
+
+        const latest = json.data[json.data.length - 1];
+        const totMv  = Math.round(latest.total_mv_twd).toLocaleString();
+        const totPnl = Math.round(latest.total_pnl_twd).toLocaleString();
+        const cost   = latest.total_mv_twd - latest.total_pnl_twd;
+        const pnlPct = cost > 0 ? (latest.total_pnl_twd / cost * 100).toFixed(1) : 0;
+
+        // 算本週累積（如果有多筆）
+        const today  = new Date(latest.date);
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+        const weekRows = json.data.filter(r => new Date(r.date) >= monday);
+        let weekDelta = 0;
+        if (weekRows.length >= 2) {
+            weekDelta = weekRows[weekRows.length - 1].total_pnl_twd - weekRows[0].total_pnl_twd;
+        }
+        const weekDeltaStr = (weekDelta >= 0 ? '+' : '') + Math.round(weekDelta).toLocaleString();
+
+        // 更新 W19 的財務 block
+        const finance = weeklyData['w19'].find(b => b.title.includes('生活'));
+        if (finance) {
+            finance.items = [
+                `[x] 帳戶總市值 NT$${totMv} (${pnlPct >= 0 ? '+' : ''}${pnlPct}%)`,
+                `[x] 總未實現損益 ${totPnl >= 0 ? '+' : ''}NT$${totPnl}`,
+                `[x] 本週累積損益 NT$${weekDeltaStr}（${weekRows.length} 個交易日）`,
+                "[ ] 訓練 ≥ 3 次 (落後)",
+                "[ ] 飲食抗發炎，減少乳製品"
+            ];
+        }
+        renderWeeklyReport(document.getElementById('weeklySelect').value);
+        if (btn) btn.innerHTML = '✅ 已同步 ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'});
+    } catch (e) {
+        if (btn) btn.innerHTML = '❌ 同步失敗（請確認 dashboard server 在跑）';
+        console.error('syncWeeklyData err:', e);
+    } finally {
+        if (btn) {
+            setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 3500);
+        }
+    }
+}
+
 // Initial render
 renderWeeklyReport(weekKeys[0]);
+// 自動嘗試同步一次（如果 dashboard server 在跑）
+syncWeeklyData(null);
 </script>
 
 </body>

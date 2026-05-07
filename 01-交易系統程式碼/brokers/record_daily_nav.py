@@ -316,19 +316,23 @@ def main() -> None:
     print(f"  YTD:    {ytd_pnl_twd:>+12,.0f} TWD  ({ytd_pct:+.2f}%)")
     print(f"{'='*55}")
 
-    # ── 10. 同步到 SQLite ──────────────────────────────────────
+    # ── 10. 同步到 SQLite (broker_positions.db, dashboard 讀的 DB) ──
     try:
-        DB_PATH = PROJECT_ROOT / "dashboard_v8" / "data" / "trading.db"
+        DB_PATH = PROJECT_ROOT / "dashboard_v8" / "broker_positions.db"
         if DB_PATH.exists():
             conn = sqlite3.connect(str(DB_PATH))
             c = conn.cursor()
             c.execute('''INSERT OR REPLACE INTO equity_snapshots
-                         (date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd, total_mv_twd, total_pnl_twd, usd_twd_rate)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                      (today_str, i_mv, s_mv, y_mv, total_mv_twd, total_unrealized_twd, USD_TWD_RATE))
+                         (date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd,
+                          total_mv_twd, total_pnl_twd, usd_twd_rate, notes)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                      (today_str, i_mv, s_mv, y_mv,
+                       total_mv_twd, total_unrealized_twd, USD_TWD_RATE, ''))
             conn.commit()
             conn.close()
-            print("[OK] SQLite equity_snapshots 已更新")
+            print(f"[OK] SQLite equity_snapshots 已更新（{today_str}）")
+        else:
+            print(f"[WARN] DB 不存在: {DB_PATH}")
     except Exception as e:
         print(f"[WARN] SQLite 更新失敗: {e}")
 
