@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "wei",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,8 +74,7 @@
               "title": "書籤"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -170,9 +169,11 @@
       "bases:建立新的 base": false
     }
   },
-  "active": "554404b646b596c1",
+  "active": "7861d2b76faedada",
   "lastOpenFiles": [
     "01-交易系統程式碼/dashboard_v8/broker_positions.db-journal",
+    "01-交易系統程式碼/logs/yuanta_sync_20260511_133002.log",
+    "01-交易系統程式碼/logs/yuanta_sync_20260511_130002.log",
     "01-交易系統程式碼/logs/yuanta_sync_20260511_123002.log",
     "01-交易系統程式碼/dashboard_v8/index.html.tmp.11124.1778473284807",
     "01-交易系統程式碼/dashboard_v8/index.html.tmp.11124.1778473265524",
@@ -181,8 +182,6 @@
     "01-交易系統程式碼/dashboard_v8/index.html.tmp.11124.1778472993352",
     "01-交易系統程式碼/dashboard_v8/index.html.tmp.11124.1778472691502",
     "01-交易系統程式碼/logs/yuanta_sync_20260511_120002.log",
-    "01-交易系統程式碼/brokers/record_daily_nav.py.tmp.11124.1778470681637",
-    "01-交易系統程式碼/brokers/record_daily_nav.py.tmp.11124.1778470672494",
     "04-個人特質與規劃/週目標/weekly_2026-W19.md",
     "03-XScript知識庫/[Example] XQ_Scripts_Functions.md",
     "04-個人特質與規劃/00-Vision-Board.md",
