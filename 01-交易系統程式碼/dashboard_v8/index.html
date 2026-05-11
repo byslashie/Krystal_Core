@@ -3853,18 +3853,35 @@ function initPageCharts(pid) {
         const history = json.data || [];
         if (history.length < 2) return;
 
-        // 計算每日增量 (Delta)
-        const labels = [];
-        const pnlDeltas = [];
-        const notesArr = [];
+        // 計算每日增量 — 優先用 C（權益淨變動），fallback 才用 A（未實現損益日差）
+        const labels    = [];
+        const pnlDeltas = [];   // 主要顯示用（C 為主）
+        const breakdown = [];   // tooltip 用：{ A: 未實現變化, B: 已實現, C: 淨變動, cashFlow, source }
+        const notesArr  = [];
 
         for (let i = 1; i < history.length; i++) {
-          labels.push(history[i].date.slice(5));
-          const delta = history[i].total_pnl_twd - history[i-1].total_pnl_twd;
-          pnlDeltas.push(Math.round(delta));
-          notesArr.push(history[i].notes || '');
+          const cur = history[i], prev = history[i-1];
+          labels.push(cur.date.slice(5));
+          const deltaA = cur.total_pnl_twd - prev.total_pnl_twd;
+          const B      = cur.realized_pnl_twd || 0;
+          const cash   = cur.cash_flow_twd || 0;
+          const Craw   = cur.net_equity_change_twd;
+          const C      = (Craw != null && Craw !== 0)
+                          ? Craw
+                          : ((cur.total_mv_twd - prev.total_mv_twd) - cash);
+          // 主顯示：C 優先；若 C 算不出（沒有 ΔMV）才用 A
+          const main = (C !== 0 || cash !== 0) ? C : deltaA;
+          pnlDeltas.push(Math.round(main));
+          breakdown.push({
+            A: Math.round(deltaA),
+            B: Math.round(B),
+            C: Math.round(C),
+            cashFlow: Math.round(cash),
+            source: (C !== 0 || cash !== 0) ? 'C' : 'A',
+          });
+          notesArr.push(cur.notes || '');
         }
-        
+
         const bgColors = pnlDeltas.map((v, idx) => {
           const isSim = notesArr[idx].includes('Simulated');
           const alpha = isSim ? 0.35 : 0.85;
@@ -3881,11 +3898,18 @@ function initPageCharts(pid) {
         opts3.plugins.tooltip = {
           callbacks: {
             label: (ctx) => {
+              const b = breakdown[ctx.dataIndex] || {};
               const note = notesArr[ctx.dataIndex] || '';
               const isSim = note.toLowerCase().includes('simulated');
-              let val = `當日變動: $${ctx.raw.toLocaleString()}`;
-              if (isSim) val = `【模擬數據】${val}`;
-              return val;
+              const sign = v => (v >= 0 ? '+' : '') + v.toLocaleString();
+              const lines = [
+                `${b.source === 'C' ? '權益淨變動' : '未實現變化'}: $${sign(ctx.raw)}`,
+                `　未實現變化: $${sign(b.A)}`,
+                `　當日已實現: $${sign(b.B)}`,
+                `　出入金:    $${sign(b.cashFlow)}`,
+              ];
+              if (isSim) lines[0] = '【模擬】' + lines[0];
+              return lines;
             }
           }
         };
@@ -6978,18 +7002,40 @@ function renderOpenTrades(positions, priceMap) {
         ? `<span style="font-size:9px;color:var(--green);margin-left:3px">●</span>`
         : `<span style="font-size:9px;color:var(--border);margin-left:3px">○</span>`;
 
-      const rsData  = (window._rsScores || {})[sym];
-      const rsVal   = rsData?.rs;
-      const rsCell  = rsVal == null
-        ? `<span style="color:var(--text-muted)">—</span>`
-        : (() => {
-            const cls   = rsVal >= 1 ? 'green' : 'red';
-            const tip   = rsData ? `title="個股: ${rsData.stock_ret}% / 0050: ${rsData.bench_ret}% (進場日 ${rsData.entry_date})"` : '';
-            const badge = rsVal >= 1.5 ? '🔥' : rsVal >= 1 ? '▲' : rsVal >= 0.5 ? '▼' : '⚠';
-            return `<span class="${cls}" style="font-weight:700" ${tip}>${badge} ${rsVal.toFixed(2)}</span>`;
-          })();
+      const rsData    = (window._rsScores || {})[sym];
+      const rsWindows = rsData?.windows || {};
+      const rsEntry   = rsData?.entry;
+      const rsBench   = rsData?.benchmark || (rTW ? '0050' : 'SPY');
+      // 排序鍵：1M（沒值就 -999）
+      const rsSortVal = (rsWindows['1M'] == null) ? -999 : rsWindows['1M'];
 
-      const rsSortVal = rsVal == null ? -999 : rsVal;
+      // 差值版 RS 強度等級（單位 pp）：
+      //  ≥+20 🔥🔥 / +10~20 🔥 / +3~10 ▲ / -3~+3 –（持平） / -10~-3 ▼ / -20~-10 ❄ / ≤-20 ⚠
+      const fmtRsVal = (v) => {
+        if (v == null) return `<span style="color:var(--text-muted)">—</span>`;
+        let badge = '', cls = '', weight = 600;
+        if      (v >=  20) { badge = '🔥🔥'; cls = 'green'; weight = 800; }
+        else if (v >=  10) { badge = '🔥';   cls = 'green'; weight = 800; }
+        else if (v >=   3) { badge = '▲';    cls = 'green'; weight = 700; }
+        else if (v >   -3) { badge = '';     cls = '';      weight = 500; }
+        else if (v >  -10) { badge = '▼';    cls = 'red';   weight = 700; }
+        else if (v >  -20) { badge = '❄';    cls = 'red';   weight = 800; }
+        else               { badge = '⚠';    cls = 'red';   weight = 800; }
+        const sign = v >= 0 ? '+' : '';
+        const color = cls === '' ? 'color:var(--text-muted);' : '';
+        return `<span class="${cls}" style="font-weight:${weight};${color}">${badge}${sign}${v.toFixed(1)}</span>`;
+      };
+      const rsTip = rsEntry
+        ? `title="進場後 RS (差值): ${rsEntry.rs >= 0 ? '+' : ''}${rsEntry.rs} pp&#10;個股: ${rsEntry.stock_ret}%　${rsBench}: ${rsEntry.bench_ret}%&#10;進場日 ${rsEntry.date}&#10;&#10;單位：個股 - ${rsBench} 漲幅差（百分點）"`
+        : '';
+      const rsCell = (rsData == null)
+        ? `<span style="color:var(--text-muted)">—</span>`
+        : `<span style="display:inline-grid;grid-template-columns:auto auto;gap:2px 10px;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;line-height:1.3" ${rsTip}>
+             <span><span style="color:var(--text-muted);font-size:9px">1W</span> ${fmtRsVal(rsWindows['1W'])}</span>
+             <span><span style="color:var(--text-muted);font-size:9px">1M</span> ${fmtRsVal(rsWindows['1M'])}</span>
+             <span><span style="color:var(--text-muted);font-size:9px">3M</span> ${fmtRsVal(rsWindows['3M'])}</span>
+             <span><span style="color:var(--text-muted);font-size:9px">6M</span> ${fmtRsVal(rsWindows['6M'])}</span>
+           </span>`;
       // 集中度 cell
       const concColor = concPct >= 30 ? 'var(--err)'
                       : concPct >= 15 ? 'var(--yellow)'
@@ -7002,6 +7048,71 @@ function renderOpenTrades(positions, priceMap) {
         ? `<span style="color:var(--text-muted)">—</span>`
         : `<span class="${dayChg >= 0 ? 'green' : 'red'}" style="font-weight:600">${dayChg >= 0 ? '+' : ''}${dayChg.toFixed(2)}%</span>`;
       const dayChgSort = dayChg == null ? -999 : dayChg;
+
+      // 加碼訊號（RS + 佔比 規則式評分）
+      const addSig = (() => {
+        if (!rsData) return null;
+        const w1W = rsWindows['1W'], w1M = rsWindows['1M'],
+              w3M = rsWindows['3M'], w6M = rsWindows['6M'];
+        let score = 0;
+        const reasons = [];
+        const pushOk  = (s) => reasons.push(`✓ ${s}`);
+        const pushNo  = (s) => reasons.push(`✗ ${s}`);
+        const pushDim = (s) => reasons.push(`· ${s}`);
+
+        // 正面：長期跑贏
+        if (w6M != null) {
+          if (w6M >= 10) { score += 25; pushOk(`長期跑贏 (6M +${w6M.toFixed(1)})`); }
+          else if (w6M >= 0) pushDim(`6M ${w6M >= 0 ? '+' : ''}${w6M.toFixed(1)}（持平）`);
+          else pushNo(`長期落後 (6M ${w6M.toFixed(1)})`);
+        }
+        // 正面：中期跑贏
+        if (w3M != null) {
+          if (w3M >= 5) { score += 25; pushOk(`中期跑贏 (3M +${w3M.toFixed(1)})`); }
+          else if (w3M >= 0) pushDim(`3M ${w3M >= 0 ? '+' : ''}${w3M.toFixed(1)}（持平）`);
+          else pushNo(`中期落後 (3M ${w3M.toFixed(1)})`);
+        }
+        // 正面：短期未崩
+        if (w1M != null) {
+          if (w1M >= 0) { score += 20; pushOk(`短期未崩 (1M ${w1M >= 0 ? '+' : ''}${w1M.toFixed(1)})`); }
+          else if (w1M < -5) { score -= 30; pushNo(`短期轉弱 (1M ${w1M.toFixed(1)})  ⚠ 重大扣分`); }
+          else pushNo(`1M 微弱 (${w1M.toFixed(1)})`);
+        }
+        // 正面：動能加速（1M > 3M / 3）
+        if (w1M != null && w3M != null && w1M > w3M / 3) {
+          score += 15; pushOk('動能加速（1M > 3M/3）');
+        }
+        // 正面：一週沒大跌
+        if (w1W != null) {
+          if (w1W >= -3) { score += 15; pushOk(`一週穩定 (1W ${w1W >= 0 ? '+' : ''}${w1W.toFixed(1)})`); }
+          else pushNo(`一週下跌 (1W ${w1W.toFixed(1)})`);
+        }
+        // 扣分：反彈但長期弱
+        if (w6M != null && w1M != null && w6M < 0 && w1M > 0) {
+          score -= 10; pushNo('反彈但長期弱（追高風險）');
+        }
+        // 扣分：佔比過高
+        if (concPct >= 30) { score -= 50; pushNo(`過度集中 ${concPct.toFixed(1)}%（不該再加）`); }
+        else if (concPct >= 15) { score -= 20; pushNo(`已是主力倉 ${concPct.toFixed(1)}%`); }
+        else pushDim(`佔比 ${concPct.toFixed(1)}%（健康倉位）`);
+
+        score = Math.max(0, Math.min(100, score));
+        let level, color, label;
+        if      (score >= 70) { level = '🟢'; color = 'var(--green)'; label = '加碼候選'; }
+        else if (score >= 40) { level = '🟡'; color = 'var(--yellow)'; label = '持有'; }
+        else                  { level = '🔴'; color = 'var(--red)';    label = '觀望/減碼'; }
+        return { score, level, color, label, reasons };
+      })();
+
+      const addCell = (addSig == null)
+        ? `<span style="color:var(--text-muted)">—</span>`
+        : (() => {
+            const tip = `title="${addSig.level} ${addSig.label}　${addSig.score}/100&#10;${addSig.reasons.join('&#10;')}"`;
+            return `<span style="display:inline-flex;align-items:center;gap:4px;font-weight:700;color:${addSig.color}" ${tip}>
+                      ${addSig.level} <span style="font-variant-numeric:tabular-nums">${addSig.score}</span>
+                    </span>`;
+          })();
+      const addSigSort = addSig == null ? -999 : addSig.score;
       return `<tr data-id="${p.id}"
         data-s0="${sym}"
         data-s1="${qty}"
@@ -7012,7 +7123,8 @@ function renderOpenTrades(positions, priceMap) {
         data-s6="${pnlAmt}"
         data-s7="${isNaN(pnlPct) ? -999 : pnlPct}"
         data-s8="${dayChgSort}"
-        data-s9="${rsSortVal}">
+        data-s9="${addSigSort}"
+        data-s10="${rsSortVal}">
         <td style="min-width:90px">
           <span class="bold">${sym}</span>${dot}
           ${(SYMBOL_NAMES[sym] || SYMBOL_NAMES[sym.replace(/^0+/,'')] || SYMBOL_NAMES[sym.padStart(4,'0')]) ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${SYMBOL_NAMES[sym] || SYMBOL_NAMES[sym.replace(/^0+/,'')] || SYMBOL_NAMES[sym.padStart(4,'0')]}</div>` : ''}
@@ -7027,6 +7139,7 @@ function renderOpenTrades(positions, priceMap) {
         <td class="num ${pnlCls}">${pnlSign}${rCurr}${fmt(Math.abs(pnlAmt), rDec)}</td>
         <td class="num ${pnlCls}">${isNaN(pnlPct) ? '—' : pnlSign + Math.abs(pnlPct).toFixed(1) + '%'}</td>
         <td class="num">${dayCell}</td>
+        <td class="num">${addCell}</td>
         <td class="num">${rsCell}</td>
         <td style="white-space:nowrap;text-align:right;padding-right:4px">
           <button class="btn" style="font-size:11px;padding:3px 8px" title="編輯策略/備註"
@@ -7066,11 +7179,17 @@ function renderOpenTrades(positions, priceMap) {
             <th class="num" data-sort-col="pnl" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',6,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">未實現<span class="sort-icon">⇅</span></th>
             <th class="num" data-sort-col="pct" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',7,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">損益%<span class="sort-icon">⇅</span></th>
             <th class="num" data-sort-col="day" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',8,'num')" style="font-size:10px;font-weight:800;color:var(--text-muted);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">今日<span class="sort-icon">⇅</span></th>
-            <th class="num" data-sort-col="rs" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',9,'num')" style="font-size:10px;font-weight:800;color:var(--purple);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right">
-              RS vs ${pTW ? '0050' : 'SPY'}<span class="sort-icon">⇅</span>
+            <th class="num" data-sort-col="add" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',9,'num')" style="font-size:10px;font-weight:800;color:var(--accent);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right;white-space:nowrap">
+              加碼<span class="sort-icon">⇅</span>
+              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--purple-soft);color:var(--accent);font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:help;margin-left:3px;vertical-align:middle"
+                onclick="event.stopPropagation()"
+                title="加碼訊號燈（0-100）&#10;&#10;判斷依據：&#10;　✓ 6M ≥ +10 pp　長期跑贏　+25&#10;　✓ 3M ≥ +5  pp　中期跑贏　+25&#10;　✓ 1M ≥ 0   pp　短期未崩　+20&#10;　✓ 1M > 3M/3　動能加速　+15&#10;　✓ 1W ≥ -3  pp　一週穩定　+15&#10;　✗ 1M < -5  pp　短期轉弱　-30&#10;　✗ 6M<0 且 1M>0　追高風險　-10&#10;　✗ 佔比 ≥ 15%　主力倉　-20&#10;　✗ 佔比 ≥ 30%　過度集中　-50&#10;&#10;結論：&#10;　🟢 ≥ 70　加碼候選&#10;　🟡 40~70　持有&#10;　🔴 < 40　觀望/減碼&#10;&#10;hover 個股可看完整判斷理由">i</span>
+            </th>
+            <th class="num" data-sort-col="rs" onclick="sortTable('open-tbl-${broker.replace(/[^a-zA-Z0-9]/g,'')}',10,'num')" style="font-size:10px;font-weight:800;color:var(--purple);padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft);text-align:right;white-space:nowrap">
+              RS vs ${pTW ? '0050' : 'SPY'} (1W/1M/3M/6M)<span class="sort-icon">⇅</span>
               <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--purple-soft);color:var(--purple);font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:help;margin-left:3px;vertical-align:middle"
                 onclick="event.stopPropagation()"
-                title="RS 相對強度計算方式：&#10;① 用均價反推推算進場日（找歷史上收盤價最接近均價的交易日）&#10;② 取同日基準指數價格（台股=0050，美股=SPY）&#10;③ RS = 個股漲幅 ÷ 基準指數漲幅&#10;&#10;🔥 RS > 1.5　超強勢，可考慮加碼&#10;▲ RS 1~1.5　跑贏大盤，持有&#10;▼ RS 0.5~1　跑輸大盤，觀察&#10;⚠ RS < 0.5　嚴重落後，考慮換倉">i</span>
+                title="RS（相對強度，差值版）&#10;RS = 個股漲幅 − 基準漲幅（單位：百分點 pp）&#10;基準：台股 = 0050，美股 = SPY&#10;&#10;四個滾動視窗（不分進場日）：&#10;　1W  ≈  5 個交易日&#10;　1M  ≈ 21 個交易日&#10;　3M  ≈ 63 個交易日&#10;　6M  ≈126 個交易日&#10;&#10;強度標示：&#10;　🔥🔥 ≥ +20 pp　超強&#10;　🔥   +10~20  pp　強&#10;　▲    +3~10  pp　小贏&#10;　–    -3~+3  pp　持平&#10;　▼    -10~-3 pp　小輸&#10;　❄    -20~-10 pp　弱&#10;　⚠   ≤ -20  pp　嚴重落後&#10;&#10;表頭點擊以 1M 排序。hover 個股可看「進場後 RS」。">i</span>
             </th>
             <th style="width:88px;background:var(--bg-raised);border-bottom:1px solid var(--border-soft)"></th>
           </tr>

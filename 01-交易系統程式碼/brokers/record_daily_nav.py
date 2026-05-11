@@ -31,6 +31,8 @@ NAV_COLUMNS = [
     "Schwab市值(USD)", "Schwab未實現損益(USD)", "Schwab未實現損益%",
     "元大市值(台幣)", "元大未實現損益(台幣)", "元大未實現損益%",
     "美元匯率",
+    "現金備檔(台幣)",  # 既有欄位，保留位置
+    "當日已實現(台幣)", "當日出入金(台幣)", "權益淨變動(台幣)",
 ]
 
 USD_TWD_RATE = 32.0
@@ -80,6 +82,94 @@ def _get_broker_summary(df, broker_name):
             pnl = calc_pnl
 
     return round(mv, 2), round(pnl, 2)
+
+
+def _get_today_realized_pnl(today_str: str, get_sheet) -> float:
+    """從 trades sheet 撈今日已實現損益總和（台幣）。
+    美股那筆若記錄是 USD，依當下匯率折回台幣。"""
+    try:
+        sh = get_sheet('trades')
+        if sh is None:
+            return 0.0
+        vals = sh.get_all_values()
+        if not vals or len(vals) < 2:
+            return 0.0
+        hdr = vals[0]
+
+        def col_idx(*cands):
+            for c in cands:
+                if c in hdr:
+                    return hdr.index(c)
+            return -1
+
+        date_i   = col_idx('日期', 'date')
+        pnl_i    = col_idx('損益', 'pnl', 'PnL')
+        broker_i = col_idx('券商', 'broker')
+        if date_i < 0 or pnl_i < 0:
+            return 0.0
+
+        total = 0.0
+        for row in vals[1:]:
+            if len(row) <= max(date_i, pnl_i):
+                continue
+            if not row[date_i].startswith(today_str):
+                continue
+            pnl = _safe_float(row[pnl_i])
+            if pnl == 0:
+                continue
+            broker = row[broker_i].lower() if broker_i >= 0 and len(row) > broker_i else ''
+            # 美券損益用 USD 記錄則折成台幣
+            if broker in ('ib', 'ibkr', 'schwab'):
+                pnl *= USD_TWD_RATE
+            total += pnl
+        return round(total, 0)
+    except Exception as e:
+        print(f"[已實現]   讀取失敗: {e}")
+        return 0.0
+
+
+def _get_today_cash_flow(today_str: str, get_sheet) -> float:
+    """從 cash_flow sheet 撈今日出入金合計（台幣）。
+    格式：日期 | 幣別 | 金額（正=入金，負=出金）| 備註
+    沒有這個 sheet 就回 0。"""
+    try:
+        sh = get_sheet('cash_flow')
+        if sh is None:
+            return 0.0
+        vals = sh.get_all_values()
+        if not vals or len(vals) < 2:
+            return 0.0
+        hdr = vals[0]
+
+        def col_idx(*cands):
+            for c in cands:
+                if c in hdr:
+                    return hdr.index(c)
+            return -1
+
+        date_i = col_idx('日期', 'date')
+        amt_i  = col_idx('金額', 'amount', 'amount_twd')
+        cur_i  = col_idx('幣別', 'currency')
+        if date_i < 0 or amt_i < 0:
+            return 0.0
+
+        total = 0.0
+        for row in vals[1:]:
+            if len(row) <= max(date_i, amt_i):
+                continue
+            if not row[date_i].startswith(today_str):
+                continue
+            amt = _safe_float(row[amt_i])
+            if amt == 0:
+                continue
+            cur = row[cur_i].upper() if cur_i >= 0 and len(row) > cur_i else 'TWD'
+            if cur == 'USD':
+                amt *= USD_TWD_RATE
+            total += amt
+        return round(total, 0)
+    except Exception as e:
+        print(f"[出入金]   讀取失敗: {e}")
+        return 0.0
 
 
 def main() -> None:
@@ -275,6 +365,25 @@ def main() -> None:
     except Exception as e:
         print(f"[YTD]      計算失敗: {e}")
 
+    # ── 6.5. 當日已實現損益（trades sheet 當天 PnL 合計）──────
+    realized_pnl_twd = _get_today_realized_pnl(today_str, get_sheet)
+    # ── 6.6. 當日出入金（cash_flow sheet 當天合計，正=入金 負=出金）─
+    cash_flow_twd = _get_today_cash_flow(today_str, get_sheet)
+    # ── 6.7. 權益淨變動 C = ΔTotalMV − 出入金 ────────────────
+    prev_total_mv = None
+    try:
+        prev_rows = [r for r in vals[1:] if r and r[0] and not r[0].startswith(today_str)]
+        if prev_rows:
+            hdr = vals[0]
+            mv_idx_p = hdr.index('總市值(台幣)') if '總市值(台幣)' in hdr else 1
+            prev_total_mv = _safe_float(prev_rows[-1][mv_idx_p])
+    except Exception:
+        pass
+    net_equity_change_twd = round((total_mv_twd - prev_total_mv) - cash_flow_twd, 0) if prev_total_mv else 0.0
+    print(f"[已實現]   {realized_pnl_twd:+,.0f} TWD")
+    print(f"[出入金]   {cash_flow_twd:+,.0f} TWD")
+    print(f"[淨變動]   {net_equity_change_twd:+,.0f} TWD  (dMV - 出入金)")
+
     # ── 7. 組 row ──────────────────────────────────────────────
     def nt(v): return f"NT${v:,.0f}"
     row = [
@@ -285,14 +394,31 @@ def main() -> None:
         s_mv, s_pnl, schwab_unrealized_pct,
         nt(y_mv), nt(y_pnl), yuanta_unrealized_pct,
         USD_TWD_RATE,
+        "",  # 現金備檔(台幣) — 留空，由你手填
+        nt(realized_pnl_twd), nt(cash_flow_twd), nt(net_equity_change_twd),
     ]
 
-    # ── 8. 確保 Header ─────────────────────────────────────────
-    if not vals or not vals[0] or vals[0][0] != '記錄時間' or len(vals[0]) < len(NAV_COLUMNS):
-        nav_sheet.clear()
+    # ── 8. 確保 Header（safe migration：永不清資料） ─────────────
+    if not vals or not vals[0]:
+        # 真的全空，建 header
         nav_sheet.insert_row(NAV_COLUMNS, 1)
         vals = [NAV_COLUMNS]
-        print("[Sheets] Header 已建立/更新")
+        print("[Sheets] Header 已建立（空表）")
+    elif vals[0][0] != '記錄時間':
+        # 第一格不對 — 拒絕清資料，要人工處理
+        print(f"[FATAL] 第一列不像 header: {vals[0][:3]}... 拒絕覆寫，請人工確認")
+        sys.exit(1)
+    elif len(vals[0]) < len(NAV_COLUMNS):
+        # Header 缺欄 — 只擴充欄位，不動歷史列
+        new_cols = NAV_COLUMNS[len(vals[0]):]
+        # 使用 update 改第 1 列指定範圍（不會碰歷史列）
+        start_col = len(vals[0]) + 1
+        end_col   = len(NAV_COLUMNS)
+        from gspread.utils import rowcol_to_a1
+        rng = f"{rowcol_to_a1(1, start_col)}:{rowcol_to_a1(1, end_col)}"
+        nav_sheet.update(rng, [new_cols])
+        vals[0] = list(vals[0]) + new_cols
+        print(f"[Sheets] Header 已擴充：新增 {len(new_cols)} 欄 → {new_cols}")
 
     # ── 9. 刪除今日舊筆，寫入最新一筆 ─────────────────────────
     rows_to_delete = [
@@ -324,10 +450,12 @@ def main() -> None:
             c = conn.cursor()
             c.execute('''INSERT OR REPLACE INTO equity_snapshots
                          (date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd,
-                          total_mv_twd, total_pnl_twd, usd_twd_rate, notes)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                          total_mv_twd, total_pnl_twd, usd_twd_rate, notes,
+                          realized_pnl_twd, cash_flow_twd, net_equity_change_twd)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                       (today_str, i_mv, s_mv, y_mv,
-                       total_mv_twd, total_unrealized_twd, USD_TWD_RATE, ''))
+                       total_mv_twd, total_unrealized_twd, USD_TWD_RATE, '',
+                       realized_pnl_twd, cash_flow_twd, net_equity_change_twd))
             conn.commit()
             conn.close()
             print(f"[OK] SQLite equity_snapshots 已更新（{today_str}）")

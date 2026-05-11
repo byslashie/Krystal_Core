@@ -263,6 +263,13 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
 
+    # Migration: 加 3 個欄位（已實現 / 出入金 / 權益淨變動）
+    c.execute("PRAGMA table_info(equity_snapshots)")
+    cols = {row[1] for row in c.fetchall()}
+    for col in ('realized_pnl_twd', 'cash_flow_twd', 'net_equity_change_twd'):
+        if col not in cols:
+            c.execute(f"ALTER TABLE equity_snapshots ADD COLUMN {col} REAL DEFAULT 0")
+
     conn.commit()
     conn.close()
 
@@ -2322,6 +2329,9 @@ def api_yahoo_proxy():
 # ============================================================================
 # RS 相對強度 API
 # ============================================================================
+_rs_cache = {'data': None, 'ts': 0}
+RS_CACHE_TTL = 600  # 秒；RS 盤中波動小，10 分鐘快取夠用，避免 yfinance rate limit
+
 @app.route('/api/rs-scores', methods=['GET'])
 def api_rs_scores():
     """
@@ -2331,6 +2341,11 @@ def api_rs_scores():
     取該日基準指數作為比較，算兩者從進場到今天的漲幅比值。
     RS = 個股漲幅 / 基準指數漲幅
     """
+    import time
+    force = request.args.get('refresh') in ('1', 'true')
+    if (not force) and _rs_cache['data'] is not None and (time.time() - _rs_cache['ts'] < RS_CACHE_TTL):
+        return jsonify({'status': 'success', 'data': _rs_cache['data'], 'cached': True,
+                        'age': int(time.time() - _rs_cache['ts'])})
     try:
         positions = get_db_positions()
         all_pos = [p for p in positions if p.get('avgCost') and float(p.get('avgCost') or 0) > 0]
@@ -2342,6 +2357,9 @@ def api_rs_scores():
         bench_us   = yf.download('SPY',     period='2y', progress=False, auto_adjust=True)['Close'].squeeze()
         bench_tw_today = float(bench_tw.iloc[-1])
         bench_us_today = float(bench_us.iloc[-1])
+
+        # 滾動視窗（交易日數）：1W / 1M / 3M / 6M
+        RS_WINDOWS = [('1W', 5), ('1M', 21), ('3M', 63), ('6M', 126)]
 
         def calc_rs(sym, avg, broker):
             is_tw = (broker == '元大')
@@ -2360,22 +2378,39 @@ def api_rs_scores():
             closes = hist['Close'].squeeze()
             today_px = float(closes.iloc[-1])
 
-            # 找歷史上最接近均價的交易日（推算進場日）
+            # 滾動視窗 RS = 個股漲幅 - 基準漲幅（差值，單位 pp）
+            windows = {}
+            for label, n in RS_WINDOWS:
+                if len(closes) <= n or len(bench) <= n:
+                    windows[label] = None
+                    continue
+                stock_past = float(closes.iloc[-1 - n])
+                bench_past = float(bench.iloc[-1 - n])
+                if stock_past <= 0 or bench_past <= 0:
+                    windows[label] = None
+                    continue
+                s_ret = (today_px - stock_past) / stock_past * 100
+                b_ret = (bench_today - bench_past) / bench_past * 100
+                windows[label] = round(s_ret - b_ret, 1)
+
+            # 進場後 RS（tooltip 用）：找歷史上最接近均價的交易日
             entry_idx      = (closes - avg).abs().idxmin()
             entry_px_stock = float(closes[entry_idx])
             bench_at_entry = float(bench.asof(entry_idx))
-
-            stock_ret = (today_px - entry_px_stock) / entry_px_stock if entry_px_stock else 0
-            bench_ret = (bench_today - bench_at_entry) / bench_at_entry if bench_at_entry else 0
-            rs = round(stock_ret / bench_ret, 2) if bench_ret != 0 else None
+            stock_ret = (today_px - entry_px_stock) / entry_px_stock * 100 if entry_px_stock else 0
+            bench_ret = (bench_today - bench_at_entry) / bench_at_entry * 100 if bench_at_entry else 0
+            entry_rs  = round(stock_ret - bench_ret, 1)
 
             return {
-                'rs': rs,
-                'stock_ret':  round(stock_ret * 100, 1),
-                'bench_ret':  round(bench_ret * 100, 1),
-                'benchmark':  bench_name,
-                'entry_date': str(entry_idx.date()) if hasattr(entry_idx, 'date') else str(entry_idx),
-                'entry_px_bench': round(bench_at_entry, 2),
+                'windows':   windows,          # {'1W': +2.3, '1M': +8.0, '3M': +12.3, '6M': -2.1}
+                'benchmark': bench_name,
+                'entry': {
+                    'date':       str(entry_idx.date()) if hasattr(entry_idx, 'date') else str(entry_idx),
+                    'stock_ret':  round(stock_ret, 1),
+                    'bench_ret':  round(bench_ret, 1),
+                    'rs':         entry_rs,
+                    'px_bench':   round(bench_at_entry, 2),
+                },
             }
 
         results = {}
@@ -2392,9 +2427,14 @@ def api_rs_scores():
             except Exception as e:
                 results[sym] = {'rs': None, 'error': str(e)}
 
-        return jsonify({'status': 'success', 'data': results})
+        _rs_cache['data'] = results
+        _rs_cache['ts'] = time.time()
+        return jsonify({'status': 'success', 'data': results, 'cached': False})
 
     except Exception as e:
+        import traceback
+        sys.stderr.write(f"[ERROR] /api/rs-scores 失敗: {e}\n{traceback.format_exc()}\n")
+        sys.stderr.flush()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
@@ -2529,7 +2569,8 @@ def api_equity_history():
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
         c.execute('''SELECT date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd,
-                            total_mv_twd, total_pnl_twd, usd_twd_rate, notes
+                            total_mv_twd, total_pnl_twd, usd_twd_rate, notes,
+                            realized_pnl_twd, cash_flow_twd, net_equity_change_twd
                      FROM equity_snapshots
                      ORDER BY date ASC
                      LIMIT ?''', (days,))

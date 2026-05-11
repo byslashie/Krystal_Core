@@ -34,12 +34,12 @@
       "analysis": "無法取得實質利率數據。"
     },
     "vix": {
-      "value": "17.5",
-      "label": "17.5 → 平靜",
-      "signal": "17.5 — 市場平靜",
+      "value": "17.2",
+      "label": "17.2 → 平靜",
+      "signal": "17.2 — 市場平靜",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: ^VIX",
-      "analysis": "當前 17.5，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
+      "analysis": "當前 17.2，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。"
     },
     "usd_twd": {
       "value": "31.38",
@@ -50,9 +50,9 @@
       "analysis": "當前 31.38，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。"
     },
     "jp_usdjpy": {
-      "value": "156.4",
-      "label": "156.4 JPY/USD",
-      "signal": "156.4 — 日圓偏弱",
+      "value": "157.2",
+      "label": "157.2 JPY/USD",
+      "signal": "157.2 — 日圓偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: JPY=X"
     },
@@ -71,9 +71,9 @@
       "source": "FRED: IRSTCB01JPM156N"
     },
     "eu_eurusd": {
-      "value": "1.1777",
-      "label": "1.1777 EUR/USD",
-      "signal": "1.1777 — 歐元偏強",
+      "value": "1.1762",
+      "label": "1.1762 EUR/USD",
+      "signal": "1.1762 — 歐元偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: EURUSD=X"
     },
@@ -92,9 +92,9 @@
       "source": "FRED: ECBMLFR (ECB主要再融資利率)"
     },
     "cn_usdcny": {
-      "value": "6.8009",
-      "label": "6.8009 CNY/USD",
-      "signal": "6.8009 — 人民幣穩定",
+      "value": "6.7951",
+      "label": "6.7951 CNY/USD",
+      "signal": "6.7951 — 人民幣穩定",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X"
     },
@@ -106,9 +106,9 @@
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1451",
-      "label": "1451 KRW/USD",
-      "signal": "1451 — 韓元偏弱",
+      "value": "1473",
+      "label": "1473 KRW/USD",
+      "signal": "1473 — 韓元偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: KRW=X"
     },
@@ -195,5 +195,5 @@
   "errors": [
     "FRED 初始化失敗: No module named 'fredapi'"
   ],
-  "cached_at": "2026-05-07T17:55:05.362346"
+  "cached_at": "2026-05-11T11:03:47.518443"
 }
