@@ -263,10 +263,11 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
 
-    # Migration: 加 3 個欄位（已實現 / 出入金 / 權益淨變動）
+    # Migration: 加欄位（已實現 / 出入金 / 權益淨變動 / 現金備檔 / 緊急預備金）
     c.execute("PRAGMA table_info(equity_snapshots)")
     cols = {row[1] for row in c.fetchall()}
-    for col in ('realized_pnl_twd', 'cash_flow_twd', 'net_equity_change_twd'):
+    for col in ('realized_pnl_twd', 'cash_flow_twd', 'net_equity_change_twd',
+                'cash_reserve_twd', 'emergency_reserve_twd'):
         if col not in cols:
             c.execute(f"ALTER TABLE equity_snapshots ADD COLUMN {col} REAL DEFAULT 0")
 
@@ -2590,13 +2591,280 @@ def api_equity_history():
         c = conn.cursor()
         c.execute('''SELECT date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd,
                             total_mv_twd, total_pnl_twd, usd_twd_rate, notes,
-                            realized_pnl_twd, cash_flow_twd, net_equity_change_twd
+                            realized_pnl_twd, cash_flow_twd, net_equity_change_twd,
+                            cash_reserve_twd, emergency_reserve_twd
                      FROM equity_snapshots
                      ORDER BY date ASC
                      LIMIT ?''', (days,))
         rows = [dict(r) for r in c.fetchall()]
         conn.close()
         return jsonify({'status': 'success', 'data': rows, 'count': len(rows)})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/benchmark-history', methods=['GET'])
+def api_benchmark_history():
+    """yfinance 抓基準指數歷史收盤價"""
+    try:
+        import yfinance as yf
+        symbol = request.args.get('symbol', '0050.TW')
+        start  = request.args.get('start')
+        end    = request.args.get('end')
+        if not start or not end:
+            return jsonify({'status': 'error', 'message': 'start/end required'}), 400
+        hist = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=True)
+        if hist.empty:
+            return jsonify({'status': 'success', 'data': []})
+        closes = hist['Close'].squeeze()
+        data = [{'date': idx.strftime('%Y-%m-%d'), 'close': float(v)}
+                for idx, v in closes.items() if v == v]  # NaN guard
+        return jsonify({'status': 'success', 'data': data, 'symbol': symbol})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/performance', methods=['GET'])
+def api_performance():
+    """績效分析：勝率、盈虧比（from trades sheet），累積報酬、跑贏大盤（from equity_snapshots）。"""
+    try:
+        import yfinance as yf
+        # 1) 累積報酬 + 跑贏大盤（從 SQLite equity_snapshots）
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''SELECT date, total_mv_twd, cash_flow_twd FROM equity_snapshots
+                     WHERE total_mv_twd > 0 ORDER BY date ASC''')
+        snaps = [dict(r) for r in c.fetchall()]
+        conn.close()
+
+        ret = {'snapshots_count': len(snaps)}
+        if len(snaps) >= 2:
+            first = snaps[0]; last = snaps[-1]
+            # 累積出入金（避免將入金算成獲利）
+            total_cf = sum(float(s.get('cash_flow_twd') or 0) for s in snaps[1:])
+            adj_first = float(first['total_mv_twd']) + total_cf
+            cum_ret = (float(last['total_mv_twd']) - adj_first) / adj_first * 100 if adj_first else 0
+            days = (datetime.strptime(last['date'], '%Y-%m-%d') -
+                    datetime.strptime(first['date'], '%Y-%m-%d')).days or 1
+            ret.update({
+                'cum_return_pct': round(cum_ret, 2),
+                'period_days':    days,
+                'period_start':   first['date'],
+                'period_end':     last['date'],
+                'cash_flow_total': round(total_cf, 0),
+            })
+
+            # 同期 0050 報酬（用 TWD 帳戶當基準參考）
+            try:
+                bench = yf.download('0050.TW',
+                                    start=first['date'], end=last['date'],
+                                    progress=False, auto_adjust=True)['Close'].squeeze()
+                if len(bench) >= 2:
+                    bench_ret = (float(bench.iloc[-1]) - float(bench.iloc[0])) / float(bench.iloc[0]) * 100
+                    ret['bench_return_pct'] = round(bench_ret, 2)
+                    ret['bench_name']       = '0050'
+                    ret['alpha_pct']        = round(cum_ret - bench_ret, 2)
+            except Exception as e:
+                ret['bench_error'] = str(e)
+
+        # 2) 勝率 / 盈虧比（從 trades sheet）
+        try:
+            from sheets_utils import get_sheet
+            sh = get_sheet('trades')
+            if sh is not None:
+                vals = sh.get_all_values()
+                if vals and len(vals) > 1:
+                    hdr = vals[0]
+                    pnl_i    = hdr.index('損益')    if '損益'    in hdr else -1
+                    status_i = hdr.index('狀態')    if '狀態'    in hdr else -1
+                    broker_i = hdr.index('券商')    if '券商'    in hdr else -1
+                    symbol_i = hdr.index('標的')    if '標的'    in hdr else -1
+
+                    def _is_us_market(broker: str, symbol: str) -> bool:
+                        b = (broker or '').lower().strip()
+                        if b in ('ib', 'ibkr', 'schwab'):
+                            return True
+                        if b in ('元大', 'yuanta'):
+                            return False
+                        # fallback：代碼判斷
+                        s = (symbol or '').strip()
+                        return bool(s) and not s.replace('.', '').isdigit()
+
+                    if pnl_i >= 0 and status_i >= 0:
+                        # 先收集每筆 raw trade（不歸類）
+                        raw_trades = []  # list of {symbol, broker, pnl, is_us}
+                        for r in vals[1:]:
+                            if len(r) <= max(pnl_i, status_i): continue
+                            if r[status_i] != '已平倉': continue
+                            try:
+                                pnl_raw = str(r[pnl_i]).replace(',','').replace('NT$','').replace('USD','').replace('$','').strip()
+                                pnl = float(pnl_raw)
+                            except: continue
+                            broker = r[broker_i] if broker_i >= 0 and len(r) > broker_i else ''
+                            symbol = r[symbol_i] if symbol_i >= 0 and len(r) > symbol_i else ''
+                            is_us = _is_us_market(broker, symbol)
+                            raw_trades.append({'symbol': symbol, 'broker': broker, 'pnl': pnl, 'is_us': is_us})
+
+                        # 合併：同 (broker, symbol) 視為同一筆交易（多次減倉是同一個決策）
+                        merged = {}  # (broker_normalized, symbol) -> {pnl_sum, is_us, raw_count}
+                        for t in raw_trades:
+                            key = (t['broker'].lower().strip(), t['symbol'].strip())
+                            if key not in merged:
+                                merged[key] = {'pnl_sum': 0.0, 'is_us': t['is_us'], 'raw_count': 0,
+                                               'symbol': t['symbol'], 'broker': t['broker']}
+                            merged[key]['pnl_sum'] += t['pnl']
+                            merged[key]['raw_count'] += 1
+
+                        wins, losses = [], []
+                        wins_us, wins_tw = [], []
+                        losses_us, losses_tw = [], []
+                        merged_log = []  # 給前端顯示哪些被合併
+                        for key, m in merged.items():
+                            pnl = m['pnl_sum']
+                            is_us = m['is_us']
+                            pnl_twd = pnl * 32.0 if is_us else pnl
+                            if m['raw_count'] > 1:
+                                merged_log.append({
+                                    'symbol': m['symbol'], 'broker': m['broker'],
+                                    'count': m['raw_count'], 'net_pnl': round(pnl, 2),
+                                    'currency': 'USD' if is_us else 'TWD',
+                                })
+                            if pnl_twd > 0:
+                                wins.append(pnl_twd)
+                                (wins_us if is_us else wins_tw).append(pnl)
+                            elif pnl_twd < 0:
+                                losses.append(pnl_twd)
+                                (losses_us if is_us else losses_tw).append(pnl)
+                            # pnl_twd == 0 的不算（平手）
+                        total = len(wins) + len(losses)
+
+                        def _stats(w, l, currency_label):
+                            n = len(w) + len(l)
+                            return {
+                                'currency':      currency_label,
+                                'closed_trades': n,
+                                'wins':          len(w),
+                                'losses':        len(l),
+                                'win_rate_pct':  round(len(w) / n * 100, 1) if n else None,
+                                'avg_win':       round(sum(w)/len(w), 0) if w else 0,
+                                'avg_loss':      round(sum(l)/len(l), 0) if l else 0,
+                                'profit_factor': round(abs(sum(w) / sum(l)), 2) if l and sum(l) != 0 else None,
+                                'total_win':     round(sum(w), 0),
+                                'total_loss':    round(sum(l), 0),
+                            }
+
+                        if total > 0:
+                            ret.update({
+                                'closed_trades': total,
+                                'raw_trade_count': len(raw_trades),  # 合併前的原始筆數
+                                'merged_log':    merged_log,         # 哪些股票被合併
+                                'wins':          len(wins),
+                                'losses':        len(losses),
+                                'win_rate_pct':  round(len(wins) / total * 100, 1),
+                                'avg_win':       round(sum(wins)/len(wins), 0) if wins else 0,
+                                'avg_loss':      round(sum(losses)/len(losses), 0) if losses else 0,
+                                'profit_factor': round(abs(sum(wins) / sum(losses)), 2) if losses and sum(losses) != 0 else None,
+                                'total_win':     round(sum(wins), 0),
+                                'total_loss':    round(sum(losses), 0),
+                                'us': _stats(wins_us, losses_us, 'USD'),
+                                'tw': _stats(wins_tw, losses_tw, 'TWD'),
+                            })
+        except Exception as e:
+            ret['trades_error'] = str(e)
+
+        # 3) 未實現勝率（目前持倉浮盈/浮虧）
+        try:
+            current_positions = get_db_positions()
+            up_count, down_count, flat_count = 0, 0, 0
+            up_pnl_twd, down_pnl_twd = 0.0, 0.0
+            for p in current_positions:
+                pnl_raw = p.get('unrealizedPnL') or p.get('unrealizedPNL') or 0
+                try:
+                    pnl = float(pnl_raw)
+                except: continue
+                if pnl == 0:
+                    flat_count += 1; continue
+                broker = (p.get('broker') or '').lower()
+                # 美券損益是 USD，元大是 TWD
+                is_us = broker in ('ib','ibkr','schwab')
+                pnl_twd = pnl * 32.0 if is_us else pnl
+                if pnl_twd > 0:
+                    up_count += 1; up_pnl_twd += pnl_twd
+                else:
+                    down_count += 1; down_pnl_twd += pnl_twd
+            total_active = up_count + down_count + flat_count
+            if total_active > 0:
+                ret['unrealized'] = {
+                    'total_positions': total_active,
+                    'up':              up_count,
+                    'down':            down_count,
+                    'flat':            flat_count,
+                    'win_rate_pct':    round(up_count / (up_count + down_count) * 100, 1) if (up_count + down_count) else None,
+                    'total_up_twd':    round(up_pnl_twd, 0),
+                    'total_down_twd':  round(down_pnl_twd, 0),
+                    'net_pnl_twd':     round(up_pnl_twd + down_pnl_twd, 0),
+                }
+        except Exception as e:
+            ret['unrealized_error'] = str(e)
+
+        # 4) 資料品質評級
+        def grade_days(d):
+            if d >= 90: return ('🟢', 'enough', f'{d} 天，足夠評估')
+            if d >= 30: return ('🟡', 'accumulating', f'{d} 天，數據累積中')
+            return ('🔴', 'insufficient', f'{d} 天，樣本太短不可參考')
+        def grade_trades(n):
+            if n >= 30: return ('🟢', 'enough', f'{n} 筆，足夠評估')
+            if n >= 10: return ('🟡', 'accumulating', f'{n} 筆，樣本偏少建議再觀察')
+            return ('🔴', 'insufficient', f'{n} 筆，樣本不足')
+
+        ret['quality'] = {
+            'return': grade_days(ret.get('period_days', 0)),
+            'trades': grade_trades(ret.get('closed_trades', 0)),
+        }
+        return jsonify({'status': 'success', 'data': ret})
+    except Exception as e:
+        import traceback
+        sys.stderr.write(f"[ERROR] /api/performance: {e}\n{traceback.format_exc()}\n")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/cash-status', methods=['GET'])
+def api_cash_status():
+    """總資金水位 = 持倉市值 + 現金備檔（最新一筆）
+    可動用現金 = 現金備檔 - 緊急預備金
+    """
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''SELECT total_mv_twd, cash_reserve_twd, emergency_reserve_twd, date
+                     FROM equity_snapshots
+                     ORDER BY date DESC LIMIT 1''')
+        r = c.fetchone()
+        conn.close()
+        if not r:
+            return jsonify({'status': 'success', 'data': None, 'message': '尚無快照'})
+        holdings_twd = float(r['total_mv_twd'] or 0)
+        cash_reserve = float(r['cash_reserve_twd'] or 0)
+        emerg_reserve = float(r['emergency_reserve_twd'] or 0)
+        usable_cash  = max(0, cash_reserve - emerg_reserve)
+        total_assets = holdings_twd + cash_reserve
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'date':              r['date'],
+                'total_assets_twd':  round(total_assets, 0),
+                'holdings_twd':      round(holdings_twd, 0),
+                'cash_reserve_twd':  round(cash_reserve, 0),
+                'emergency_reserve_twd': round(emerg_reserve, 0),
+                'usable_cash_twd':   round(usable_cash, 0),
+                'holdings_pct':      round(holdings_twd / total_assets * 100, 1) if total_assets else 0,
+                'usable_pct':        round(usable_cash  / total_assets * 100, 1) if total_assets else 0,
+                'emergency_pct':     round(emerg_reserve / total_assets * 100, 1) if total_assets else 0,
+                'cash_reserve_filled': cash_reserve > 0,
+            }
+        })
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

@@ -779,6 +779,44 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
     <div class="page active" id="p1" role="region" aria-live="polite">
       <div class="page-heading">📊 投資組合總覽</div>
       <div class="banner">🔄 自動同步已啟用 — 數據每 30 秒更新一次，最後同步：10:32:07 ｜ 景氣象限：<strong>擴張</strong></div>
+
+      <!-- 總資金水位 -->
+      <div id="cash-status-card" class="kpi-card" style="margin-bottom:16px;padding:18px 22px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+          <div>
+            <div class="kpi-label" style="margin-bottom:4px">💰 總資金水位</div>
+            <div class="kpi-val" id="cs-total" style="font-size:28px">--</div>
+          </div>
+          <div id="cs-hint" style="font-size:12px;color:var(--text-muted);text-align:right;line-height:1.5">
+            載入中...
+          </div>
+        </div>
+        <!-- 三段橫條 -->
+        <div id="cs-bar" style="display:flex;height:14px;width:100%;border-radius:7px;overflow:hidden;background:var(--bg-raised);margin-bottom:10px">
+          <div id="cs-bar-hold"  style="background:var(--green);height:100%;width:0%"  title="持倉"></div>
+          <div id="cs-bar-cash"  style="background:var(--accent);height:100%;width:0%" title="可動用現金"></div>
+          <div id="cs-bar-emerg" style="background:var(--yellow);height:100%;width:0%" title="緊急預備金"></div>
+        </div>
+        <!-- 四個並排數字 -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:13px">
+          <div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">持倉</div>
+            <div style="font-weight:700" id="cs-hold">--</div>
+            <div style="font-size:11px;color:var(--text-muted)" id="cs-hold-pct">--</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em">可動用現金</div>
+            <div style="font-weight:700;color:var(--accent)" id="cs-cash">--</div>
+            <div style="font-size:11px;color:var(--text-muted)" id="cs-cash-pct">--</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--yellow);text-transform:uppercase;letter-spacing:.08em">緊急預備金</div>
+            <div style="font-weight:700;color:var(--yellow)" id="cs-emerg">--</div>
+            <div style="font-size:11px;color:var(--text-muted)" id="cs-emerg-pct">--</div>
+          </div>
+        </div>
+      </div>
+
       <div class="kpi-grid kpi-grid-4">
         <div class="kpi-card">
           <div class="kpi-label">💰 總資產</div>
@@ -2114,52 +2152,125 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
 
     <!-- PAGE 9: 績效 -->
     <div class="page" id="p9">
-      <div class="page-heading">📈 績效分析</div>
-      <div class="kpi-grid kpi-grid-4">
-        <div class="kpi-card"><div class="kpi-label">年度報酬</div><div class="kpi-val green">+24.5%</div><div class="kpi-sub"><span class="up">▲ 跑贏 S&amp;P500 +8.5%</span></div></div>
-        <div class="kpi-card"><div class="kpi-label">月均報酬</div><div class="kpi-val blue">+2.1%</div><div class="kpi-sub">過去 12 個月均值</div></div>
-        <div class="kpi-card"><div class="kpi-label">勝率</div><div class="kpi-val yellow">62%</div><div class="kpi-sub">148 勝 / 91 負</div></div>
-        <div class="kpi-card"><div class="kpi-label">獲利因子</div><div class="kpi-val purple">2.15</div><div class="kpi-sub">盈虧比 1 : 2.15</div></div>
+      <div class="page-heading">📈 績效分析 <span id="p9-quality-banner" style="font-size:12px;color:var(--text-muted);font-weight:400;margin-left:8px"></span></div>
+
+      <!-- 資料來源圖例 -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);margin-bottom:16px;padding:10px 14px;background:var(--bg-raised);border-radius:8px;border:1px solid var(--border-soft)">
+        <span><span style="color:var(--green);font-weight:700">✓ 真實</span> — 來自 SQLite / Sheet / yfinance</span>
+        <span><span style="color:var(--yellow);font-weight:700">⚠ 真實但有警告</span> — 樣本不足或計算有限制</span>
+        <span><span style="color:var(--red);font-weight:700">🔴 示範資料</span> — 寫死的 demo，尚未串接真實資料</span>
       </div>
-      <div class="chart-card" style="margin-bottom:20px">
-        <div class="chart-title">年度權益曲線 <span class="chart-subtitle">vs 大盤基準</span></div>
+      <div class="kpi-grid kpi-grid-4">
+        <div class="kpi-card" style="border-left:3px solid var(--green)">
+          <div class="kpi-label">
+            <span style="color:var(--green);font-weight:700">✓</span> 累積報酬
+            <span class="qbadge" id="qb-ret" style="float:right;font-size:11px;cursor:help">🟡</span>
+          </div>
+          <div class="kpi-val green" id="kp-ret">--</div>
+          <div class="kpi-sub" id="kp-ret-sub">--</div>
+        </div>
+        <div class="kpi-card" style="border-left:3px solid var(--green)">
+          <div class="kpi-label">
+            <span style="color:var(--green);font-weight:700">✓</span> 跑贏大盤
+            <span class="qbadge" id="qb-bench" style="float:right;font-size:11px;cursor:help">🟡</span>
+          </div>
+          <div class="kpi-val blue" id="kp-bench">--</div>
+          <div class="kpi-sub" id="kp-bench-sub">--</div>
+        </div>
+        <div class="kpi-card" style="border-left:3px solid var(--green)">
+          <div class="kpi-label">
+            <span style="color:var(--green);font-weight:700">✓</span> 勝率
+            <span class="qbadge" id="qb-win" style="float:right;font-size:11px;cursor:help">🟡</span>
+          </div>
+          <div class="kpi-val yellow" id="kp-win">--</div>
+          <div class="kpi-sub" id="kp-win-sub">--</div>
+        </div>
+        <div class="kpi-card" style="border-left:3px solid var(--yellow)">
+          <div class="kpi-label">
+            <span style="color:var(--yellow);font-weight:700">⚠</span> 盈虧比
+            <span class="qbadge" id="qb-pf" style="float:right;font-size:11px;cursor:help">🟡</span>
+          </div>
+          <div class="kpi-val purple" id="kp-pf">--</div>
+          <div class="kpi-sub" id="kp-pf-sub">--</div>
+        </div>
+      </div>
+
+      <!-- 分市場明細：美股 / 台股 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="kpi-card" style="padding:14px 18px;border-left:3px solid var(--green)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <div style="font-weight:700;color:var(--accent)">
+              <span style="color:var(--green)">✓</span> 🇺🇸 美股（USD）
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)" id="kp-us-meta">--</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+            <div><div style="color:var(--text-muted);font-size:10px">勝率</div><div style="font-weight:700" id="kp-us-win">--</div></div>
+            <div><div style="color:var(--text-muted);font-size:10px">盈虧比</div><div style="font-weight:700" id="kp-us-pf">--</div></div>
+            <div><div style="color:var(--text-muted);font-size:10px">淨損益</div><div style="font-weight:700" id="kp-us-net">--</div></div>
+          </div>
+        </div>
+        <div class="kpi-card" style="padding:14px 18px;border-left:3px solid var(--green)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <div style="font-weight:700;color:var(--green)">
+              <span style="color:var(--green)">✓</span> 🇹🇼 台股（TWD）
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)" id="kp-tw-meta">--</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+            <div><div style="color:var(--text-muted);font-size:10px">勝率</div><div style="font-weight:700" id="kp-tw-win">--</div></div>
+            <div><div style="color:var(--text-muted);font-size:10px">盈虧比</div><div style="font-weight:700" id="kp-tw-pf">--</div></div>
+            <div><div style="color:var(--text-muted);font-size:10px">淨損益</div><div style="font-weight:700" id="kp-tw-net">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 未實現（目前持倉浮盈/浮虧） -->
+      <div class="kpi-card" style="padding:14px 18px;margin-bottom:20px;border-left:3px solid var(--yellow)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div style="font-weight:700">
+            <span style="color:var(--yellow)">⚠</span> 📊 未實現（目前持倉）
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px"
+              title="真實資料但有限制：&#10;1. Schwab 部分持倉 PNL 為 NULL（DB 未抓到），會少算&#10;2. 浮動勝率會隨股價跳動&#10;3. 未實現獲利尚未實現，不能當已賺取">ℹ 真實但有警告</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)" id="kp-un-meta">--</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px">
+          <div><div style="color:var(--text-muted);font-size:10px">浮動勝率</div><div style="font-weight:700" id="kp-un-win">--</div></div>
+          <div><div style="color:var(--text-muted);font-size:10px">浮盈</div><div style="font-weight:700;color:var(--green)" id="kp-un-up">--</div></div>
+          <div><div style="color:var(--text-muted);font-size:10px">浮虧</div><div style="font-weight:700;color:var(--red)" id="kp-un-down">--</div></div>
+          <div><div style="color:var(--text-muted);font-size:10px">淨</div><div style="font-weight:700" id="kp-un-net">--</div></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;border-left:3px solid var(--green)">
+        <div class="chart-title">
+          <span style="color:var(--green)">✓</span> NAV 曲線 <span class="chart-subtitle">vs 0050（基準 100）</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:6px">— 自記錄以來</span>
+        </div>
         <div class="chart-wrap" style="height:220px"><canvas id="c-perf-equity"></canvas></div>
       </div>
       <div class="chart-row chart-row-11">
-        <div class="chart-card">
-          <div class="chart-title">月度報酬率</div>
+        <div class="chart-card" style="border-left:3px solid var(--green)">
+          <div class="chart-title">
+            <span style="color:var(--green)">✓</span> 每日報酬率
+            <span style="font-size:11px;color:var(--text-muted);margin-left:6px">— 已扣出入金</span>
+          </div>
           <div class="chart-wrap" style="height:200px"><canvas id="c-monthly-returns"></canvas></div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">交易結果分佈</div>
+        <div class="chart-card" style="border-left:3px solid var(--green)">
+          <div class="chart-title">
+            <span style="color:var(--green)">✓</span> 交易結果分佈
+            <span style="font-size:11px;color:var(--text-muted);margin-left:6px">— 已平倉，合併後</span>
+          </div>
           <div class="chart-wrap" style="height:200px"><canvas id="c-trade-dist"></canvas></div>
         </div>
       </div>
-      <div class="section-head">📅 月度績效熱力表</div>
-      <div class="table-wrap">
-        <table class="heatmap-table">
-          <thead><tr><th>指標</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th><th>Jan</th><th>Feb</th></tr></thead>
-          <tbody>
-            <tr>
-              <td style="font-weight:600;color:var(--text-primary);background:var(--bg-raised)">報酬%</td>
-              <td class="hm-pos">+3.2%</td><td class="hm-neg">-1.1%</td><td class="hm-pos">+4.5%</td><td class="hm-pos">+2.8%</td>
-              <td class="hm-neg">-0.7%</td><td class="hm-pos">+3.9%</td><td class="hm-pos">+1.6%</td><td class="hm-pos">+5.2%</td>
-              <td class="hm-neg">-2.3%</td><td class="hm-pos">+3.1%</td><td class="hm-pos">+1.8%</td><td class="hm-pos">+2.4%</td>
-            </tr>
-            <tr>
-              <td style="font-weight:600;color:var(--text-primary);background:var(--bg-raised)">交易數</td>
-              <td class="hm-neu">18</td><td class="hm-neu">22</td><td class="hm-neu">19</td><td class="hm-neu">24</td>
-              <td class="hm-neu">16</td><td class="hm-neu">21</td><td class="hm-neu">20</td><td class="hm-neu">26</td>
-              <td class="hm-neu">17</td><td class="hm-neu">23</td><td class="hm-neu">19</td><td class="hm-neu">15</td>
-            </tr>
-            <tr>
-              <td style="font-weight:600;color:var(--text-primary);background:var(--bg-raised)">勝率</td>
-              <td class="hm-pos">67%</td><td class="hm-neg">45%</td><td class="hm-pos">68%</td><td class="hm-pos">63%</td>
-              <td class="hm-neg">50%</td><td class="hm-pos">71%</td><td class="hm-pos">60%</td><td class="hm-pos">73%</td>
-              <td class="hm-neg">41%</td><td class="hm-pos">65%</td><td class="hm-pos">58%</td><td class="hm-pos">67%</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="section-head">
+        <span style="color:var(--green)">✓</span> 📅 每日損益熱力表
+        <span style="font-size:11px;color:var(--text-muted);margin-left:6px">— 過去 60 天，已扣出入金</span>
+      </div>
+      <div id="p9-daily-heatmap" style="padding:14px;background:var(--bg-raised);border-radius:8px;min-height:60px">
+        <div style="color:var(--text-muted);text-align:center;padding:20px">⏳ 載入中...</div>
       </div>
     </div>
 
@@ -4068,49 +4179,190 @@ function initPageCharts(pid) {
     });
   }
 
-  // PAGE 9: Performance
+  // PAGE 9: Performance — 全部真實資料
   if (pid === 'p9') {
-    const months12 = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-    const equity = [100000,104500,109000,107700,112500,116400,121800,119100,122900,124700,126200,127800];
-    const spy    = [100000,102800,105600,104000,107200,110100,114800,112400,116000,118200,119800,121500];
-    const optsEq = baseOpts(true);
-    optsEq.scales.y.ticks.callback = v => `$${(v/1000).toFixed(0)}k`;
-    chartInstances['c-perf-equity'] = new Chart(document.getElementById('c-perf-equity'), {
-      type: 'line',
-      data: {
-        labels: months12,
-        datasets: [
-          { label: 'Krystal', data: equity, borderColor: cv('--accent'), backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, tension: 0.35 },
-          { label: 'S&P 500', data: spy,    borderColor: cv('--text-muted'), backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, tension: 0.35 }
-        ]
-      },
-      options: optsEq
-    });
-    const monthlyPct = [3.2,-1.1,4.5,2.8,-0.7,3.9,1.6,5.2,-2.3,3.1,1.8,2.4];
-    const optsBar = baseOpts(false);
-    optsBar.scales.y.ticks.callback = v => v + '%';
-    chartInstances['c-monthly-returns'] = new Chart(document.getElementById('c-monthly-returns'), {
-      type: 'bar',
-      data: {
-        labels: months12,
-        datasets: [{
-          data: monthlyPct,
-          backgroundColor: monthlyPct.map(v => v >= 0 ? cv('--green-soft') : cv('--red-soft')),
-          borderColor: monthlyPct.map(v => v >= 0 ? cv('--green') : cv('--red')),
-          borderWidth: 1.5, borderRadius: 3
-        }]
-      },
-      options: optsBar
-    });
-    chartInstances['c-trade-dist'] = new Chart(document.getElementById('c-trade-dist'), {
-      type: 'doughnut',
-      data: {
-        labels: ['盈利','虧損','持平'],
-        datasets: [{ data: [68,22,10], backgroundColor: [cv('--green'), cv('--red'), cv('--yellow')], borderWidth: 0, hoverOffset: 6 }]
-      },
-      options: { ...noAxesOpts(true), cutout: '60%' }
-    });
+    loadPerformance();   // 真實 KPI（勝率/盈虧比/累積報酬）
+    loadPerformanceCharts();  // 真實圖表
   }
+}
+
+// ── 績效圖表（真實資料） ─────────────────────────────────────
+async function loadPerformanceCharts() {
+  // ── 1. 自記錄以來 NAV vs 0050 曲線 ────────────────────────
+  try {
+    const histRes = await fetch(`${API_BASE}/api/equity-history?days=365`);
+    const histJson = await histRes.json();
+    const hist = (histJson.status === 'success') ? (histJson.data || []) : [];
+
+    if (hist.length >= 2) {
+      const labels = hist.map(r => r.date.slice(5));   // MM-DD
+      const navStart = hist[0].total_mv_twd;
+      const navIdx = hist.map(r => (r.total_mv_twd / navStart * 100));
+
+      // 同期 0050 報酬（基準）— 從 yfinance 抓
+      let benchIdx = null;
+      try {
+        const bRes = await fetch(`${API_BASE}/api/benchmark-history?symbol=0050.TW&start=${hist[0].date}&end=${hist[hist.length-1].date}`);
+        const bJson = await bRes.json();
+        if (bJson.status === 'success' && bJson.data?.length) {
+          // 把 bench 對齊到 hist 的日期
+          const bMap = {};
+          bJson.data.forEach(r => bMap[r.date] = r.close);
+          const bDates = Object.keys(bMap).sort();
+          const bStart = bMap[bDates[0]];
+          benchIdx = hist.map(r => {
+            // 找 r.date 或之前最近的 bench price
+            let v = bMap[r.date];
+            if (!v) {
+              for (let d = bDates.length - 1; d >= 0; d--) {
+                if (bDates[d] <= r.date) { v = bMap[bDates[d]]; break; }
+              }
+            }
+            return v ? (v / bStart * 100) : null;
+          });
+        }
+      } catch (e) { console.warn('benchmark fetch failed', e); }
+
+      const opts = baseOpts(true);
+      opts.scales.y.ticks.callback = v => v.toFixed(0);
+      opts.plugins.tooltip.callbacks = {
+        label: ctx => `${ctx.dataset.label}: ${ctx.raw?.toFixed(2)} (${ctx.raw >= 100 ? '+' : ''}${(ctx.raw-100).toFixed(2)}%)`
+      };
+      const datasets = [{
+        label: 'Krystal 帳戶', data: navIdx,
+        borderColor: cv('--accent'), backgroundColor: 'hsla(217,91%,63%,0.06)',
+        fill: true, borderWidth: 2, pointRadius: 3, tension: 0.25
+      }];
+      if (benchIdx) {
+        datasets.push({
+          label: '0050（基準）', data: benchIdx,
+          borderColor: cv('--text-muted'), backgroundColor: 'transparent',
+          borderWidth: 1.5, borderDash: [4,4], pointRadius: 0, tension: 0.25
+        });
+      }
+      if (chartInstances['c-perf-equity']) chartInstances['c-perf-equity'].destroy();
+      chartInstances['c-perf-equity'] = new Chart(document.getElementById('c-perf-equity'), {
+        type: 'line', data: { labels, datasets }, options: opts
+      });
+    }
+
+    // ── 2. 每日報酬率 bar ──────────────────────────────────
+    if (hist.length >= 2) {
+      const labels = [], pctArr = [];
+      for (let i = 1; i < hist.length; i++) {
+        labels.push(hist[i].date.slice(5));
+        const cur = hist[i], prev = hist[i-1];
+        const cash = cur.cash_flow_twd || 0;
+        // 報酬率 = (今市值 - 昨市值 - 出入金) / 昨市值 × 100
+        const pct = ((cur.total_mv_twd - prev.total_mv_twd - cash) / prev.total_mv_twd) * 100;
+        pctArr.push(parseFloat(pct.toFixed(2)));
+      }
+      const opts = baseOpts(false);
+      opts.scales.y.ticks.callback = v => v + '%';
+      if (chartInstances['c-monthly-returns']) chartInstances['c-monthly-returns'].destroy();
+      chartInstances['c-monthly-returns'] = new Chart(document.getElementById('c-monthly-returns'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: '每日報酬率', data: pctArr,
+            backgroundColor: pctArr.map(v => v >= 0 ? cv('--green-soft') : cv('--red-soft')),
+            borderColor:     pctArr.map(v => v >= 0 ? cv('--green')      : cv('--red')),
+            borderWidth: 1.5, borderRadius: 3
+          }]
+        },
+        options: opts
+      });
+    }
+  } catch (e) {
+    console.warn('NAV chart failed:', e);
+  }
+
+  // ── 3. 交易結果分佈 ─────────────────────────────────────
+  try {
+    const perfRes = await fetch(`${API_BASE}/api/performance`);
+    const perfJson = await perfRes.json();
+    if (perfJson.status === 'success' && perfJson.data) {
+      const d = perfJson.data;
+      const data = [d.wins || 0, d.losses || 0];
+      if (chartInstances['c-trade-dist']) chartInstances['c-trade-dist'].destroy();
+      chartInstances['c-trade-dist'] = new Chart(document.getElementById('c-trade-dist'), {
+        type: 'doughnut',
+        data: {
+          labels: [`盈利 ${d.wins || 0} 筆`, `虧損 ${d.losses || 0} 筆`],
+          datasets: [{
+            data, backgroundColor: [cv('--green'), cv('--red')],
+            borderWidth: 0, hoverOffset: 6
+          }]
+        },
+        options: {
+          ...noAxesOpts(true), cutout: '60%',
+          plugins: {
+            ...noAxesOpts(true).plugins,
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const total = data[0] + data[1];
+                  const pct = total ? (ctx.raw / total * 100).toFixed(1) : 0;
+                  return `${ctx.label}: ${pct}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  } catch (e) { console.warn('trade dist failed', e); }
+
+  // ── 4. 每日損益熱力表（替換月度熱力表） ────────────────
+  try {
+    renderDailyPnlHeatmap();
+  } catch (e) { console.warn('heatmap failed', e); }
+}
+
+// ── 每日損益熱力表 ────────────────────────────────────────
+async function renderDailyPnlHeatmap() {
+  const container = document.getElementById('p9-daily-heatmap');
+  if (!container) return;
+  const res = await fetch(`${API_BASE}/api/equity-history?days=60`);
+  const json = await res.json();
+  if (json.status !== 'success' || !json.data?.length) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text-muted);text-align:center">資料不足</div>';
+    return;
+  }
+  const data = json.data;
+  if (data.length < 2) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text-muted);text-align:center">資料不足，需 ≥2 個快照</div>';
+    return;
+  }
+  // 計算每日報酬率
+  const days = [];
+  for (let i = 1; i < data.length; i++) {
+    const cash = data[i].cash_flow_twd || 0;
+    const delta = data[i].total_mv_twd - data[i-1].total_mv_twd - cash;
+    const pct = (delta / data[i-1].total_mv_twd) * 100;
+    days.push({ date: data[i].date, delta, pct });
+  }
+  // 找 min/max for color scaling
+  const maxAbs = Math.max(...days.map(d => Math.abs(d.pct))) || 1;
+  const cellColor = pct => {
+    const intensity = Math.min(1, Math.abs(pct) / maxAbs);
+    const alpha = 0.15 + intensity * 0.75;
+    return pct >= 0
+      ? `hsla(0, 82%, 62%, ${alpha})`    // 紅=漲（台股慣例）
+      : `hsla(152, 62%, 36%, ${alpha})`; // 綠=跌
+  };
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+  days.forEach(d => {
+    const sign = d.pct >= 0 ? '+' : '';
+    html += `<div style="min-width:54px;padding:8px 6px;background:${cellColor(d.pct)};border-radius:6px;text-align:center;cursor:help"
+              title="${d.date}\n損益 ${sign}NT$${Math.round(d.delta).toLocaleString()}\n報酬率 ${sign}${d.pct.toFixed(2)}%">
+              <div style="font-size:9px;color:var(--text-muted)">${d.date.slice(5)}</div>
+              <div style="font-size:11px;font-weight:700;color:${d.pct >= 0 ? 'var(--green)' : 'var(--red)'}">${sign}${d.pct.toFixed(1)}%</div>
+            </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // ── Clock ──────────────────────────────────────────────────
@@ -4274,7 +4526,10 @@ async function loadBrokerPositions() {
 
       globalUsTWD = ibMV + schwabMV;
       globalTwTWD = yuantaMV;
-      
+
+      // 拉總資金水位卡片
+      loadCashStatus();
+
       const allocCashTWD = parseFloat(localStorage.getItem('cashReserveTWD') || '0');
       const allocTotal = globalUsTWD + globalTwTWD + allocCashTWD;
       if (allocTotal > 0) {
@@ -6819,6 +7074,193 @@ const API_BASE = (
   window.location.port === '8080' ||
   window.location.port === '8889'
 ) ? 'http://127.0.0.1:9999' : window.location.origin;
+
+// ── 績效分析（真實資料） ─────────────────────────────────────
+async function loadPerformance() {
+  try {
+    const res  = await fetch(`${API_BASE}/api/performance`);
+    const json = await res.json();
+    if (json.status !== 'success') return;
+    const d = json.data || {};
+    const set = (id, txt, color) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = txt;
+      if (color) el.style.color = color;
+    };
+    const setTip = (id, tip) => {
+      const el = document.getElementById(id);
+      if (el) el.title = tip;
+    };
+
+    // 1) 累積報酬
+    if (d.cum_return_pct != null) {
+      const sign = d.cum_return_pct >= 0 ? '+' : '';
+      set('kp-ret', `${sign}${d.cum_return_pct.toFixed(2)}%`,
+          d.cum_return_pct >= 0 ? 'var(--green)' : 'var(--red)');
+      set('kp-ret-sub', `${d.period_start} ~ ${d.period_end}（${d.period_days} 天）`);
+    } else {
+      set('kp-ret', '--');
+      set('kp-ret-sub', '資料不足');
+    }
+
+    // 2) 跑贏大盤
+    if (d.alpha_pct != null) {
+      const sign = d.alpha_pct >= 0 ? '+' : '';
+      set('kp-bench', `${sign}${d.alpha_pct.toFixed(2)}%`,
+          d.alpha_pct >= 0 ? 'var(--green)' : 'var(--red)');
+      set('kp-bench-sub', `vs ${d.bench_name}（${d.bench_return_pct >= 0 ? '+' : ''}${d.bench_return_pct}%）`);
+    } else {
+      set('kp-bench', '--');
+      set('kp-bench-sub', '基準資料不足');
+    }
+
+    // 3) 勝率
+    if (d.win_rate_pct != null) {
+      set('kp-win', `${d.win_rate_pct.toFixed(1)}%`);
+      const mergedNote = (d.raw_trade_count && d.closed_trades && d.raw_trade_count > d.closed_trades)
+        ? `（${d.raw_trade_count} 原始 → ${d.closed_trades} 合併）`
+        : '';
+      set('kp-win-sub', `${d.wins} 勝 / ${d.losses} 負 ${mergedNote}`);
+      // hover 顯示合併明細
+      const winEl = document.getElementById('kp-win-sub');
+      if (winEl && d.merged_log && d.merged_log.length) {
+        winEl.title = '已合併（同檔股票多次出場視為 1 筆）：\n' +
+          d.merged_log.map(m => `  ${m.symbol} (${m.broker}): ${m.count} 筆 → 淨 ${m.net_pnl >= 0 ? '+' : ''}${m.net_pnl} ${m.currency}`).join('\n');
+        winEl.style.cursor = 'help';
+      }
+    } else {
+      set('kp-win', '--');
+      set('kp-win-sub', '無已平倉紀錄');
+    }
+
+    // 4) 盈虧比（整體，全換 TWD）
+    if (d.profit_factor != null) {
+      const color = d.profit_factor >= 1.5 ? 'var(--green)'
+                  : d.profit_factor >= 1   ? 'var(--yellow)'
+                  :                          'var(--red)';
+      set('kp-pf', d.profit_factor.toFixed(2), color);
+      const warn = d.profit_factor < 1 ? ' ⚠️ 贏不過輸' : '';
+      set('kp-pf-sub', `全換 TWD 計算${warn}（市場差異見下方明細）`);
+    } else {
+      set('kp-pf', '--');
+      set('kp-pf-sub', '無已平倉紀錄');
+    }
+
+    // 4.5) 分市場明細
+    const fillMarket = (prefix, m, currency) => {
+      if (!m || m.closed_trades == null || m.closed_trades === 0) {
+        set(`kp-${prefix}-win`, '--');
+        set(`kp-${prefix}-pf`,  '--');
+        set(`kp-${prefix}-net`, '--');
+        set(`kp-${prefix}-meta`, '無已平倉');
+        return;
+      }
+      const sym = currency === 'USD' ? '$' : 'NT$';
+      const net = m.total_win + m.total_loss;
+      const netSign = net >= 0 ? '+' : '';
+      const netColor = net >= 0 ? 'var(--green)' : 'var(--red)';
+      set(`kp-${prefix}-win`, `${m.win_rate_pct?.toFixed(1) ?? '--'}%`,
+          (m.win_rate_pct ?? 0) >= 50 ? 'var(--green)' : 'var(--red)');
+      const pfColor = m.profit_factor == null   ? ''
+                    : m.profit_factor >= 1.5 ? 'var(--green)'
+                    : m.profit_factor >= 1   ? 'var(--yellow)'
+                    :                          'var(--red)';
+      set(`kp-${prefix}-pf`, m.profit_factor != null ? m.profit_factor.toFixed(2) : '--', pfColor);
+      set(`kp-${prefix}-net`, `${netSign}${sym}${Math.round(net).toLocaleString()}`, netColor);
+      set(`kp-${prefix}-meta`, `${m.wins} 勝 / ${m.losses} 負（${m.closed_trades} 筆）`);
+    };
+    fillMarket('us', d.us, 'USD');
+    fillMarket('tw', d.tw, 'TWD');
+
+    // 4.6) 未實現（目前持倉）
+    const u = d.unrealized;
+    if (u && u.total_positions) {
+      set('kp-un-win', u.win_rate_pct != null ? `${u.win_rate_pct.toFixed(1)}%` : '--',
+          (u.win_rate_pct ?? 0) >= 50 ? 'var(--green)' : 'var(--red)');
+      set('kp-un-up',   `+NT$${Math.round(u.total_up_twd).toLocaleString()}`);
+      set('kp-un-down', `NT$${Math.round(u.total_down_twd).toLocaleString()}`);
+      const netSign = u.net_pnl_twd >= 0 ? '+' : '';
+      set('kp-un-net', `${netSign}NT$${Math.round(u.net_pnl_twd).toLocaleString()}`,
+          u.net_pnl_twd >= 0 ? 'var(--green)' : 'var(--red)');
+      set('kp-un-meta', `${u.up} 浮盈 / ${u.down} 浮虧${u.flat ? ` / ${u.flat} 平` : ''}（${u.total_positions} 檔）`);
+    } else {
+      set('kp-un-meta', '無持倉資料');
+    }
+
+    // 5) 資料品質標籤
+    const qRet = d.quality?.return  || [];
+    const qTr  = d.quality?.trades  || [];
+    const updateBadge = (id, q, kpiType) => {
+      const el = document.getElementById(id);
+      if (!el || !q.length) return;
+      el.textContent = q[0];
+      const tipMap = {
+        'return': `累積報酬基於 ${d.period_days || 0} 天市值快照\n${q[2]}\n\n標準：≥90 天 🟢 足夠 / ≥30 天 🟡 累積中 / <30 天 🔴 太短\n\n注意：未扣出入金可能讓報酬虛胖（已扣 ${(d.cash_flow_total || 0).toLocaleString()}）`,
+        'trades': `勝率／盈虧比基於 ${d.closed_trades || 0} 筆已平倉交易\n${q[2]}\n\n標準：≥30 筆 🟢 足夠 / ≥10 筆 🟡 累積中 / <10 筆 🔴 太少`,
+      };
+      el.title = tipMap[kpiType] || q[2];
+    };
+    updateBadge('qb-ret',   qRet, 'return');
+    updateBadge('qb-bench', qRet, 'return');
+    updateBadge('qb-win',   qTr,  'trades');
+    updateBadge('qb-pf',    qTr,  'trades');
+
+    // 6) 標題附註
+    const banner = document.getElementById('p9-quality-banner');
+    if (banner) {
+      const ret_q = qRet[0] || '🔴';
+      const tr_q  = qTr[0]  || '🔴';
+      banner.innerHTML = `資料品質：報酬 ${ret_q} ${d.period_days || 0} 天 ｜ 交易 ${tr_q} ${d.closed_trades || 0} 筆`;
+    }
+  } catch (e) {
+    console.warn('loadPerformance failed:', e);
+  }
+}
+
+// ── 總資金水位卡片 ──────────────────────────────────────────
+async function loadCashStatus() {
+  try {
+    const res  = await fetch(`${API_BASE}/api/cash-status`);
+    const json = await res.json();
+    if (json.status !== 'success' || !json.data) return;
+    const d = json.data;
+    const fmt = n => `NT$${Math.round(n).toLocaleString()}`;
+    const set = (id, txt, color) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = txt;
+      if (color) el.style.color = color;
+    };
+    set('cs-total', fmt(d.total_assets_twd));
+    set('cs-hold',  fmt(d.holdings_twd));
+    set('cs-hold-pct',  `${d.holdings_pct}%`);
+    set('cs-cash',  fmt(d.usable_cash_twd));
+    set('cs-cash-pct',  `${d.usable_pct}%`);
+    set('cs-emerg', fmt(d.emergency_reserve_twd));
+    set('cs-emerg-pct', `${d.emergency_pct}%`);
+
+    // 三段橫條
+    const setW = (id, pct) => {
+      const el = document.getElementById(id);
+      if (el) el.style.width = Math.max(0, pct) + '%';
+    };
+    setW('cs-bar-hold',  d.holdings_pct);
+    setW('cs-bar-cash',  d.usable_pct);
+    setW('cs-bar-emerg', d.emergency_pct);
+
+    const hint = document.getElementById('cs-hint');
+    if (hint) {
+      if (!d.cash_reserve_filled) {
+        hint.innerHTML = `<span style="color:var(--yellow)">⚠ 請去 Google Sheets 填寫今日「現金備檔(台幣)」</span>`;
+      } else {
+        hint.innerHTML = `更新日 ${d.date}<br>持倉 ${d.holdings_pct}% ｜ 現金 ${(d.usable_pct + d.emergency_pct).toFixed(1)}%`;
+      }
+    }
+  } catch (e) {
+    console.warn('loadCashStatus failed:', e);
+  }
+}
 
 // ── Open Trades / 當前持倉 (p6) — 從 broker_positions DB 抓取 ──────
 let allOpenTrades = [];   // 實際存放 broker positions

@@ -485,7 +485,7 @@ def fetch_macro_data(force_refresh: bool = False) -> dict:
 
     result["indicators"]["vix"] = {
         "value": _fmt_num(vix_val) if vix_val else "N/A",
-        "label": f"{_fmt_num(vix_val)} → {'平靜' if vix_val and vix_val < 20 else '恐慌'}" if vix_val else "N/A",
+        "label": f"{_fmt_num(vix_val)} → {'平靜' if vix_val and vix_val < 42 else '恐慌'}" if vix_val else "N/A",
         "signal": vix_signal,
         "signal_color": vix_color,
         "source": "Yahoo Finance: ^VIX",

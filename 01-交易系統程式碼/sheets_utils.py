@@ -530,42 +530,27 @@ def sync_broker_positions_and_log_trades(broker_name: str, new_positions: list) 
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # 檢查舊部位是否有變動或出清
+        # [已禁用 2026-05-12] 因 append_trade 欄位順序錯位，這段會寫垃圾資料到 trades sheet
+        # 而且 broker name normalization 不一致導致 false-positive。先停用，等修好整套
+        # broker name normalize + append_trade schema 對齊後再開啟。
+        AUTO_DETECT_CLOSE = False  # ← 設 True 才會自動寫入
         for old_p in old_broker_pos:
             sym = str(old_p.get('symbol', ''))
             old_qty = float(old_p.get('position', 0))
             if sym not in new_map:
                 # 已出清
-                logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已出清，寫入 trades。")
-                trade_record = {
-                    "id": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
-                    "日期": ts,
-                    "券商": broker_name,
-                    "標的": sym,
-                    "方向": "出清",
-                    "進場價": old_p.get('avgCost', ''),
-                    "出場價": old_p.get('marketPrice', old_p.get('currentPrice', '')),
-                    "數量": old_qty,
-                    "狀態": "已實現",
-                    "策略": "",
-                    "進場原因": "系統自動偵測",
-                    "出場原因": "系統自動偵測",
-                    "備註": "自 broker_positions 同步時自動記錄"
-                }
-                append_trade(trade_record)
-            else:
-                new_qty = float(new_map[sym].get('position', 0))
-                if new_qty < old_qty:
-                    # 部分出清
-                    logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 減少部位 ({old_qty} -> {new_qty})，寫入 trades。")
+                logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已出清"
+                            + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
+                if AUTO_DETECT_CLOSE:
                     trade_record = {
-                        "id": f"partial_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                        "id": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
                         "日期": ts,
                         "券商": broker_name,
                         "標的": sym,
-                        "方向": "部分出清",
+                        "方向": "出清",
                         "進場價": old_p.get('avgCost', ''),
-                        "出場價": new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', '')),
-                        "數量": old_qty - new_qty,
+                        "出場價": old_p.get('marketPrice', old_p.get('currentPrice', '')),
+                        "數量": old_qty,
                         "狀態": "已實現",
                         "策略": "",
                         "進場原因": "系統自動偵測",
@@ -573,6 +558,29 @@ def sync_broker_positions_and_log_trades(broker_name: str, new_positions: list) 
                         "備註": "自 broker_positions 同步時自動記錄"
                     }
                     append_trade(trade_record)
+            else:
+                new_qty = float(new_map[sym].get('position', 0))
+                if new_qty < old_qty:
+                    # 部分出清
+                    logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 減少部位 ({old_qty} -> {new_qty})"
+                                + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
+                    if AUTO_DETECT_CLOSE:
+                        trade_record = {
+                            "id": f"partial_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                            "日期": ts,
+                            "券商": broker_name,
+                            "標的": sym,
+                            "方向": "部分出清",
+                            "進場價": old_p.get('avgCost', ''),
+                            "出場價": new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', '')),
+                            "數量": old_qty - new_qty,
+                            "狀態": "已實現",
+                            "策略": "",
+                            "進場原因": "系統自動偵測",
+                            "出場原因": "系統自動偵測",
+                            "備註": "自 broker_positions 同步時自動記錄"
+                        }
+                        append_trade(trade_record)
                 elif new_qty > old_qty:
                     # 增加部位
                     logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 增加部位 ({old_qty} -> {new_qty})。")

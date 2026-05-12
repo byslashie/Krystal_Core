@@ -342,7 +342,7 @@ class SyncEngine:
                 strategy_name = row.get('策略名稱', '').strip()
                 strategy_id = row.get('ID', '').strip()
 
-                if '已批准' not in status or not strategy_name:
+                if not any(k in status for k in ['已批准', '完成', '已完成']) or not strategy_name:
                     continue
 
                 # 避免重複處理

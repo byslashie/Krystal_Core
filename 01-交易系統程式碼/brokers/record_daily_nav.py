@@ -33,7 +33,11 @@ NAV_COLUMNS = [
     "美元匯率",
     "現金備檔(台幣)",  # 既有欄位，保留位置
     "當日已實現(台幣)", "當日出入金(台幣)", "權益淨變動(台幣)",
+    "緊急預備金(台幣)",
 ]
+
+# 緊急預備金預設值（首次寫入時填入；之後讀 Sheet 已填的值）
+EMERGENCY_RESERVE_DEFAULT = 200000
 
 USD_TWD_RATE = 32.0
 
@@ -384,7 +388,27 @@ def main() -> None:
     print(f"[出入金]   {cash_flow_twd:+,.0f} TWD")
     print(f"[淨變動]   {net_equity_change_twd:+,.0f} TWD  (dMV - 出入金)")
 
-    # ── 7. 組 row ──────────────────────────────────────────────
+    # ── 7. 沿用上一筆的「現金備檔」「緊急預備金」（使用者手填值，重跑時不該被覆蓋） ─
+    def _carry_over(col_name: str, default: str = "") -> str:
+        try:
+            if not vals or not vals[0] or col_name not in vals[0]:
+                return default
+            idx = vals[0].index(col_name)
+            for r in reversed(vals[1:]):
+                if r and len(r) > idx:
+                    v = r[idx]
+                    if v and str(v).strip() not in ('', '--', 'None'):
+                        return v
+        except Exception:
+            pass
+        return default
+
+    cash_reserve_carry  = _carry_over("現金備檔(台幣)", "")
+    emerg_reserve_carry = _carry_over("緊急預備金(台幣)", f"NT${EMERGENCY_RESERVE_DEFAULT:,}")
+    print(f"[現金備檔] 沿用: {cash_reserve_carry or '(空)'}")
+    print(f"[緊急預備金] 沿用: {emerg_reserve_carry}")
+
+    # ── 7.5 組 row ──────────────────────────────────────────────
     def nt(v): return f"NT${v:,.0f}"
     row = [
         now_dt,
@@ -394,8 +418,9 @@ def main() -> None:
         s_mv, s_pnl, schwab_unrealized_pct,
         nt(y_mv), nt(y_pnl), yuanta_unrealized_pct,
         USD_TWD_RATE,
-        "",  # 現金備檔(台幣) — 留空，由你手填
+        cash_reserve_carry,  # 現金備檔(台幣) — 沿用上一筆，使用者可手動覆蓋
         nt(realized_pnl_twd), nt(cash_flow_twd), nt(net_equity_change_twd),
+        emerg_reserve_carry,
     ]
 
     # ── 8. 確保 Header（safe migration：永不清資料） ─────────────
@@ -446,16 +471,20 @@ def main() -> None:
     try:
         DB_PATH = PROJECT_ROOT / "dashboard_v8" / "broker_positions.db"
         if DB_PATH.exists():
+            cash_reserve_num  = _safe_float(cash_reserve_carry)
+            emerg_reserve_num = _safe_float(emerg_reserve_carry)
             conn = sqlite3.connect(str(DB_PATH))
             c = conn.cursor()
             c.execute('''INSERT OR REPLACE INTO equity_snapshots
                          (date, ib_mv_usd, schwab_mv_usd, yuanta_mv_twd,
                           total_mv_twd, total_pnl_twd, usd_twd_rate, notes,
-                          realized_pnl_twd, cash_flow_twd, net_equity_change_twd)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                          realized_pnl_twd, cash_flow_twd, net_equity_change_twd,
+                          cash_reserve_twd, emergency_reserve_twd)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                       (today_str, i_mv, s_mv, y_mv,
                        total_mv_twd, total_unrealized_twd, USD_TWD_RATE, '',
-                       realized_pnl_twd, cash_flow_twd, net_equity_change_twd))
+                       realized_pnl_twd, cash_flow_twd, net_equity_change_twd,
+                       cash_reserve_num, emerg_reserve_num))
             conn.commit()
             conn.close()
             print(f"[OK] SQLite equity_snapshots 已更新（{today_str}）")
