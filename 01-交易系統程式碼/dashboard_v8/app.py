@@ -2353,8 +2353,20 @@ def api_rs_scores():
             return jsonify({'status': 'success', 'data': {}})
 
         # 預先下載兩個基準指數歷史
-        bench_tw   = yf.download('0050.TW', period='2y', progress=False, auto_adjust=True)['Close'].squeeze()
-        bench_us   = yf.download('SPY',     period='2y', progress=False, auto_adjust=True)['Close'].squeeze()
+        def download_bench(ticker):
+            df = yf.download(ticker, period='2y', progress=False, auto_adjust=True)
+            if 'Close' in df.columns:
+                if isinstance(df.columns, pd.MultiIndex):
+                    return df['Close'].iloc[:, 0]
+                return df['Close']
+            return pd.Series()
+
+        bench_tw = download_bench('0050.TW')
+        bench_us = download_bench('SPY')
+        
+        if bench_tw.empty or bench_us.empty:
+             return jsonify({'status': 'error', 'message': '無法下載基準指數數據'})
+
         bench_tw_today = float(bench_tw.iloc[-1])
         bench_us_today = float(bench_us.iloc[-1])
 
@@ -2373,9 +2385,17 @@ def api_rs_scores():
             bench_name  = '0050' if is_tw else 'SPY'
 
             hist = yf.download(sym_yf, period='2y', progress=False, auto_adjust=True)
-            if hist.empty:
+            if hist.empty or 'Close' not in hist.columns:
                 return None
-            closes = hist['Close'].squeeze()
+            
+            if isinstance(hist.columns, pd.MultiIndex):
+                closes = hist['Close'].iloc[:, 0]
+            else:
+                closes = hist['Close']
+            
+            if closes.empty:
+                return None
+                
             today_px = float(closes.iloc[-1])
 
             # 滾動視窗 RS = 個股漲幅 - 基準漲幅（差值，單位 pp）

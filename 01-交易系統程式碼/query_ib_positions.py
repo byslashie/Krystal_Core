@@ -4,10 +4,17 @@
 避免 Flask 多線程環境中的事件循環問題
 """
 
+import asyncio
 import json
 import sys
 import logging
 from datetime import datetime
+
+# Python 3.14 相容：ib_insync 需要 event loop 預先建立
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stderr)
 logger = logging.getLogger(__name__)
@@ -17,7 +24,7 @@ try:
 
     # 連接 IB
     ib = IB()
-    ib.connect(host='127.0.0.1', port=7496, clientId=199, readonly=True)
+    ib.connect(host='127.0.0.1', port=7497, clientId=199, readonly=True)
 
     if not ib.isConnected():
         print(json.dumps({
