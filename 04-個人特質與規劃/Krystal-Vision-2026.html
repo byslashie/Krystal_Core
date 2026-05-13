@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Krystal · Soul & System 2026</title>
+<title>Krystal · Soul & System 2026 (v1.1 校準版)</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -25,7 +25,7 @@
 
 body {
     background: var(--bg);
-    background-image: 
+    background-image:
         radial-gradient(circle at 20% 20%, rgba(147, 51, 234, 0.03) 0%, transparent 40%),
         radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 40%);
     color: var(--text);
@@ -383,14 +383,172 @@ body {
     opacity: 0.6;
 }
 
+/* --- LIFESTYLE 2030 VIEW (v1.1 新增) --- */
+.lifestyle-view { max-width: 1400px; margin: 0 auto; padding: 7rem 2rem 4rem; }
+.lifestyle-hero {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(147, 51, 234, 0.05));
+    padding: 5rem 3rem;
+    border-radius: 3rem;
+    margin-bottom: 4rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+    text-align: center;
+}
+.lifestyle-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+}
+.lifestyle-hero .accent-text {
+    color: var(--primary);
+}
+.lifestyle-hero .sub {
+    font-size: 1.3rem;
+    color: var(--text-dim);
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.dual-track-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+.track-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 2rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+    border-top: 6px solid var(--primary);
+}
+.track-card.track-b { border-top-color: var(--secondary); }
+.track-card h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; color: var(--text); }
+.track-card .track-sub { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 1.8rem; }
+.track-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.95rem;
+}
+.track-row:last-child { border-bottom: none; }
+.track-row .yr { font-weight: 800; color: var(--text-dim); }
+.track-row .amt { font-weight: 800; color: var(--text); }
+.track-row.milestone .amt { color: var(--primary); }
+
+.timeline {
+    background: white;
+    padding: 3rem;
+    border-radius: 2.5rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 3rem;
+}
+.timeline-item {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 2rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-year { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+.timeline-content h4 { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
+.timeline-content p { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 0.3rem; }
+.timeline-content .tag {
+    display: inline-block;
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--primary);
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-right: 6px;
+    margin-top: 6px;
+}
+
+.space-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+.space-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 2rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+}
+.space-card h4 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.space-card ul { list-style: none; }
+.space-card li {
+    padding: 0.5rem 0;
+    padding-left: 22px;
+    position: relative;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+}
+.space-card li::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-size: 0.8rem;
+    top: 0.55rem;
+}
+
+.base-table {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 2rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 3rem;
+    overflow-x: auto;
+}
+.base-table table { width: 100%; border-collapse: collapse; }
+.base-table th {
+    text-align: left;
+    padding: 1rem 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 800;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--primary);
+    text-transform: uppercase;
+}
+.base-table td {
+    padding: 1rem 0.8rem;
+    font-size: 0.95rem;
+    color: var(--text);
+    border-bottom: 1px solid #f1f5f9;
+}
+.base-table tr:hover td { background: rgba(212, 175, 55, 0.03); }
+.base-table .city { font-weight: 800; }
+.base-table .star { color: var(--primary); }
+
 /* --- FOOTER --- */
 footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-size: 0.9rem; letter-spacing: 1px; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 1000px) {
-    .chart-sec, .mandala-grid { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 3rem; }
+    .chart-sec, .mandala-grid, .dual-track-grid, .space-grid { grid-template-columns: 1fr; }
+    .hero h1, .lifestyle-hero h1 { font-size: 3rem; }
+    .timeline-item { grid-template-columns: 1fr; gap: 0.5rem; }
 }
 </style>
 </head>
@@ -398,12 +556,13 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
 
 <div class="nav-container">
     <div class="nav-inner">
-        <div class="nav-logo">KRYSTAL 2026</div>
+        <div class="nav-logo">KRYSTAL 2026 · v1.1</div>
         <div class="nav-links">
             <a class="nav-link active" onclick="showView('vision', this)">Vision Dash</a>
+            <a class="nav-link" onclick="showView('lifestyle', this)">Lifestyle 2030</a>
             <a class="nav-link" onclick="showView('weekly', this)">Weekly Center</a>
         </div>
-        <div style="font-weight: 600; color: var(--text-dim); font-size: 0.8rem;">Soul Evolution</div>
+        <div style="font-weight: 600; color: var(--text-dim); font-size: 0.8rem;">Soul Evolution · Choice over Revenge</div>
     </div>
 </div>
 
@@ -414,9 +573,9 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     <!-- HERO -->
     <section class="hero">
         <div class="hero-content">
-            <div class="awakening">Awakening</div>
+            <div class="awakening">Awakening · v1.1 校準</div>
             <h1>Soul & System</h1>
-            <p>不再死撐，開始傾聽靈魂的聲音</p>
+            <p>從「翻身」到「選擇權」 · 從「終點」到「節奏」</p>
             <div class="quote-box">
                 <p style="font-size: 1.3rem; font-weight: 600; font-style: italic; color: var(--text);">
                     「我不再靠意志力死撐，而是學會傾聽靈魂。<br>
@@ -424,6 +583,9 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 </p>
                 <div style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: 3px;">
                     — 我就是人生自己的鑰匙 —
+                </div>
+                <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-dim); font-style: normal;">
+                    2026-05-13 校準：嘉實量化 PM 上班族 × 月投 1.8 萬 × 雙軌 A/B 路徑
                 </div>
             </div>
         </div>
@@ -454,7 +616,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <div class="legend-item"><div class="dot" style="background: #d4af37;"></div> 自我 5%</div>
             </div>
         </div>
-        
+
         <!-- Chart 2: Future -->
         <div class="chart-card">
             <p style="font-weight: 800; font-size: 1.1rem; color: var(--accent); margin-bottom: 1.5rem;">未來：能量取回模式</p>
@@ -481,8 +643,8 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     </div>
 
 
-    <!-- GOAL CENTER TABS -->
-    <div class="section-header">目標與願景 / GOAL & VISION</div>
+    <!-- GOAL CENTER TABS (v1.1 校準) -->
+    <div class="section-header">目標與願景 / GOAL & VISION（v1.1 校準）</div>
     <div class="tab-container">
         <div class="tab-nav">
             <button class="tab-btn active" onclick="openTab(event, 'yearly')">YEARLY 2026</button>
@@ -494,15 +656,15 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <div class="cell" style="border-top: 5px solid var(--primary);">
                     <div class="cell-title">💰 財務戰略</div>
                     <ul class="cell-content">
-                        <li>資產規模突破 1,000 萬</li>
-                        <li>建立穩定自動複利系統</li>
-                        <li>資產是生命的「選擇權」</li>
+                        <li>2026 末資產 650 萬（校準後現實版）</li>
+                        <li>0050 月投 1.8 萬不間斷</li>
+                        <li>資產是「選擇權」，不是「翻身證書」</li>
                     </ul>
                 </div>
                 <div class="cell" style="border-top: 5px solid var(--accent);">
                     <div class="cell-title">🌿 健康體態</div>
                     <ul class="cell-content">
-                        <li>體脂穩定 22% </li>
+                        <li>體脂穩定 22%（無死線）</li>
                         <li>順應體感，修復身心</li>
                         <li>甲狀腺與腸胃深度療癒</li>
                     </ul>
@@ -510,9 +672,9 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <div class="cell" style="border-top: 5px solid var(--secondary);">
                     <div class="cell-title">✨ 自由人生</div>
                     <ul class="cell-content">
-                        <li>地理自由：泰國與海外旅居</li>
-                        <li>KOL 影響力：分享量化作品</li>
-                        <li>主理人意識：我不只是功能</li>
+                        <li>嘉實本業 ≠ 牢籠（A — 喜歡，只是想喘息）</li>
+                        <li>Q4 完成 Phase 2 自動化系統</li>
+                        <li>2027 Q1 規劃首次獨旅 mini gap</li>
                     </ul>
                 </div>
             </div>
@@ -520,17 +682,18 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         <div id="monthly" class="tab-content">
             <div class="mandala-grid" style="margin-bottom: 0;">
                 <div class="cell" style="border-top: 5px solid var(--primary);">
-                    <div class="cell-title">🏝️ 重生之旅</div>
+                    <div class="cell-title">🏝️ Lifestyle 預演</div>
                     <ul class="cell-content">
-                        <li>泰國獨旅：找回自己的節奏</li>
-                        <li>斷開舊能量，練習一個人的自由</li>
+                        <li>列出 3-5 個獨旅 base 候選城市</li>
+                        <li>2026 剩 5 天特休保留彈性</li>
+                        <li>練習「一個人」的存在感</li>
                     </ul>
                 </div>
                 <div class="cell" style="border-top: 5px solid var(--accent);">
-                    <div class="cell-title">💻 系統正式化</div>
+                    <div class="cell-title">💻 系統深化</div>
                     <ul class="cell-content">
-                        <li>Phase 1 全自動化啟動</li>
-                        <li>完成 UAT 最終測試</li>
+                        <li>Phase 1 剩餘 50% 收尾</li>
+                        <li>準備 Phase 2 Python 回測架構</li>
                     </ul>
                 </div>
                 <div class="cell" style="border-top: 5px solid var(--danger);">
@@ -554,8 +717,8 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <div class="cell" style="border-top: 5px solid var(--primary);">
                     <div class="cell-title">🎨 願景重構</div>
                     <ul class="cell-content">
-                        <li>完成 Dashboard 3.0 更新</li>
-                        <li>視覺化取回能量的進度</li>
+                        <li>Vision v1.1 校準完成 ✅</li>
+                        <li>Lifestyle 2030 + Mini Gap Plan 啟用</li>
                     </ul>
                 </div>
                 <div class="cell" style="border-top: 5px solid var(--accent);">
@@ -569,8 +732,8 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         </div>
     </div>
 
-    <!-- MANDALA STRATEGY -->
-    <div class="section-header">曼陀羅戰略 / STRATEGY MANDALA</div>
+    <!-- MANDALA STRATEGY (v1.1 校準) -->
+    <div class="section-header">曼陀羅戰略 / STRATEGY MANDALA（v1.1 校準）</div>
     <div class="mandala-grid">
         <div class="cell">
             <div class="cell-title">🌿 健康體態</div>
@@ -583,17 +746,17 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         <div class="cell">
             <div class="cell-title">📈 職業與量化</div>
             <ul class="cell-content">
-                <li>策略系統全自動化</li>
+                <li>嘉實本業累積 × 副業策略並進</li>
+                <li>2028 留停試水，2029 才選擇</li>
                 <li>量化作品集上線</li>
-                <li>持續優化交易邏輯</li>
             </ul>
         </div>
         <div class="cell">
-            <div class="cell-title">💰 財務自由</div>
+            <div class="cell-title">💰 財務自由（雙軌）</div>
             <ul class="cell-content">
-                <li>2026：1,000萬目標</li>
-                <li>資產是生命的選擇權</li>
-                <li>個人資本獨立運作</li>
+                <li>A 軌：2033 達 3000-3500 萬 ⭐</li>
+                <li>B 軌：1 億為 upside · 無死線</li>
+                <li>資產 = 生命的「選擇權」</li>
             </ul>
         </div>
         <div class="cell">
@@ -609,7 +772,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
             <ul class="cell-content">
                 <li>我是人生自己的鑰匙</li>
                 <li>取回能量，終結補位</li>
-                <li>我是一個人，不是功能</li>
+                <li>把「翻身」改為「選擇權」</li>
             </ul>
         </div>
         <div class="cell">
@@ -617,7 +780,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
             <ul class="cell-content">
                 <li>給予空間，看清真相</li>
                 <li>不需猜、不需追的關係</li>
-                <li>尊重彼此的生命決定</li>
+                <li>能一起旅居的伴侶（願景）</li>
             </ul>
         </div>
         <div class="cell">
@@ -629,19 +792,19 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
             </ul>
         </div>
         <div class="cell">
-            <div class="cell-title">🏝️ 生活與體驗</div>
+            <div class="cell-title">🏝️ Mini Gap 三階段</div>
             <ul class="cell-content">
-                <li>泰國獨旅與心靈重置</li>
-                <li>評估海外旅居可能性</li>
-                <li>練習一個人的自由</li>
+                <li>2027 Q1：15 天獨旅 ⭐</li>
+                <li>2028：留停 1-3 個月深度旅居</li>
+                <li>2029-2030：真正選擇點</li>
             </ul>
         </div>
         <div class="cell">
-            <div class="cell-title">✨ 個人影響力</div>
+            <div class="cell-title">✨ 抒發型自媒體</div>
             <ul class="cell-content">
-                <li>整理並分享量化知識</li>
-                <li>建立自媒體專業形象</li>
-                <li>吸引同頻率的靈魂</li>
+                <li>不設頻率、不追粉絲</li>
+                <li>整理已發生的事，非為發而做</li>
+                <li>變現是副產品，不依賴</li>
             </ul>
         </div>
     </div>
@@ -654,13 +817,241 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     <div class="deep-card" style="border-left-color: var(--accent);">
         <p style="font-style: italic; color: var(--text);">「等量付出是關係的底線。我的時間非常珍貴，不再捐贈給拒絕長大的靈魂。」</p>
     </div>
+    <div class="deep-card" style="border-left-color: var(--secondary);">
+        <p style="font-style: italic; color: var(--text);">「我想要 1 億——但不是為了翻身給誰看，而是為了讓未來的自己有充足的選擇權。3000 萬已是 lifestyle 啟動點，1 億達不到也 OK。」<br><span style="font-size: 0.85rem; color: var(--text-dim); font-style: normal;">— 2026-05-13 校準</span></p>
+    </div>
 
     <footer>
-        Krystal Soul & System Evolution · 2026-04-23 · "Freedom is the only metric that matters."
+        Krystal Soul & System Evolution · v1.1 校準於 2026-05-13 · "Freedom is the only metric that matters."
     </footer>
     </div> <!-- End main-content -->
     </div> <!-- End layout-wrapper -->
 </div> <!-- End vision-view -->
+
+
+<!-- LIFESTYLE 2030 VIEW (v1.1 新增) -->
+<div id="lifestyle-view" class="view">
+    <div class="lifestyle-view">
+        <section class="lifestyle-hero">
+            <div style="font-size: 0.9rem; color: var(--secondary); letter-spacing: 8px; font-weight: 800; margin-bottom: 1rem;">LIFESTYLE VISION 2030</div>
+            <h1>五星級生活 <span class="accent-text">×</span> 地理自由</h1>
+            <p class="sub">
+                在自己的房子裡像住<strong style="color: var(--primary);">五星級飯店</strong>一樣醒來，<br>
+                一年有 <strong style="color: var(--primary);">3-6 個月</strong>，世界其他角落也是我的家。
+            </p>
+        </section>
+
+        <!-- 雙軌路徑 -->
+        <div class="section-header">雙軌路徑 / DUAL TRACK</div>
+        <div class="dual-track-grid">
+            <div class="track-card">
+                <h3>🛤️ A 軌：保底自由</h3>
+                <p class="track-sub">3000-3500 萬 → Lifestyle 啟動 · 主路徑、必達</p>
+                <div class="track-row"><span class="yr">2026</span><span class="amt">650 萬</span></div>
+                <div class="track-row"><span class="yr">2027</span><span class="amt">830 萬</span></div>
+                <div class="track-row"><span class="yr">2028</span><span class="amt">1060 萬</span></div>
+                <div class="track-row"><span class="yr">2029</span><span class="amt">1346 萬</span></div>
+                <div class="track-row"><span class="yr">2030</span><span class="amt">1675 萬</span></div>
+                <div class="track-row milestone"><span class="yr">⭐ 2033</span><span class="amt">3341 萬</span></div>
+                <p style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-dim);">中性 25% 年化 + 月投 1.8 萬</p>
+            </div>
+            <div class="track-card track-b">
+                <h3>🚀 B 軌：順其自然 Upside</h3>
+                <p class="track-sub">1 億 → 影響力 + 餘裕 · 無死線、達不到也 OK</p>
+                <div class="track-row"><span class="yr">2035</span><span class="amt">5247 萬</span></div>
+                <div class="track-row milestone"><span class="yr">2037-38</span><span class="amt">~1 億</span></div>
+                <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text); line-height: 1.7;">
+                    達到 A 軌 3000 萬後，你可以選擇：<br>
+                    · 停下來（這就是 lifestyle）<br>
+                    · 繼續複利（自然滾動到 1 億）<br>
+                    · 加碼影響力（自媒體 / 委託管理）
+                </p>
+                <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--secondary); font-weight: 700;">這個決定 3000 萬時的你比現在的你更清楚</p>
+            </div>
+        </div>
+
+        <!-- Mini Gap 三階段 Timeline -->
+        <div class="section-header">Mini Gap 三階段 / FROM EMPLOYEE TO FREEDOM</div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-year">2026</div>
+                <div class="timeline-content">
+                    <h4>階段 0：上班族 × 累積期</h4>
+                    <p>嘉實量化 PM 正常上班 · 副業累積 · 5 天特休保留作彈性</p>
+                    <p>12 月可能 5-7 天「lifestyle 預演」</p>
+                    <span class="tag">資產 650 萬</span>
+                    <span class="tag">不勉強做 mini gap</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2027 Q1</div>
+                <div class="timeline-content">
+                    <h4>⭐ 階段 1：首次真正 Mini Gap（獨旅 19-21 天）</h4>
+                    <p>用新一年 15 天特休 + 週末 · 一個人 · 不帶媽媽、不帶朋友</p>
+                    <p>第一次真正照顧自己 · 測試 lifestyle 預覽</p>
+                    <span class="tag">資產 830 萬</span>
+                    <span class="tag">核心要求：獨旅</span>
+                    <span class="tag">京都 / 清邁 / 沖繩</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2027-28</div>
+                <div class="timeline-content">
+                    <h4>階段 2：留職停薪 1-3 個月</h4>
+                    <p>選一個喜歡的 base 深度住 · 測試「沒有正職的真實感」</p>
+                    <p>副業能否撐起生活 · 抒發型自媒體可在此時啟動</p>
+                    <span class="tag">資產 1060 萬</span>
+                    <span class="tag">深度旅居</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2029-30</div>
+                <div class="timeline-content">
+                    <h4>階段 3：真正的選擇點</h4>
+                    <p>A1 回嘉實 + 每年 2-3 次 mini gap（穩定派）</p>
+                    <p>A2 辭職全力自由（自由派）/ A3 轉兼職顧問（中間派）</p>
+                    <span class="tag">資產 1346-1675 萬</span>
+                    <span class="tag">由體驗決定</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2030-32</div>
+                <div class="timeline-content">
+                    <h4>階段 4：尋找永久基地</h4>
+                    <p>研究台灣非北部買房（高雄/台南/宜蘭/台中）</p>
+                    <p>出手 1500-2500 萬的房子 · 設計浴缸 + 橢圓雙面盆</p>
+                    <span class="tag">海外旅居 3-4 個月/年</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">⭐ 2033+</div>
+                <div class="timeline-content">
+                    <h4>階段 5：完整 Lifestyle</h4>
+                    <p>自有房 = 五星級避世空間 · 一年 3-6 個月海外</p>
+                    <p>找出最愛的 2-3 個 base · 被動覆蓋全部支出</p>
+                    <span class="tag">A 軌達成 3000-3500 萬</span>
+                    <span class="tag">B 軌持續累積</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 居住空間 -->
+        <div class="section-header">居住空間 / HOME AS A SANCTUARY</div>
+        <div class="space-grid">
+            <div class="space-card">
+                <h4>🛁 浴室（核心空間）</h4>
+                <ul>
+                    <li>獨立浴缸（深泡、可看景）</li>
+                    <li><strong style="color: var(--primary);">橢圓形雙面盆</strong>（自己 + 伴侶各一）</li>
+                    <li>乾濕分離 + 大尺寸淋浴間</li>
+                    <li>暖氣 / 暖風機 / 浴巾加熱架</li>
+                </ul>
+            </div>
+            <div class="space-card">
+                <h4>🛏️ 臥室</h4>
+                <ul>
+                    <li>King size 床 + 五星級寢具（埃及棉、羽絨）</li>
+                    <li>遮光窗簾 + 床頭可調燈</li>
+                    <li>衣帽間（walk-in closet）</li>
+                </ul>
+            </div>
+            <div class="space-card">
+                <h4>💼 客廳 / 書房</h4>
+                <ul>
+                    <li>大面採光 + 落地窗</li>
+                    <li>能讓我安心交易 4 小時的工作桌</li>
+                    <li>質感沙發 + 閱讀角</li>
+                </ul>
+            </div>
+            <div class="space-card">
+                <h4>🍳 廚房</h4>
+                <ul>
+                    <li>中島 + 開放式設計</li>
+                    <li>高蛋白備餐空間</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 海外 Base 候選 -->
+        <div class="section-header">海外 Base 候選 / OVERSEAS BASES</div>
+        <div class="base-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>城市</th>
+                        <th>飛行</th>
+                        <th>月支出</th>
+                        <th>適合季節</th>
+                        <th>主題</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="city">京都 / 東京 <span class="star">★</span></td>
+                        <td>3.5h</td>
+                        <td>12-18 萬</td>
+                        <td>4-5 月、10-11 月</td>
+                        <td>美感、寧靜、櫻花/楓葉</td>
+                    </tr>
+                    <tr>
+                        <td class="city">清邁</td>
+                        <td>4h</td>
+                        <td>5-8 萬</td>
+                        <td>11-2 月（涼季）</td>
+                        <td>養生、社群、低成本</td>
+                    </tr>
+                    <tr>
+                        <td class="city">沖繩</td>
+                        <td>1.5h</td>
+                        <td>10-15 萬</td>
+                        <td>春秋</td>
+                        <td>飛行短、自然療癒、第一次獨旅低門檻</td>
+                    </tr>
+                    <tr>
+                        <td class="city">首爾</td>
+                        <td>2.5h</td>
+                        <td>12-16 萬</td>
+                        <td>春秋</td>
+                        <td>美食、購物、文化</td>
+                    </tr>
+                    <tr>
+                        <td class="city">峇里島烏布</td>
+                        <td>5h</td>
+                        <td>6-10 萬</td>
+                        <td>4-10 月</td>
+                        <td>瑜伽、冥想、療癒</td>
+                    </tr>
+                    <tr>
+                        <td class="city">里斯本 / 波多</td>
+                        <td>長程</td>
+                        <td>10-15 萬</td>
+                        <td>5-9 月</td>
+                        <td>歐洲基地、自媒體圈</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 給自己的提醒 -->
+        <div class="section-header" style="color: var(--secondary);">給自己的提醒 / REMINDER</div>
+        <div class="deep-card" style="border-left-color: var(--secondary);">
+            <p style="font-style: italic; color: var(--text); line-height: 1.9;">
+                「你已經用了 10 天特休，但都用在跟媽媽、朋友出國——『好像沒有真正照顧到自己』。<br><br>
+                這不是你的錯。但這提醒我們：<strong style="color: var(--primary);">下一次特休，第一順位是你自己。</strong><br><br>
+                媽媽永遠都會在，朋友隨時可以見，<br>
+                但『一個人安靜地存在 19 天』這件事，<br>
+                在『成為媽媽的女兒 / 朋友的朋友 / 公司的 PM』三十幾年後，<br>
+                你還沒真正體驗過。<br><br>
+                不是自私，是回家——<strong style="color: var(--secondary);">回到「你」本身。</strong>」
+            </p>
+        </div>
+
+        <footer>
+            Lifestyle Vision 2030 · v1.0 (2026-05-13) · "Choice, not Revenge."
+        </footer>
+    </div>
+</div>
+
 
 <!-- WEEKLY CENTER VIEW -->
 <div id="weekly-view" class="view">
@@ -681,6 +1072,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">📅 歷史存檔</h3>
                 <div class="weekly-controls" style="margin: 0;">
                     <select class="weekly-select" id="weeklySelect" style="margin-bottom: 1.5rem;">
+                        <option value="w20">Weekly Report 2026-W20 (0511-0517) · 進行中</option>
                         <option value="w19">Weekly Report 2026-W19 (0504-0510)</option>
                         <option value="w18">Weekly Report 2026-W18 (0427-0503)</option>
                         <option value="w17">Weekly Report 2026-W17 (0420-0426)</option>
@@ -720,7 +1112,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
 function showView(viewId, el) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId + '-view').classList.add('active');
-    
+
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
 }
@@ -746,7 +1138,7 @@ document.querySelectorAll('.pie-wrap').forEach(wrap => {
     const slices = wrap.querySelectorAll('.slice');
     const cVal = wrap.querySelector('.c-val');
     const cName = wrap.querySelector('.c-name');
-    
+
     // Store defaults
     const defaultVal = cVal.innerText;
     const defaultName = cName.innerText;
@@ -771,6 +1163,60 @@ document.querySelectorAll('.pie-wrap').forEach(wrap => {
 
 // --- WEEKLY REPORT SIDEBAR LOGIC ---
 const weeklyData = {
+    "w20": [
+        {
+            title: "🤖 交易系統 (Krystal Core)",
+            color: "var(--accent)",
+            items: [
+                "[x] Discord bot 加入 07:00 自動同步 + 08:00 早報排程",
+                "[x] 修復 IB / Schwab 同步問題（5/12 09:32）",
+                "[x] 修復 RS scores 相對強度計算邏輯",
+                "[x] Dashboard v8 app.py + index.html 大幅更新（+598 行）",
+                "[x] 新增 DATA_AUDIT.md 數據稽核文件",
+                "[x] record_daily_nav.py 補完現金備檔欄位",
+                "[x] Discord bot 自啟動捷徑（Startup folder，已釐清非惡意警報）",
+                "[ ] Schwab Token 重新授權"
+            ]
+        },
+        {
+            title: "📝 願景與規劃 ⭐",
+            color: "var(--primary)",
+            items: [
+                "[x] 與 Claude 深度討論：gap year vs 財務自由",
+                "[x] 釐清月投 1.8 萬 + 500 萬起點的真實時程",
+                "[x] 認知校準：2026 達 1000 萬 → 改為 650 萬（中性 25%）",
+                "[x] 新增 [[Lifestyle-Vision-2030]]（五星級生活 × 地理自由）",
+                "[x] 新增 [[Mini-Gap-Launch-Plan]] 三階段架構",
+                "[x] 更新 [[Long-Term-Plans]] v1.1（雙軌 A 3000萬 / B 1億 upside）",
+                "[x] 更新 [[00-Vision-Board]] 對齊上班族真實處境",
+                "[x] HTML v1.1 重生（新增 Lifestyle 2030 分頁）",
+                "[*] 動機重新定義：「翻身」→「選擇權」",
+                "[*] 自媒體路線：商業 KOL → 抒發型優先",
+                "[*] Mini Gap 觸發：資產門檻 → 生活準備度"
+            ]
+        },
+        {
+            title: "🛡️ 關係與心理邊界",
+            color: "var(--danger)",
+            items: [
+                "[x] 情緒紀錄 20260512.md 寫完",
+                "[ ] 重讀 4/14 諮商日記",
+                "[ ] 預約下次諮商時間",
+                "[*] 覺察：已用 10 天特休都用在『跟媽媽朋友』— 沒有照顧到自己"
+            ]
+        },
+        {
+            title: "🏝️ 生活、財務與覺察",
+            color: "var(--secondary)",
+            items: [
+                "[x] 0050 月投 1.8 萬持續執行",
+                "[ ] 訓練 ≥ 3 次",
+                "[ ] 飲食抗發炎",
+                "[*] 2026 剩 5 天特休 — 保留作彈性，不勉強做 mini gap",
+                "[*] 開始想像：2027 Q1 第一次獨旅 19-21 天，會想去哪？"
+            ]
+        }
+    ],
     "w19": [
         {
             title: "🤖 交易系統 (Krystal Core)",
@@ -798,12 +1244,13 @@ const weeklyData = {
             ]
         },
         {
-            title: "✍️ 內容創作",
+            title: "✍️ 內容創作（抒發型）",
             color: "var(--secondary)",
             items: [
                 "[ ] 覺察文章大綱 (W16 規劃，已延 3 週)",
                 "[ ] 從 4/14 日記挑 1 個切角",
-                "[ ] 週六 14:00–16:00 創作時段"
+                "[ ] 週六 14:00–16:00 創作時段",
+                "[*] 路線校準：抒發型優先，非商業 KOL"
             ]
         },
         {
@@ -813,7 +1260,8 @@ const weeklyData = {
                 "[x] 帳戶總市值 NT$2,380,463 (+39.1%)",
                 "[x] YTD +NT$324,690 (+16.6%)",
                 "[ ] 訓練 ≥ 3 次 (落後)",
-                "[ ] 飲食抗發炎，減少乳製品"
+                "[ ] 飲食抗發炎，減少乳製品",
+                "[*] Vision v1.1 校準：650 萬 / 雙軌 A+B / Mini Gap 三階段"
             ]
         }
     ],
@@ -848,35 +1296,35 @@ const weeklyData = {
         }
     ],
     "w17": [
-        { 
-            title: "🛡️ 關係與心理邊界", 
-            color: "var(--danger)", 
+        {
+            title: "🛡️ 關係與心理邊界",
+            color: "var(--danger)",
             items: [
                 "[x] 接受「沒有對方好像會好點」的覺察",
                 "[x] 練習課題分離，不為對方情緒負責",
                 "[ ] 停損思維：評估等待是否有清晰的終點",
                 "[x] 停止過度付出，收回能量給自己"
-            ] 
+            ]
         },
-        { 
-            title: "💻 系統開發 (Krystal Core)", 
-            color: "var(--accent)", 
+        {
+            title: "💻 系統開發 (Krystal Core)",
+            color: "var(--accent)",
             items: [
                 "[x] 量化積木自動下單 Phase 1 UAT 測試計畫",
                 "[x] Dashboard 3.0 Sidebar 週報與切換功能",
                 "[ ] KGI Signal Consistency 官方文件整理",
                 "[x] 優化核心能量分配圖互動邏輯"
-            ] 
+            ]
         },
-        { 
-            title: "🏝️ 生活、財務與充電", 
-            color: "var(--primary)", 
+        {
+            title: "🏝️ 生活、財務與充電",
+            color: "var(--primary)",
             items: [
                 "[x] 泰國行程規劃確認（與朋友同行）",
                 "[ ] 注意飲食抗發炎：減少乳製品攝取",
                 "[ ] 台股波動機會持續觀察",
                 "[x] Schwab 持倉同步驗證"
-            ] 
+            ]
         }
     ],
     "w16": [
@@ -890,7 +1338,7 @@ const weeklyData = {
 };
 
 let currentWeekIdx = 0;
-const weekKeys = ["w19", "w18", "w17", "w16", "w15"];
+const weekKeys = ["w20", "w19", "w18", "w17", "w16", "w15"];
 
 function renderWeeklyReport(weekKey) {
     const contentDiv = document.getElementById("weeklyContent");
@@ -918,13 +1366,19 @@ function renderWeeklyReport(weekKey) {
         let html = `<div class="glass-card" style="padding: 2.5rem; animation: fadeIn 0.3s ease;">
             <h4 style="color: ${block.color}; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">${block.title}</h4>
             <div class="checklist-container">`;
-        
+
         block.items.forEach(item => {
             const isChecked = item.startsWith("[x]");
-            const isChecklist = item.startsWith("[ ]") || item.startsWith("[x]");
+            const isNote = item.startsWith("[*]");
+            const isChecklist = item.startsWith("[ ]") || item.startsWith("[x]") || isNote;
             const text = isChecklist ? item.substring(3).trim() : item;
-            
-            if (isChecklist) {
+
+            if (isNote) {
+                html += `
+                    <div class="checklist-item" style="border-left: 3px solid var(--secondary); padding-left: 12px; background: rgba(147,51,234,0.04); border-radius: 0 8px 8px 0; padding-top: 8px; padding-bottom: 8px;">
+                        <div class="checklist-text" style="color: var(--secondary); font-weight: 700;">📌 ${text}</div>
+                    </div>`;
+            } else if (isChecklist) {
                 html += `
                     <div class="checklist-item">
                         <div class="checkbox ${isChecked ? 'checked' : ''}">${isChecked ? '✓' : ''}</div>
@@ -992,14 +1446,29 @@ async function syncWeeklyData(btn) {
         const weekDeltaStr = (weekDelta >= 0 ? '+' : '') + Math.round(weekDelta).toLocaleString();
 
         // 更新 W19 的財務 block
-        const finance = weeklyData['w19'].find(b => b.title.includes('生活'));
-        if (finance) {
-            finance.items = [
+        const finance19 = weeklyData['w19'].find(b => b.title.includes('生活'));
+        if (finance19) {
+            finance19.items = [
                 `[x] 帳戶總市值 NT$${totMv} (${pnlPct >= 0 ? '+' : ''}${pnlPct}%)`,
                 `[x] 總未實現損益 ${totPnl >= 0 ? '+' : ''}NT$${totPnl}`,
                 `[x] 本週累積損益 NT$${weekDeltaStr}（${weekRows.length} 個交易日）`,
                 "[ ] 訓練 ≥ 3 次 (落後)",
-                "[ ] 飲食抗發炎，減少乳製品"
+                "[ ] 飲食抗發炎，減少乳製品",
+                "[*] Vision v1.1 校準：650 萬 / 雙軌 A+B / Mini Gap 三階段"
+            ];
+        }
+        // 更新 W20（本週）的財務 block — 即時數據
+        const finance20 = weeklyData['w20'].find(b => b.title.includes('生活'));
+        if (finance20) {
+            finance20.items = [
+                `[x] 帳戶總市值 NT$${totMv} (${pnlPct >= 0 ? '+' : ''}${pnlPct}%)`,
+                `[x] 總未實現損益 ${totPnl >= 0 ? '+' : ''}NT$${totPnl}`,
+                `[x] 本週累積損益 NT$${weekDeltaStr}（${weekRows.length} 個交易日）`,
+                "[x] 0050 月投 1.8 萬持續執行",
+                "[ ] 訓練 ≥ 3 次",
+                "[ ] 飲食抗發炎",
+                "[*] 2026 剩 5 天特休 — 保留作彈性",
+                "[*] 想像 2027 Q1 第一次獨旅，會想去哪？"
             ];
         }
         renderWeeklyReport(document.getElementById('weeklySelect').value);
@@ -1014,9 +1483,9 @@ async function syncWeeklyData(btn) {
     }
 }
 
-// Initial render
+// Initial render — 預設顯示 W20（本週進行中）
 renderWeeklyReport(weekKeys[0]);
-// 自動嘗試同步一次（如果 dashboard server 在跑）
+// 自動嘗試同步一次（如果 dashboard server 在跑），會更新 W19 財務數據
 syncWeeklyData(null);
 </script>
 

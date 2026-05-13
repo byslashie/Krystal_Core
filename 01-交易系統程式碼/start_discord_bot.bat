@@ -1,6 +1,6 @@
 @echo off
 :: Krystal Discord Bot 啟動腳本
-set PROJECT_ROOT=h:\我的雲端硬碟\Krystal_完整系統\01-交易系統程式碼
+set PROJECT_ROOT=c:\Projects\Krystal_完整系統\01-交易系統程式碼
 set LOGFILE=%PROJECT_ROOT%\logs\discord_bot.log
 
 if not exist "%PROJECT_ROOT%\logs" mkdir "%PROJECT_ROOT%\logs"
