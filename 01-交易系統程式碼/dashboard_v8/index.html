@@ -4229,7 +4229,15 @@ async function loadPerformanceCharts() {
           const bMap = {};
           bJson.data.forEach(r => bMap[r.date] = r.close);
           const bDates = Object.keys(bMap).sort();
-          const bStart = bMap[bDates[0]];
+          // 基準價 = 帳戶起始日（hist[0].date）對應的 0050 收盤價，找不到就往前回溯最近一筆
+          const accountStart = hist[0].date;
+          let bStart = bMap[accountStart];
+          if (!bStart) {
+            for (let d = bDates.length - 1; d >= 0; d--) {
+              if (bDates[d] <= accountStart) { bStart = bMap[bDates[d]]; break; }
+            }
+          }
+          if (!bStart) bStart = bMap[bDates[0]]; // 萬一帳戶起始日比所有 bench 都早，退回原行為
           benchIdx = hist.map(r => {
             // 找 r.date 或之前最近的 bench price
             let v = bMap[r.date];

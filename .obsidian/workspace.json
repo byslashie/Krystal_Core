@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "04-個人特質與規劃/Lifestyle-Vision-2030.md",
+                "file": "01-交易系統程式碼/strategies/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Lifestyle-Vision-2030"
+              "title": "README"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "XF_早盤當沖_安心",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,7 +74,8 @@
               "title": "書籤"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -171,22 +172,23 @@
   },
   "active": "554404b646b596c1",
   "lastOpenFiles": [
-    "01-交易系統程式碼/sheets_utils.py.tmp.51184.1778755143357",
-    "01-交易系統程式碼/sheets_utils.py.tmp.51184.1778755110921",
-    "01-交易系統程式碼/__pycache__/sheets_utils.cpython-311.pyc.2691655274528",
-    "01-交易系統程式碼/sync_schwab_to_sheets.py.tmp.51184.1778755057180",
-    "01-交易系統程式碼/sheets_utils.py.tmp.51184.1778755016127",
-    "01-交易系統程式碼/_cache/macro_indicators.json",
-    "01-交易系統程式碼/_cache/tw_macro.json",
-    "01-交易系統程式碼/dashboard_v8/broker_positions.db-journal",
-    "01-交易系統程式碼/__pycache__/tw_macro_scraper.cpython-311.pyc.2088126072512",
-    "01-交易系統程式碼/__pycache__/macro_data.cpython-311.pyc.2088124747984",
-    "01-交易系統程式碼/dashboard_v8/__pycache__/app.cpython-311.pyc.2089357406448",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.57312.1778756077196",
+    "02-策略知識庫/Strategies/S8-0050現股網格/Backtests",
+    "02-策略知識庫/Strategies/S8-0050現股網格/Versions",
+    "02-策略知識庫/Strategies/S8-0050現股網格",
+    "02-策略知識庫/Strategies/S7-台指期早盤當沖/Backtests",
+    "02-策略知識庫/Strategies/S7-台指期早盤當沖/Versions",
+    "02-策略知識庫/Strategies/S7-台指期早盤當沖",
+    "04-個人特質與規劃/Lifestyle-Vision-2030.md",
+    "01-交易系統程式碼/strategies/README.md",
+    "01-交易系統程式碼/strategies/README.md.tmp.57312.1778755707372",
+    "01-交易系統程式碼/strategies/0050_現股網格_睡眠版.xs",
+    "01-交易系統程式碼/strategies/0050_現股網格_睡眠版.xs.tmp.57312.1778755677579",
+    "01-交易系統程式碼/__pycache__/sheets_utils.cpython-311.pyc.1927585730592",
     "04-個人特質與規劃/Fertility-Decision.md",
     "04-個人特質與規劃/Life-Window-Map.md",
     "01-交易系統程式碼/docs/DISCORD.md",
     "04-個人特質與規劃/Mini-Gap-Launch-Plan.md",
-    "04-個人特質與規劃/Lifestyle-Vision-2030.md",
     "04-個人特質與規劃/被忽视时刻快速清单_待填写.md",
     "03-XScript知識庫/[Example] XQ_Scripts_StockSelection.md",
     "04-個人特質與規劃/情緒紀錄_20260512.md",
@@ -205,7 +207,6 @@
     "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/核心修復課題與行動綱領.md",
     "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/20260421_覺察日記_識破倒果為因的控制.md",
     "04-個人特質與規劃/心靈成長/01-關係解構與斷捨離/20260420_深夜覺察日記.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/把力氣放回自己身上的行動清單.md",
-    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/AI社交防護助手與語氣模擬構想.md"
+    "04-個人特質與規劃/心靈成長/02-療癒與系統修復/把力氣放回自己身上的行動清單.md"
   ]
 }
