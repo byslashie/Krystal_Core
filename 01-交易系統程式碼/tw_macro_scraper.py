@@ -15,7 +15,6 @@ tw_macro_scraper.py — 台灣總經指標自動爬取
 import re
 import json
 import logging
-import requests
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -26,16 +25,6 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = Path(__file__).parent / "_cache"
 TW_CACHE_FILE = CACHE_DIR / "tw_macro.json"
 TW_CACHE_TTL_HOURS = 24
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/122.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json, text/html, */*",
-    "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
-}
 
 
 # ════════════════════════════════════════════════════════════════
@@ -98,72 +87,71 @@ def _score_to_light(score: int) -> tuple[str, str, str]:
         return "🔵", "藍燈", "var(--accent)"
 
 
+def _ndc_session_and_csrf(page_path: str) -> tuple:
+    """建立 cloudscraper session 並從指定頁面取得 CSRF token。NDC 套了 Cloudflare + Laravel CSRF。"""
+    import cloudscraper
+    s = cloudscraper.create_scraper()
+    r = s.get(f"https://index.ndc.gov.tw{page_path}", timeout=20)
+    m = re.search(r'name="csrf-token"\s+content="([^"]+)"', r.text)
+    if not m:
+        raise RuntimeError("NDC csrf-token 抓不到")
+    return s, m.group(1)
+
+
+def _ndc_post_json(session, csrf: str, endpoint: str, referer_path: str) -> dict:
+    """對 NDC JSON endpoint 發 POST（XHR + CSRF）。"""
+    r = session.post(
+        f"https://index.ndc.gov.tw{endpoint}",
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRF-TOKEN": csrf,
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Referer": f"https://index.ndc.gov.tw{referer_path}",
+        },
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def _ym_to_str(ym: str) -> str:
+    """'202603' -> '2026-03'"""
+    if isinstance(ym, str) and len(ym) == 6 and ym.isdigit():
+        return f"{ym[:4]}-{ym[4:]}"
+    return str(ym)
+
+
 def fetch_ndc_business_light() -> Optional[dict]:
     """
-    從 NDC 開放資料 API 抓取最新景氣對策信號（景氣燈號）。
-    API 文件：https://index.ndc.gov.tw/
+    從 NDC 抓取最新景氣對策信號。
+    端點：POST https://index.ndc.gov.tw/n/json/lightscore （需 cloudscraper + CSRF）
+    回傳格式：{"line":[{"x":"YYYYMM","y":分數}], "next":"下次更新時間", ...}
     """
-    # ── 嘗試 NDC JSON API ────────────────────────────────────────
-    api_urls = [
-        "https://index.ndc.gov.tw/api/zh_tw/a/7",   # 景氣對策信號
-        "https://index.ndc.gov.tw/api/en/a/7",
-    ]
-
-    for url in api_urls:
-        try:
-            resp = requests.get(url, headers=HEADERS, timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
-                # NDC API 回傳格式：{ "data": [ {"date": "YYYY-MM", "score": 28, ...} ] }
-                items = data if isinstance(data, list) else data.get("data", [])
-                if items:
-                    latest = items[-1]
-                    score = latest.get("score") or latest.get("Score") or latest.get("value")
-                    date_str = latest.get("date") or latest.get("Date") or latest.get("ym")
-                    if score is not None:
-                        score = int(score)
-                        emoji, name, color = _score_to_light(score)
-                        logger.info(f"✅ NDC 景氣燈號：{score} 分 → {name}")
-                        return {
-                            "score": score,
-                            "light_name": name,
-                            "emoji": emoji,
-                            "color": color,
-                            "date": date_str,
-                            "source": f"NDC API ({date_str})",
-                        }
-        except Exception as e:
-            logger.warning(f"NDC API ({url}) 失敗: {e}")
-
-    # ── Fallback：爬取 NDC 網站 HTML ────────────────────────────
     try:
-        from bs4 import BeautifulSoup
-        url = "https://index.ndc.gov.tw/n/zh_tw"
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text()
-            # 找「景氣對策信號」分數（通常是 2 位數）
-            match = re.search(r'對策信號.*?(\d{2})\s*分', text) or \
-                    re.search(r'綜合判斷分數.*?(\d{2})', text)
-            if match:
-                score = int(match.group(1))
-                emoji, name, color = _score_to_light(score)
-                logger.info(f"✅ NDC 網站爬取：景氣燈號 {score} 分 → {name}")
-                month = datetime.now().strftime("%Y-%m")
-                return {
-                    "score": score,
-                    "light_name": name,
-                    "emoji": emoji,
-                    "color": color,
-                    "date": month,
-                    "source": f"NDC 網站 (爬取 {month})",
-                }
+        s, csrf = _ndc_session_and_csrf("/n/zh_tw/lightscore")
+        data = _ndc_post_json(s, csrf, "/n/json/lightscore", "/n/zh_tw/lightscore")
+        line = data.get("line") or []
+        if not line:
+            logger.error("❌ NDC lightscore line 空")
+            return None
+        latest = line[-1]
+        score = int(latest["y"])
+        date_str = _ym_to_str(latest["x"])
+        next_update = data.get("next")  # NDC 直接給「YYYY-MM-DD HH:MM」
+        emoji, name, color = _score_to_light(score)
+        logger.info(f"✅ NDC 景氣燈號 ({date_str})：{score} 分 → {name}，下次 {next_update}")
+        return {
+            "score": score,
+            "light_name": name,
+            "emoji": emoji,
+            "color": color,
+            "date": date_str,
+            "next_update": next_update,
+            "source": f"NDC ({date_str})",
+        }
     except Exception as e:
-        logger.warning(f"NDC 網站爬取失敗: {e}")
-
-    logger.error("❌ 景氣燈號爬取失敗（所有來源）")
-    return None
+        logger.error(f"❌ 景氣燈號爬取失敗: {e}")
+        return None
 
 
 # ════════════════════════════════════════════════════════════════
@@ -174,55 +162,47 @@ def fetch_cbc_rate() -> Optional[dict]:
     """
     從中央銀行網站抓取重貼現率（Discount Rate）。
     CBC 每季召開理監事會議決定利率，通常維持或調整 0.125%。
+    頁面上格式：「重貼現率 2024-03-22 2%」
     """
-    try:
-        from bs4 import BeautifulSoup
+    import cloudscraper
+    from bs4 import BeautifulSoup
 
-        # CBC 利率政策頁面
+    try:
+        s = cloudscraper.create_scraper()
         url = "https://www.cbc.gov.tw/tw/cp-302-927-CAF14-1.html"
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text(separator=" ")
-
-            # 搜尋「重貼現率」後面的數字
-            match = re.search(
-                r'重貼現率[^0-9]*(\d+\.\d+)',
-                text
-            )
-            if match:
-                rate = float(match.group(1))
-                logger.info(f"✅ CBC 重貼現率：{rate}%")
+        r = s.get(url, timeout=20)
+        if r.status_code != 200:
+            logger.warning(f"CBC 頁面 status={r.status_code}")
+            return None
+        text = BeautifulSoup(r.text, "html.parser").get_text(separator=" ")
+        # 抓「重貼現率 YYYY-MM-DD X%」這種格式
+        m = re.search(r'重貼現率\s+(\d{4}-\d{2}-\d{2})\s+(\d+(?:\.\d+)?)\s*%', text)
+        if not m:
+            # fallback：用反向格式 "X% 重貼現率"
+            m = re.search(r'(\d+(?:\.\d+)?)\s*%[^0-9]{0,30}重貼現率', text)
+            if m:
+                rate = float(m.group(1))
+                logger.info(f"✅ CBC 重貼現率：{rate}%（無日期）")
                 return {
                     "rate": rate,
                     "date": datetime.now().strftime("%Y-%m"),
-                    "source": "CBC 中央銀行網站",
+                    "source": "CBC 中央銀行",
                 }
+            logger.error("❌ CBC 頁面找不到重貼現率")
+            return None
+        date_str, rate_str = m.group(1), m.group(2)
+        rate = float(rate_str)
+        # YYYY-MM-DD -> YYYY-MM
+        date_ym = date_str[:7]
+        logger.info(f"✅ CBC 重貼現率 ({date_str})：{rate}%")
+        return {
+            "rate": rate,
+            "date": date_ym,
+            "source": f"CBC ({date_str} 調整)",
+        }
     except Exception as e:
-        logger.warning(f"CBC 網站爬取失敗: {e}")
-
-    # ── Fallback：CBC 新聞稿 RSS ──────────────────────────────────
-    try:
-        from bs4 import BeautifulSoup
-        url = "https://www.cbc.gov.tw/tw/np-1426-1.html"
-        resp = requests.get(url, headers=HEADERS, timeout=10)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text()
-            match = re.search(r'重貼現率維持[^0-9]*(\d+\.\d+)|重貼現率調整[^0-9]*(\d+\.\d+)', text)
-            if match:
-                rate = float(match.group(1) or match.group(2))
-                logger.info(f"✅ CBC 新聞稿解析：重貼現率 {rate}%")
-                return {
-                    "rate": rate,
-                    "date": datetime.now().strftime("%Y-%m"),
-                    "source": "CBC 新聞稿",
-                }
-    except Exception as e:
-        logger.warning(f"CBC 新聞稿爬取失敗: {e}")
-
-    logger.error("❌ 央行利率爬取失敗（所有來源）")
-    return None
+        logger.error(f"❌ CBC 央行利率爬取失敗: {e}")
+        return None
 
 
 # ════════════════════════════════════════════════════════════════
@@ -231,57 +211,43 @@ def fetch_cbc_rate() -> Optional[dict]:
 
 def fetch_tw_pmi() -> Optional[dict]:
     """
-    從中華經濟研究院抓取台灣製造業採購經理人指數（PMI）。
-    每月第一個工作日發布。
+    從 NDC 抓取最新台灣製造業 PMI（季調值）。
+    端點：POST https://index.ndc.gov.tw/n/json/PMI （需 cloudscraper + CSRF）
+    回傳格式：{"right":{"55":{"lang":"製造業PMI(季調值)","d":[{"m":"YYYYMM","n":分數},...]}}}
     """
     try:
-        from bs4 import BeautifulSoup
-
-        # CIER PMI 新聞稿頁面
-        url = "https://www.cier.edu.tw/news.aspx?n=168&sms=11476"
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text(separator=" ")
-
-            # 搜尋 PMI 數值（兩位數.一位小數）
-            match = re.search(
-                r'台灣製造業PMI.*?(\d{2}\.\d)|製造業PMI.*?(\d{2}\.\d)|PMI.*?指數.*?(\d{2}\.\d)',
-                text[:3000]
-            )
-            if match:
-                pmi = float(match.group(1) or match.group(2) or match.group(3))
-                logger.info(f"✅ CIER 台灣製造業 PMI：{pmi}")
-                return {
-                    "pmi": pmi,
-                    "date": datetime.now().strftime("%Y-%m"),
-                    "source": "CIER 中華經濟研究院",
-                }
+        s, csrf = _ndc_session_and_csrf("/n/zh_tw/data/PMI")
+        data = _ndc_post_json(s, csrf, "/n/json/PMI", "/n/zh_tw/data/PMI")
+        # 找 "製造業PMI(季調值)" 那一條
+        right = data.get("right") or {}
+        series = None
+        for v in right.values():
+            if "製造業PMI" in (v.get("lang") or "") and "季調" in v.get("lang", ""):
+                series = v
+                break
+        if not series:
+            # fallback：任何 PMI 開頭的
+            for v in right.values():
+                if "製造業PMI" in (v.get("lang") or ""):
+                    series = v
+                    break
+        if not series or not series.get("d"):
+            logger.error("❌ NDC PMI 找不到製造業 PMI 序列")
+            return None
+        latest = series["d"][-1]
+        pmi = float(latest["n"])
+        date_str = _ym_to_str(latest["m"])
+        next_update = data.get("next")
+        logger.info(f"✅ NDC 台灣製造業 PMI ({date_str})：{pmi}，下次 {next_update}")
+        return {
+            "pmi": pmi,
+            "date": date_str,
+            "next_update": next_update,
+            "source": f"NDC ({date_str})",
+        }
     except Exception as e:
-        logger.warning(f"CIER 網站爬取失敗: {e}")
-
-    # ── Fallback：NDC 服務業 / 製造業 PMI ───────────────────────
-    try:
-        from bs4 import BeautifulSoup
-        url = "https://index.ndc.gov.tw/n/zh_tw"
-        resp = requests.get(url, headers=HEADERS, timeout=10)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text()
-            match = re.search(r'製造業.*?PMI.*?(\d{2}\.\d)|PMI.*?(\d{2}\.\d)', text[:5000])
-            if match:
-                pmi = float(match.group(1) or match.group(2))
-                logger.info(f"✅ NDC 台灣製造業 PMI：{pmi}")
-                return {
-                    "pmi": pmi,
-                    "date": datetime.now().strftime("%Y-%m"),
-                    "source": "NDC 國家發展委員會",
-                }
-    except Exception as e:
-        logger.warning(f"NDC PMI 爬取失敗: {e}")
-
-    logger.error("❌ 台灣 PMI 爬取失敗（所有來源）")
-    return None
+        logger.error(f"❌ 台灣 PMI 爬取失敗: {e}")
+        return None
 
 
 # ════════════════════════════════════════════════════════════════
@@ -317,6 +283,7 @@ def get_tw_indicators(force_refresh: bool = False) -> dict:
             "signal":       f"{score}分 — 景氣{'熱絡' if score >= 32 else ('穩定' if score >= 23 else ('趨緩' if score >= 17 else '低迷'))}",
             "signal_color": color,
             "updated":      date,
+            "next_update":  light_data.get("next_update"),
             "source":       light_data["source"],
             "is_scraped":   True,
         }
@@ -333,6 +300,7 @@ def get_tw_indicators(force_refresh: bool = False) -> dict:
             "signal":       f"{rate:.2f}% — CBC {'升息' if rate > 2.0 else ('降息' if rate < 2.0 else '維持利率')}",
             "signal_color": "var(--red)" if rate > 2.5 else ("var(--yellow)" if rate >= 2.0 else "var(--green)"),
             "updated":      rate_data["date"],
+            "next_update":  "下次理監事會議（季度）",
             "source":       rate_data["source"],
             "is_scraped":   True,
         }
@@ -362,6 +330,7 @@ def get_tw_indicators(force_refresh: bool = False) -> dict:
             "signal":       signal,
             "signal_color": color,
             "updated":      pmi_data["date"],
+            "next_update":  pmi_data.get("next_update"),
             "source":       pmi_data["source"],
             "is_scraped":   True,
         }

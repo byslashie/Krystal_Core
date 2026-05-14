@@ -94,7 +94,16 @@ else:
     try:
         sys.path.insert(0, str(PROJECT))
         from modules.notifier import notify_sync_event
-        notify_sync_event("元大 Step2 上傳失敗", f"RC={r2.returncode}", ok=False)
+        import os, socket
+        src_info = (
+            f"RC={r2.returncode}\n"
+            f"來源: krystal_sync.py\n"
+            f"PID: {os.getpid()}\n"
+            f"主機: {socket.gethostname()}\n"
+            f"使用者: {os.environ.get('USERNAME','?')}\n"
+            f"log: {log_path.name}"
+        )
+        notify_sync_event("元大 Step2 上傳失敗", src_info, ok=False)
     except Exception:
         pass
 

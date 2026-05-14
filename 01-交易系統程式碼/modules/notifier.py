@@ -40,6 +40,24 @@ def _send(payload: dict[str, Any]) -> bool:
     if not WEBHOOK_URL:
         print("[notifier] DISCORD_WEBHOOK_YUANTA 未設定，跳過通知")
         return False
+    # 紀錄誰呼叫了 notifier（用來追幽靈訊息）
+    try:
+        import sys as _sys
+        import inspect as _inspect
+        caller = "?"
+        frame = _inspect.currentframe()
+        if frame and frame.f_back and frame.f_back.f_back:
+            f = frame.f_back.f_back
+            caller = f"{Path(f.f_code.co_filename).name}:{f.f_lineno} {f.f_code.co_name}()"
+        log_path = Path(__file__).resolve().parent.parent / "logs" / "notifier_calls.log"
+        log_path.parent.mkdir(exist_ok=True)
+        with open(log_path, "a", encoding="utf-8") as f:
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            argv = " ".join(_sys.argv)[:200]
+            content_preview = str(payload.get("content", ""))[:120].replace("\n", " | ")
+            f.write(f"{ts} pid={os.getpid()} argv=[{argv}] caller={caller} | {content_preview}\n")
+    except Exception:
+        pass
     try:
         if _HAS_REQUESTS:
             r = requests.post(WEBHOOK_URL, json=payload, timeout=10)

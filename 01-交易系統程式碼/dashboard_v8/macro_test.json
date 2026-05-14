@@ -1,0 +1,70 @@
+{
+  "indicators": {
+    "eu_eurusd": {
+      "analysis": "",
+      "label": "1.1716 EUR/USD",
+      "signal": "1.1716 — 歐元偏強",
+      "signal_color": "var(--green)",
+      "value": "1.1716"
+    },
+    "fed_rate": {
+      "analysis": "當前 3.64%，利率已正常化至中性水準附近。資金成本下降，有利股市估值擴張，尤其科技、成長股。台美利差縮小，有助外資回流台股。",
+      "label": "3.64% → 維持",
+      "signal": "3.64% — 利率正常化",
+      "signal_color": "var(--yellow)",
+      "value": "3.64%"
+    },
+    "ism_pmi": {
+      "analysis": "",
+      "label": "49.0",
+      "signal": "49.0 — 製造業輕微收縮",
+      "signal_color": "var(--yellow)",
+      "value": "49.0"
+    },
+    "nfp": {
+      "analysis": "當前 +115K，就業增長放緩，低於市場預期水準。就業轉溫支持 Fed 降息預期，債券和成長股通常受益。需持續觀察是否進一步惡化為負成長。",
+      "label": "+115K → 溫和",
+      "signal": "+115K — 就業溫和",
+      "signal_color": "var(--yellow)",
+      "value": "+115K"
+    },
+    "real_rate": {
+      "analysis": "當前 1.99%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。",
+      "label": "1.99% → 偏高",
+      "signal": "1.99% — 實質利率中性偏緊",
+      "signal_color": "var(--yellow)",
+      "value": "1.99%"
+    },
+    "tw_light": {
+      "analysis": "",
+      "label": "🔴 紅燈",
+      "signal": "39分 — 景氣熱絡",
+      "signal_color": "var(--red)",
+      "value": "🔴 紅燈"
+    },
+    "us_cpi": {
+      "analysis": "當前 4.0%，高於 Fed 目標 2%，通膨黏著。服務業通膨（房租、薪資）是主要黏著項目，難以快速降至目標。Fed 降息時程因此延後，高利率環境持續，成長股估值承壓。",
+      "label": "4.0% → 偏高",
+      "signal": "4.0% — 通膨超標",
+      "signal_color": "var(--red)",
+      "value": "4.0%"
+    },
+    "usd_twd": {
+      "analysis": "當前 1030.37，台幣大幅貶值。出口導向科技股（台積電、聯電等）匯兌收益顯著增加。外資持有台股角度，台幣弱使美元計價報酬打折，外資減碼動機強。央行若持續干預，需注意政策風險。",
+      "label": "1030.37 TWD/USD",
+      "signal": "1030.37 — 台幣偏弱",
+      "signal_color": "var(--yellow)",
+      "value": "1030.37"
+    },
+    "vix": {
+      "analysis": "當前 17.9，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。",
+      "label": "17.9 → 平靜",
+      "signal": "17.9 — 市場平靜",
+      "signal_color": "var(--green)",
+      "value": "17.9"
+    }
+  },
+  "source": "live",
+  "status": "success",
+  "updated": "2026-05-14T10:55:39.620022"
+}

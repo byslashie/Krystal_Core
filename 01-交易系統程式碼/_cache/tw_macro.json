@@ -1,10 +1,37 @@
 {
-  "indicators": {},
-  "errors": [
-    "tw_light 爬取失敗",
-    "tw_rate 爬取失敗",
-    "tw_pmi 爬取失敗"
-  ],
-  "scraped_at": "2026-05-12T16:22:53.735024",
-  "cached_at": "2026-05-12T16:22:53.736032"
+  "indicators": {
+    "tw_light": {
+      "value": "🔴 紅燈",
+      "label": "39分 → 紅燈",
+      "signal": "39分 — 景氣熱絡",
+      "signal_color": "var(--red)",
+      "updated": "2026-03",
+      "next_update": "2026-05-28 16:00",
+      "source": "NDC (2026-03)",
+      "is_scraped": true
+    },
+    "tw_rate": {
+      "value": "2.00%",
+      "label": "2.00% → 維持不變",
+      "signal": "2.00% — CBC 維持利率",
+      "signal_color": "var(--yellow)",
+      "updated": "2024-03",
+      "next_update": "下次理監事會議（季度）",
+      "source": "CBC (2024-03-22 調整)",
+      "is_scraped": true
+    },
+    "tw_pmi": {
+      "value": "60.3",
+      "label": "60.3 → 擴張",
+      "signal": "60.3 — 製造業強勁擴張",
+      "signal_color": "var(--green)",
+      "updated": "2026-04",
+      "next_update": "2026-06-01 16:00",
+      "source": "NDC (2026-04)",
+      "is_scraped": true
+    }
+  },
+  "errors": [],
+  "scraped_at": "2026-05-14T17:52:01.939708",
+  "cached_at": "2026-05-14T17:52:01.940860"
 }

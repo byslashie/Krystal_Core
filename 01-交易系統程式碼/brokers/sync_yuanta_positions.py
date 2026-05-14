@@ -342,15 +342,9 @@ def main() -> bool:
     snapshot_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"已儲存庫存 snapshot → {snapshot_path}")
 
-    # 通知 Step 1 完成
-    try:
-        from modules.notifier import notify_sync_event
-        detail_lines = [f"{p['symbol']:<7} {int(p['position']):>5}股  現價:{p.get('currentPrice',0):.2f}  未實現:{p.get('unrealizedPnL',0):+.0f}" for p in positions]
-        detail_lines.append(f"─" * 38)
-        detail_lines.append(f"總市值 NT${total_market_value:,.0f}  未實現 {total_unrealized:+,.0f}")
-        notify_sync_event("元大 Step1 snapshot 完成", "\n".join(detail_lines), ok=True)
-    except Exception as e:
-        print(f"[notifier] {e}")
+    # Step 1 完成通知已移除（避免與 Step 2「📈 元大庫存更新」重複）
+    # 改由 upload_yuanta_to_sheets.py 統一通知（含均價，較完整）
+    # 2026-05-14 cleanup by Krystal + Claude
 
     # 6) 嘗試直接寫入 Google Sheets（若 SSL 失敗則留給 upload_yuanta_to_sheets.py 處理）
     try:

@@ -499,24 +499,60 @@ def sync_from_google_sheets():
         c.execute('SELECT * FROM broker_positions')
         old_positions = [dict(r) for r in c.fetchall()]
 
+        # ── 3. 讀取 trades 資訊來補足策略名稱 (Enrichment) ───────────
+        try:
+            df_trades = read_sheet_data_with_cache('trades')
+            # 建立 (券商, 標的) -> 策略 的對照表（只取進行中的）
+            # 欄位：券商, 標的, 策略, 備註, 狀態
+            t_broker = next((c for c in ['券商', 'broker'] if c in df_trades.columns), '券商')
+            t_symbol = next((c for c in ['標的', 'symbol'] if c in df_trades.columns), '標的')
+            t_strat  = next((c for c in ['策略', 'strategy'] if c in df_trades.columns), '策略')
+            t_notes  = next((c for c in ['備註', 'notes'] if c in df_trades.columns), '備註')
+            t_status = next((c for c in ['狀態', 'status'] if c in df_trades.columns), '狀態')
+            
+            # 只取「進行中」或「open」的
+            open_trades = df_trades[df_trades[t_status].astype(str).str.contains('進行中|open|OPEN', na=False, regex=True)]
+            strat_map = {}
+            for _, tr in open_trades.iterrows():
+                key = (_normalize_broker(str(tr.get(t_broker, ''))), str(tr.get(t_symbol, '')).strip())
+                strat_map[key] = {
+                    'strategy': str(tr.get(t_strat, '')),
+                    'notes': str(tr.get(t_notes, ''))
+                }
+        except Exception as ex:
+            print(f"⚠️ 無法讀取 trades 進行補強: {ex}")
+            strat_map = {}
+
         # ── 清空並寫入新持倉 ─────────────────────────────────────────
         c.execute('DELETE FROM broker_positions')
+        
         for _, row in df.iterrows():
             def _f(v, default=None):
                 return float(v) if pd.notna(v) and str(v) not in ('', 'nan') else default
+            
+            sym = str(row.get('symbol', row.get('代碼', ''))).strip()
+            broker = _normalize_broker(str(row.get('broker', row.get('券商', ''))))
+            
+            # 從 trades 對照表取得策略與備註
+            enrich = strat_map.get((broker, sym), {'strategy': '', 'notes': ''})
+            strat_val = enrich['strategy']
+            notes_val = enrich['notes']
+            
             c.execute('''INSERT INTO broker_positions
-                (symbol, position, avgCost, currentPrice, marketValue, unrealizedPnL, broker, currency, timestamp, name)
-                VALUES (?,?,?,?,?,?,?,?,?,?)''', (
-                str(row.get('symbol', '')),
-                _f(row.get('position')),
-                _f(row.get('avgCost')),
-                _f(row.get('currentPrice', row.get('marketPrice'))),
-                _f(row.get('marketValue')),
-                _f(row.get('unrealizedPnL', row.get('unrealizedPNL'))),
-                _normalize_broker(str(row.get('broker', row.get('券商', '')))),
-                str(row.get('currency', '')),
-                str(row.get('時間', row.get('timestamp', ''))),
-                str(row.get('name', row.get('名稱', row.get('商品名稱', ''))))
+                (symbol, position, avgCost, currentPrice, marketValue, unrealizedPnL, broker, currency, timestamp, name, strategy, notes)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (
+                sym,
+                _f(row.get('position', row.get('數量'))),
+                _f(row.get('avgCost', row.get('成本價'))),
+                _f(row.get('currentPrice', row.get('marketPrice', row.get('市價')))),
+                _f(row.get('marketValue', row.get('市值'))),
+                _f(row.get('unrealizedPnL', row.get('unrealizedPNL', row.get('損益')))),
+                broker,
+                str(row.get('currency', row.get('幣別', ''))),
+                str(row.get('時間', row.get('timestamp', row.get('日期', '')))),
+                str(row.get('name', row.get('名稱', row.get('商品名稱', '')))),
+                strat_val,
+                notes_val
             ))
 
         count = len(df)
@@ -1931,7 +1967,8 @@ def api_macro_indicators():
     """宏觀指標 - 經濟數據和匯率 (對接 macro_data 真實數據)"""
     try:
         from macro_data import get_indicators
-        data = get_indicators()
+        force_refresh = request.args.get('refresh') in ('1', 'true', 'yes')
+        data = get_indicators(force_refresh=force_refresh)
         inds = data.get('indicators', {})
 
         # 轉換為前端需要的格式
@@ -1946,7 +1983,9 @@ def api_macro_indicators():
             'usd_twd': 'usd_twd',
             'eu_eurusd': 'eu_eurusd',
             'real_rate': 'real_rate',
-            'tw_light': 'tw_light'
+            'tw_light': 'tw_light',
+            'tw_pmi':   'tw_pmi',
+            'tw_rate':  'tw_rate',
         }
 
         for frontend_key, macro_key in mapping.items():
@@ -1956,7 +1995,10 @@ def api_macro_indicators():
                 'label': item.get('label', 'N/A'),
                 'signal': item.get('signal', 'neutral'),
                 'signal_color': item.get('signal_color', 'var(--text-muted)'),
-                'analysis': item.get('analysis', '')
+                'analysis': item.get('analysis', ''),
+                'next_update': item.get('next_update'),
+                'updated': item.get('updated'),
+                'source': item.get('source'),
             }
 
         return jsonify({
@@ -2157,21 +2199,21 @@ def api_social_reddit():
     import random
     
     mock_articles = [
-        {'id': 1, 'type': '標的', 'title': '[標的] 2330 台積電 多', 'sentiment': 'bullish', 'score': 85},
-        {'id': 2, 'type': '閒聊', 'title': '今日盤後閒聊 - 震盪向上？', 'sentiment': 'neutral', 'score': 55},
-        {'id': 3, 'type': '新聞', 'title': '[新聞] 通膨數據低於預期', 'sentiment': 'bullish', 'score': 70},
-        {'id': 4, 'type': '標的', 'title': '[標的] NVDA 輝達 空', 'sentiment': 'bearish', 'score': 20},
-        {'id': 5, 'type': '情報', 'title': '[情報] 元大高股息 0056 規模突破新高', 'sentiment': 'bullish', 'score': 65}
+        {'id': 1, 'category': '標的', 'title': '[標的] 2330 台積電 多', 'sentiment': 'bullish', 'nrec': 85, 'url': 'https://www.ptt.cc/bbs/Stock/M.1715610000.A.html'},
+        {'id': 2, 'category': '閒聊', 'title': '今日盤後閒聊 - 震盪向上？', 'sentiment': 'neutral', 'nrec': 45, 'url': 'https://www.ptt.cc/bbs/Stock/M.1715610001.A.html'},
+        {'id': 3, 'category': '新聞', 'title': '[新聞] 通膨數據低於預期', 'sentiment': 'bullish', 'nrec': 120, 'url': 'https://www.ptt.cc/bbs/Stock/M.1715610002.A.html'},
+        {'id': 4, 'category': '標的', 'title': '[標的] NVDA 輝達 空', 'sentiment': 'bearish', 'nrec': 20, 'url': 'https://www.ptt.cc/bbs/Stock/M.1715610003.A.html'},
+        {'id': 5, 'category': '情報', 'title': '[情報] 元大高股息 0056 規模突破新高', 'sentiment': 'bullish', 'nrec': 65, 'url': 'https://www.ptt.cc/bbs/Stock/M.1715610004.A.html'}
     ]
     
     random.shuffle(mock_articles)
     
     return jsonify({
         'status': 'success', 
-        'data': mock_articles[:3],
+        'articles': mock_articles[:5],
         'ptt_summary': {
             'bull_pct': 68,
-            'hot_topics': ['台積電', '美股震盪', 'AI 伺服器', '0056']
+            'hot_topics': [['台積電', 12], ['美股震盪', 8], ['AI 伺服器', 5], ['0056', 4]]
         },
         'subreddits': [{'sentiment': 'bullish'}]
     })
@@ -2657,14 +2699,20 @@ def api_performance():
 
             # 同期 0050 報酬（用 TWD 帳戶當基準參考）
             try:
+                import math
                 bench = yf.download('0050.TW',
                                     start=first['date'], end=last['date'],
                                     progress=False, auto_adjust=True)['Close'].squeeze()
                 if len(bench) >= 2:
-                    bench_ret = (float(bench.iloc[-1]) - float(bench.iloc[0])) / float(bench.iloc[0]) * 100
-                    ret['bench_return_pct'] = round(bench_ret, 2)
-                    ret['bench_name']       = '0050'
-                    ret['alpha_pct']        = round(cum_ret - bench_ret, 2)
+                    b0, b1 = float(bench.iloc[0]), float(bench.iloc[-1])
+                    if math.isfinite(b0) and math.isfinite(b1) and b0 != 0:
+                        bench_ret = (b1 - b0) / b0 * 100
+                        ret['bench_return_pct'] = round(bench_ret, 2)
+                        ret['bench_name']       = '0050'
+                        ret['alpha_pct']        = round(cum_ret - bench_ret, 2)
+                    else:
+                        ret['bench_name']  = '0050'
+                        ret['bench_error'] = 'invalid bench prices (NaN or zero)'
             except Exception as e:
                 ret['bench_error'] = str(e)
 
@@ -2785,9 +2833,9 @@ def api_performance():
                 except: continue
                 if pnl == 0:
                     flat_count += 1; continue
-                broker = (p.get('broker') or '').lower()
-                # 美券損益是 USD，元大是 TWD
-                is_us = broker in ('ib','ibkr','schwab')
+                # 判斷是否為美股券商 (USD)
+                broker_norm = _normalize_broker(p.get('broker') or '')
+                is_us = broker_norm in ('IB', 'Schwab')
                 pnl_twd = pnl * 32.0 if is_us else pnl
                 if pnl_twd > 0:
                     up_count += 1; up_pnl_twd += pnl_twd
@@ -2822,6 +2870,19 @@ def api_performance():
             'return': grade_days(ret.get('period_days', 0)),
             'trades': grade_trades(ret.get('closed_trades', 0)),
         }
+
+        # 防呆：把任何 NaN/Inf 轉成 None，避免產生非法 JSON 讓前端 parse 失敗
+        import math
+        def _scrub(v):
+            if isinstance(v, float) and not math.isfinite(v):
+                return None
+            if isinstance(v, dict):
+                return {k: _scrub(x) for k, x in v.items()}
+            if isinstance(v, list):
+                return [_scrub(x) for x in v]
+            return v
+        ret = _scrub(ret)
+
         return jsonify({'status': 'success', 'data': ret})
     except Exception as e:
         import traceback

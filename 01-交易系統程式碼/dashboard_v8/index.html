@@ -533,8 +533,12 @@ select option{background:var(--bg-base);color:var(--text-primary)}
 .macro-step-title{font-size:13px;font-weight:800;color:var(--text-primary);margin-bottom:6px;letter-spacing:-.01em}
 .macro-step-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;font-weight:500}
 .macro-indicator-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-.macro-indicator{background:var(--bg-raised);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;text-align:center;cursor:pointer;transition:all var(--transition)}
+.macro-indicator{background:var(--bg-raised);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;text-align:center;cursor:pointer;transition:all var(--transition);position:relative}
 .macro-indicator:hover{border-color:var(--accent);transform:translateY(-1px)}
+.macro-indicator[data-demo="true"]{border-left:3px solid var(--red)}
+.macro-indicator[data-demo="true"]::after{content:"🔴 示範";position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;z-index:2;pointer-events:none}
+.macro-indicator[data-real="true"]{border-left:3px solid var(--green)}
+.macro-indicator[data-real="true"]::after{content:"✓ 真實";position:absolute;top:4px;right:4px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;z-index:2;pointer-events:none}
 .macro-indicator-label{font-size:10px;color:var(--text-muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .macro-indicator-val{font-size:22px;font-weight:900;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:4px;letter-spacing:-.03em}
 .macro-indicator-trend{font-size:11px;font-weight:600;margin-bottom:8px}
@@ -841,7 +845,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
       </div>
       <div class="chart-row chart-row-21">
         <div class="chart-card">
-          <div class="chart-title">投資組合走勢 <span class="chart-subtitle">過去 13 個月 vs S&amp;P 500</span></div>
+          <div class="chart-title">投資組合走勢 <span class="chart-subtitle">vs 0050（基準 100）— 自記錄以來</span></div>
           <div class="chart-wrap" style="height:220px"><canvas id="c-trend"></canvas></div>
         </div>
         <div class="chart-card">
@@ -901,6 +905,12 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
     <!-- PAGE 2: 總經羅盤 -->
     <div class="page" id="p2">
       <div class="page-heading">🌐 總經羅盤</div>
+      <!-- 資料來源圖例（與 P8/P9 一致） -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);margin-bottom:12px;padding:10px 14px;background:var(--bg-raised);border-radius:8px;border:1px solid var(--border-soft)">
+        <span><span style="color:var(--green);font-weight:700">✓ 真實</span> — yfinance / FRED / 政府公開資料</span>
+        <span><span style="color:var(--red);font-weight:700">🔴 示範</span> — 寫死的舊值，尚未串接 API</span>
+        <span style="color:var(--text-muted)">每張指標卡右上角會標示資料來源狀態</span>
+      </div>
       <div class="banner banner-yellow">📡 財經M平方框架 — 5步驟判斷景氣象限 ｜ 當前判斷：<strong>擴張象限</strong> ｜ 每週確認一次</div>
       <!-- Quadrant Selector -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
@@ -2078,27 +2088,39 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
 
     <!-- PAGE 8: 策略比對 -->
     <div class="page" id="p8">
-      <div class="page-heading">📊 策略比對分析</div>
-      <div class="banner">📈 所有策略 NAV 從 100 正規化出發 ｜ 更平滑的曲線 = 風險調整後表現更佳</div>
+      <div class="page-heading">
+        📊 策略比對分析
+        <span style="margin-left:12px;font-size:11px;vertical-align:middle;background:var(--red);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700">🔴 示範資料</span>
+      </div>
+      <!-- 資料來源圖例（與 P9 一致） -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);margin-bottom:16px;padding:10px 14px;background:var(--bg-raised);border-radius:8px;border:1px solid var(--border-soft)">
+        <span><span style="color:var(--green);font-weight:700">✓ 真實</span> — 來自 SQLite / Sheet / yfinance</span>
+        <span><span style="color:var(--yellow);font-weight:700">⚠ 真實但有警告</span> — 樣本不足或計算有限制</span>
+        <span><span style="color:var(--red);font-weight:700">🔴 示範資料</span> — 寫死的 demo，尚未串接真實資料</span>
+      </div>
+      <div class="banner" style="border-left:3px solid var(--red);background:var(--bg-raised)">⚠️ 本頁所有圖表為示範數據（寫死的 demo），尚未串接真實策略 NAV / 回測 / 雷達資料</div>
       <!-- Multi-strategy NAV -->
-      <div class="chart-card" style="margin-bottom:20px">
-        <div class="chart-title">多策略 NAV 曲線比較 <span class="chart-subtitle">12 個月 · 正規化基準 100</span></div>
+      <div class="chart-card" style="margin-bottom:20px;border-left:3px solid var(--red);position:relative">
+        <div style="position:absolute;top:10px;right:14px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;z-index:2" title="尚未串接真實策略 NAV，這是寫死的 demo">🔴 示範資料</div>
+        <div class="chart-title"><span style="color:var(--red)">🔴</span> 多策略 NAV 曲線比較 <span class="chart-subtitle">12 個月 · 正規化基準 100</span></div>
         <div class="chart-wrap" style="height:280px"><canvas id="c-nav-compare"></canvas></div>
       </div>
       <!-- Backtest vs Actual Gap -->
       <div class="chart-row chart-row-11">
-        <div class="chart-card">
-          <div class="chart-title">回測 vs 實盤年報酬 <span class="chart-subtitle">落差分析</span></div>
+        <div class="chart-card" style="border-left:3px solid var(--red);position:relative">
+          <div style="position:absolute;top:10px;right:14px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;z-index:2" title="尚未串接真實回測 vs 實盤資料，這是寫死的 demo">🔴 示範資料</div>
+          <div class="chart-title"><span style="color:var(--red)">🔴</span> 回測 vs 實盤年報酬 <span class="chart-subtitle">落差分析</span></div>
           <div class="chart-wrap" style="height:220px"><canvas id="c-bt-vs-live"></canvas></div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">策略風險特徵雷達圖</div>
+        <div class="chart-card" style="border-left:3px solid var(--red);position:relative">
+          <div style="position:absolute;top:10px;right:14px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;z-index:2" title="尚未串接真實策略風險特徵，這是寫死的 demo">🔴 示範資料</div>
+          <div class="chart-title"><span style="color:var(--red)">🔴</span> 策略風險特徵雷達圖</div>
           <div class="chart-wrap" style="height:220px"><canvas id="c-radar"></canvas></div>
         </div>
       </div>
       <!-- Allocation Recommendation -->
-      <div class="section-head">💡 加碼/減碼建議（凱利公式 + 近期表現）</div>
-      <div class="table-wrap">
+      <div class="section-head"><span style="color:var(--red)">🔴</span> 💡 加碼/減碼建議（凱利公式 + 近期表現）<span style="margin-left:8px;font-size:10px;background:var(--red);color:#fff;padding:1px 6px;border-radius:3px;font-weight:700">示範資料</span></div>
+      <div class="table-wrap" style="border-left:3px solid var(--red)">
         <table>
           <thead><tr><th>排名</th><th>策略</th><th>當前配置</th><th>凱利建議上限</th><th>夏普評級</th><th>近期趨勢</th><th>操作建議</th></tr></thead>
           <tbody>
@@ -2133,8 +2155,8 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
         </table>
       </div>
       <!-- Rolling metrics -->
-      <div class="section-head">📉 近 3 個月滾動績效</div>
-      <div class="mini-stats" style="grid-template-columns:repeat(3,1fr)">
+      <div class="section-head"><span style="color:var(--red)">🔴</span> 📉 近 3 個月滾動績效<span style="margin-left:8px;font-size:10px;background:var(--red);color:#fff;padding:1px 6px;border-radius:3px;font-weight:700">示範資料</span></div>
+      <div class="mini-stats" style="grid-template-columns:repeat(3,1fr);border-left:3px solid var(--red);padding-left:10px">
         <div class="mini-stat">
           <div class="mini-stat-label">趨勢追蹤 3M 報酬</div>
           <div class="mini-stat-val green">+6.8%</div>
@@ -3932,27 +3954,25 @@ function initPageCharts(pid) {
 
   // PAGE 1: Dashboard
   if (pid === 'p1') {
-    const months13 = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-    const portVals = [98000,101200,105800,108300,106900,111400,113200,118900,115700,119800,121600,124200,125345];
-    const spyVals  = [98000,100100,103400,105800,104200,107600,109000,113500,110800,114200,116000,118900,120100];
     const opts1 = baseOpts(true);
-    opts1.scales.y.ticks.callback = v => `$${(v/1000).toFixed(0)}k`;
+    opts1.scales.y.ticks.callback = v => `${v.toFixed(0)}`;
     chartInstances['c-trend'] = new Chart(document.getElementById('c-trend'), {
       type: 'line',
       data: {
-        labels: months13,
+        labels: [],
         datasets: [
-          { label: 'Portfolio', data: portVals, borderColor: cv('--accent'), backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, pointBackgroundColor: cv('--accent'), tension: 0.35 },
-          { label: 'S&P 500',   data: spyVals,  borderColor: cv('--purple'), backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 2, borderDash: [4,4], tension: 0.35 }
+          { label: 'Portfolio', data: [], borderColor: cv('--accent'), backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, pointBackgroundColor: cv('--accent'), tension: 0.25 },
+          { label: '0050',      data: [], borderColor: cv('--purple'), backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, borderDash: [4,4], tension: 0.25 }
         ]
       },
       options: opts1
     });
+    loadP1Trend();
     chartInstances['c-alloc-donut'] = new Chart(document.getElementById('c-alloc-donut'), {
       type: 'doughnut',
       data: {
-        labels: ['IB 美股','元大 台股','現金'],
-        datasets: [{ data: [62,28,10], backgroundColor: [cv('--accent'), cv('--green'), cv('--yellow')], borderWidth: 0, hoverOffset: 6 }]
+        labels: ['IB+Schwab 美股','元大 台股','現金'],
+        datasets: [{ data: [0,0,0], backgroundColor: [cv('--accent'), cv('--green'), cv('--yellow')], borderWidth: 0, hoverOffset: 6 }]
       },
       options: { ...noAxesOpts(false), cutout: '65%' }
     });
@@ -4376,14 +4396,20 @@ updateClock();
 setInterval(updateClock, 1000);
 
 // ── Init on load ───────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   pageCharts['p1'] = true;
   initPageCharts('p1');
-  calcKelly();
-  loadBrokerPositions();
-  fetchMacroIndicators(false);
-  loadMarketIndices();
-  fetchPTTSentiment();
+  
+  // 按照依賴順序執行
+  await loadBrokerPositions();  // 這會更新持倉、總市值、凱利計算所需的基礎數據
+  loadPerformance();           // 更新 P1/P9 的績效卡片 (勝率、盈虧比等)
+  loadStrategies();            // 更新 P10 的策略列表
+  fetchMacroIndicators(false); // 更新總經羅盤
+  loadMarketIndices();         // 更新全球市場強弱
+  fetchPTTSentiment();         // 更新 PTT 情緒
+  
+  // 延遲一下執行凱利計算，確保數據已填入 DOM
+  setTimeout(calcKelly, 500);
 });
 
 async function loadBrokerPositions() {
@@ -4509,6 +4535,13 @@ async function loadBrokerPositions() {
       setEl('p1-total-mv',    `NT$${Math.round(totalMV).toLocaleString()}`);
       setEl('p1-total-pnl',   fmtS(totalPnL), totalPnL>=0?'green':'red');
       setEl('p1-total-count', totalCount);
+
+      // 同步更新 P4 Kelly Calculator 的輸入欄位
+      const kAcc = document.getElementById('k-account');
+      if (kAcc) kAcc.value = Math.round(totalMV);
+      const kCash = document.getElementById('k-cash-reserve');
+      const savedCash = localStorage.getItem('cashReserveTWD') || '0';
+      if (kCash) kCash.value = savedCash;
       
       const tt_pct = document.getElementById('p1-total-pnl-pct');
       if (tt_pct) {
@@ -4530,7 +4563,19 @@ async function loadBrokerPositions() {
       // 拉總資金水位卡片
       loadCashStatus();
 
-      const allocCashTWD = parseFloat(localStorage.getItem('cashReserveTWD') || '0');
+      // 現金備檔以 equity-history 最後一筆為準（cash_reserve + emergency）
+      // localStorage 只當 fallback，避免 Sheet 還沒填時整個圖空白
+      let allocCashTWD = parseFloat(localStorage.getItem('cashReserveTWD') || '0');
+      try {
+        const eqRes = await fetch(`${API_BASE}/api/equity-history?days=30`);
+        const eqJson = await eqRes.json();
+        if (eqJson.status === 'success' && eqJson.data?.length) {
+          const last = eqJson.data[eqJson.data.length - 1];
+          const realCash = (last.cash_reserve_twd || 0) + (last.emergency_reserve_twd || 0);
+          if (realCash > 0) allocCashTWD = realCash;
+        }
+      } catch (e) { /* keep localStorage fallback */ }
+
       const allocTotal = globalUsTWD + globalTwTWD + allocCashTWD;
       if (allocTotal > 0) {
         const allocUsPct = parseFloat((globalUsTWD / allocTotal * 100).toFixed(1));
@@ -4544,7 +4589,7 @@ async function loadBrokerPositions() {
         setTxt('p1-alloc-us-pct', allocUsPct+'%');
         setTxt('p1-alloc-tw-pct', allocTwPct+'%');
         setTxt('p1-alloc-cash-pct', allocCashPct+'%');
-        
+
         const p3Donut = chartInstances['c-alloc-class'];
         if (p3Donut) { p3Donut.data.datasets[0].data = allocData; p3Donut.update(); }
       }
@@ -6099,13 +6144,20 @@ async function updateAllocFromKelly(acctTWD, cashReserveTWD) {
 
     globalUsTWD = 0; globalTwTWD = 0; let s3Exposure = 0;
     all.forEach(p => {
-      const b = (p['券商']||p.source||p.broker||'').toLowerCase();
+      const bRaw = (p['券商']||p.source||p.broker||'');
+      const b = bRaw.toLowerCase();
       const mv = getMV_twd(p);
-      if (b.includes('schwab') || b === 'ib' || b === 'ibkr') globalUsTWD += mv;
-      else if (b.includes('元大') || b === 'yuanta') globalTwTWD += mv;
+      
+      // 更加強健的券商歸類
+      const isUS = b.includes('schwab') || b === 'ib' || b === 'ibkr' || b.includes('interactive');
+      const isTW = b.includes('元大') || b === 'yuanta' || b === 'j' || b.includes('yuanta'); // 包含 j 容錯
+      
+      if (isUS) globalUsTWD += mv;
+      else if (isTW) globalTwTWD += mv;
       
       const strat = (p['策略']||p.strategy||'').toUpperCase();
-      if (strat.includes('S3')) s3Exposure += mv;
+      // 支援 S3 代號 或 中文關鍵字
+      if (strat.includes('S3') || strat.includes('強勢股')) s3Exposure += mv;
     });
 
     const usTWD = globalUsTWD;
@@ -6837,9 +6889,40 @@ function _updateCard(card, ind) {
     trendEl.textContent = ind.signal || '';
     trendEl.style.color = ind.signal_color || 'var(--text-secondary)';
   }
+  // 寫入「下次更新時機」小字（若無則隱藏）
+  let nextEl = card.querySelector('.macro-indicator-next');
+  if (!nextEl) {
+    nextEl = document.createElement('div');
+    nextEl.className = 'macro-indicator-next';
+    nextEl.style.cssText = 'font-size:9px;color:var(--text-muted);text-align:left;margin-top:4px;line-height:1.3;opacity:0.75';
+    card.appendChild(nextEl);
+  }
+  if (ind.next_update) {
+    nextEl.textContent = `🕓 下次：${ind.next_update}`;
+    nextEl.style.display = '';
+  } else {
+    nextEl.style.display = 'none';
+  }
+  // hover tooltip：來源 + 最後更新 + 下次
+  const tipParts = [];
+  if (ind.source)      tipParts.push(`來源：${ind.source}`);
+  if (ind.updated)     tipParts.push(`最後更新：${ind.updated}`);
+  if (ind.next_update) tipParts.push(`下次更新：${ind.next_update}`);
+  if (tipParts.length) card.title = tipParts.join('\n');
+  // 標記為真實資料，移除 demo 紅徽章
+  card.removeAttribute('data-demo');
+  card.setAttribute('data-real', 'true');
+}
+
+// 初始把 P2 所有總經指標卡標為 demo（紅徽章），等 fetchMacroIndicators 覆寫後再移除
+function _markAllMacroCardsAsDemo() {
+  document.querySelectorAll('#p2 .macro-indicator').forEach(card => {
+    if (!card.hasAttribute('data-real')) card.setAttribute('data-demo', 'true');
+  });
 }
 
 async function fetchMacroIndicators(forceRefresh) {
+  _markAllMacroCardsAsDemo();   // 先全部標紅，成功覆寫後才會自動移除
   const url = API_BASE + '/api/macro-indicators' + (forceRefresh ? '?refresh=1' : '');
   let data;
   try {
@@ -7074,6 +7157,49 @@ const API_BASE = (
   window.location.port === '8080' ||
   window.location.port === '8889'
 ) ? 'http://127.0.0.1:9999' : window.location.origin;
+
+// ── P1 投資組合走勢（真實 NAV vs 0050，normalize 起始=100） ────
+async function loadP1Trend() {
+  try {
+    const eqRes = await fetch(`${API_BASE}/api/equity-history?days=365`);
+    const eqJson = await eqRes.json();
+    if (eqJson.status !== 'success') return;
+    const hist = (eqJson.data || []).filter(r => r.total_mv_twd > 0);
+    if (hist.length < 2) return;
+
+    const startDate = hist[0].date;
+    const endDate   = hist[hist.length - 1].date;
+    const base = hist[0].total_mv_twd;
+    const navIdx = hist.map(r => +(r.total_mv_twd / base * 100).toFixed(2));
+    const labels = hist.map(r => r.date.slice(5));   // MM-DD
+
+    // 抓 0050 同期收盤，對齊到 portfolio 日期
+    let benchIdx = new Array(hist.length).fill(null);
+    try {
+      const bRes = await fetch(`${API_BASE}/api/benchmark-history?symbol=0050.TW&start=${startDate}&end=${endDate}`);
+      const bJson = await bRes.json();
+      if (bJson.status === 'success' && (bJson.data || []).length >= 2) {
+        const bMap = new Map(bJson.data.map(d => [d.date, d.close]));
+        const bBase = bJson.data[0].close;
+        // 對齊：portfolio 每一天找最近的（含當天或之前）0050 收盤
+        let lastClose = bBase;
+        benchIdx = hist.map(r => {
+          if (bMap.has(r.date)) lastClose = bMap.get(r.date);
+          return +(lastClose / bBase * 100).toFixed(2);
+        });
+      }
+    } catch (e) { /* 沒抓到 bench 就只畫 portfolio */ }
+
+    const chart = chartInstances['c-trend'];
+    if (!chart) return;
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = navIdx;
+    chart.data.datasets[1].data = benchIdx;
+    chart.update();
+  } catch (e) {
+    console.warn('loadP1Trend failed:', e);
+  }
+}
 
 // ── 績效分析（真實資料） ─────────────────────────────────────
 async function loadPerformance() {
@@ -13781,14 +13907,16 @@ async function loadStrategyLibrary() {
     renderStrategyCards(filtered);
   };
 
+  const _markMock = arr => arr.map(d => ({ ...d, is_mock: true }));
   try {
     const resp = await fetch('/api/strategy-center/library');
     const json = await resp.json();
     if (loading) loading.style.display = 'none';
-    _applyAndRender(json.data && json.data.length > 0 ? json.data : MOCK_LIBRARY);
+    const hasReal = json.data && json.data.length > 0;
+    _applyAndRender(hasReal ? json.data : _markMock(MOCK_LIBRARY));
   } catch (e) {
     if (loading) loading.style.display = 'none';
-    _applyAndRender(MOCK_LIBRARY);
+    _applyAndRender(_markMock(MOCK_LIBRARY));
   }
 }
 
@@ -13898,9 +14026,14 @@ function renderStrategyCards(data) {
     const scorePct = d.score || 0;
 
     const safeKey = encodeURIComponent(d.name);
-    return `<div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:14px;padding:0;overflow:hidden;position:relative;transition:box-shadow 200ms;cursor:pointer;"
+    const mockBorder = d.is_mock ? 'border:2px solid var(--red);' : 'border:1px solid var(--border);';
+    const mockBadge = d.is_mock
+      ? `<div style="position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;z-index:2;" title="尚未串接真實策略資料，這是寫死的示範卡片">🔴 示範資料</div>`
+      : '';
+    return `<div style="background:var(--bg-raised);${mockBorder}border-radius:14px;padding:0;overflow:hidden;position:relative;transition:box-shadow 200ms;cursor:pointer;"
         onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow='none'"
         onclick="openStrategyDetail(event, '${safeKey}')">
+      ${mockBadge}
 
       <!-- 頂部色帶 + 狀態 -->
       <div style="background:${st.bg};padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">

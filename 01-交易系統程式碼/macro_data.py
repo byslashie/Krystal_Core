@@ -21,6 +21,15 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Module load 時就讀 .env，確保被 Flask import 時 FRED_API_KEY / 其他 secret 已就位
+try:
+    from dotenv import load_dotenv
+    _env = Path(__file__).parent / ".env"
+    if _env.exists():
+        load_dotenv(_env, override=False)
+except ImportError:
+    pass
+
 # 快取設定
 CACHE_DIR = Path(__file__).parent / "_cache"
 CACHE_FILE = CACHE_DIR / "macro_indicators.json"
@@ -642,10 +651,19 @@ def fetch_macro_data(force_refresh: bool = False) -> dict:
 
     # ── 其餘手動覆蓋值（從 Google Sheets 讀取，非台灣三大指標）──
     overrides = _load_sheets_overrides()
-    for key, override in overrides.items():
+    
+    # 確保 MANUAL_OVERRIDES 中的所有 key 都有值 (作為最終保險)
+    full_overrides = MANUAL_OVERRIDES.copy()
+    full_overrides.update(overrides)
+
+    for key, override in full_overrides.items():
         # 台灣三大指標若已自動爬取成功，不覆蓋
         if key in ("tw_light", "tw_pmi", "tw_rate") and key in result["indicators"]:
             continue
+        # 若 API 已抓到真實數據，不覆蓋 (除非 Sheet 強制覆蓋，但這裡邏輯是補位)
+        if key in result["indicators"] and not override.get("is_manual"):
+            continue
+            
         result["indicators"][key] = {
             "value":        override["value"],
             "label":        override.get("label", override["value"]),
@@ -654,6 +672,37 @@ def fetch_macro_data(force_refresh: bool = False) -> dict:
             "source":       override.get("source", f"手動更新 ({override.get('updated', '')})"),
             "is_manual":    True
         }
+
+    # ── 補 next_update（每張卡顯示「下次更新時機」）─────────────
+    # 沒抓到 next_update 的指標，依其發布規則寫死提示
+    NEXT_UPDATE_RULES = {
+        # FRED（每月發布，FRED 沒給 next，寫死該指標的標準發布時程）
+        "us_cpi":    "每月 10-15 日 (FRED: CPIAUCSL)",
+        "nfp":       "每月第一個週五 (FRED: PAYEMS)",
+        "fed_rate":  "FOMC 會議後 (FRED: FEDFUNDS)",
+        "real_rate": "每日更新 (FRED: DFII10)",
+        # yfinance（即時報價）
+        "vix":       "即時 (交易時段每分鐘)",
+        "usd_twd":   "即時 (交易時段每分鐘)",
+        "eu_eurusd": "即時 (交易時段每分鐘)",
+        "jp_usdjpy": "即時 (交易時段每分鐘)",
+        # 其他 FRED 月度
+        "jp_cpi":    "每月 (FRED: JPNCPIALLMINMEI)",
+        "jp_rate":   "BOJ 會議後 (FRED: IRSTCB01JPM156N)",
+        "eu_cpi":    "每月 (FRED: CP0000EZ19M086NEST)",
+        "eu_rate":   "ECB 會議後",
+        "cn_usdcny": "即時 (Yahoo CNY=X)",
+        "kr_usdkrw": "即時 (Yahoo KRW=X)",
+        # 手動更新（Google Sheets）
+        "ism_pmi":   "每月第一個工作日 (ISM 官網)",
+    }
+    for key, ind in result["indicators"].items():
+        if not isinstance(ind, dict):
+            continue
+        if ind.get("next_update"):  # tw_light/tw_pmi/tw_rate 已自帶
+            continue
+        if key in NEXT_UPDATE_RULES:
+            ind["next_update"] = NEXT_UPDATE_RULES[key]
 
     _save_cache(result)
     return result

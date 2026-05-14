@@ -5,6 +5,8 @@ Krystal Discord Bot — 每日報告 + Claude AI 智能對話
 Slash 指令：
   /今日報告  — 立即產生今日持倉報告
   /早報      — 立即產生早報（大盤 + 持倉 + 異動原因）
+  /收盤      — 立即產生台股收盤結算報告
+  /美股開盤  — 立即產生美股開盤 +5min 監控報告
   /同步      — 立即觸發 IB + Schwab 同步
   /庫存      — 查持倉清單
   /損益      — 查未實現損益
@@ -13,6 +15,8 @@ Slash 指令：
 自動功能：
   - 每天 07:00 自動同步 IB + Schwab 持倉
   - 每天 08:00 自動發送早報（大盤 + 持倉 + 異動標的原因）
+  - 每天 13:35 自動發送台股收盤結算（週末跳過）
+  - 美股開盤 +5min 自動監控（夏令 21:35 / 冬令 22:35，週末跳過）
 
 環境變數（.env）：
   DISCORD_BOT_TOKEN=
@@ -44,6 +48,22 @@ CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
 CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 SNAPSHOT   = PROJECT_ROOT / "data" / "yuanta_positions_snapshot.json"
 TZ         = ZoneInfo("Asia/Taipei")
+TZ_US      = ZoneInfo("America/New_York")
+
+
+def _is_us_dst() -> bool:
+    """美東現在是否為夏令時間（EDT）。夏令: 3 月第二週日 → 11 月第一週日。"""
+    return datetime.now(TZ_US).dst().total_seconds() != 0
+
+
+def _us_open_taipei_time() -> time:
+    """美股開盤對應台北時間：夏令 21:30，冬令 22:30。"""
+    return time(21, 30, tzinfo=TZ) if _is_us_dst() else time(22, 30, tzinfo=TZ)
+
+
+def _us_open_report_taipei_time() -> time:
+    """美股開盤後 5 分鐘的台北時間（給 _build_us_open_report 用）：夏令 21:35，冬令 22:35。"""
+    return time(21, 35, tzinfo=TZ) if _is_us_dst() else time(22, 35, tzinfo=TZ)
 
 # ── Anthropic client（lazy import） ──────────────
 _anthropic_client = None
@@ -306,33 +326,103 @@ def _fetch_quote_and_news(yf_sym: str, want_news: bool = False) -> dict:
     return info
 
 
-# ── Claude 異動原因解釋 ─────────────────────────────
-def _explain_mover(symbol: str, name_hint: str, pct: float, headlines: list[str]) -> str:
-    """請 Claude 用 2 行解釋為什麼大漲/大跌"""
-    claude = get_claude()
-    if not claude:
-        if headlines:
-            return headlines[0][:80]
-        return "無相關新聞"
-    direction = "大漲" if pct > 0 else "大跌"
-    news_block = "\n".join(f"- {h}" for h in headlines) if headlines else "（無近期新聞）"
-    prompt = (
-        f"{symbol}（{name_hint}）今日{direction} {pct:+.2f}%。\n"
-        f"最近新聞標題（可能是英文）：\n{news_block}\n\n"
-        "請**全部用繁體中文**回答，2 行內，每行不超過 35 字。"
-        "格式：第一行主因，第二行佐證或延伸。"
-        "若新聞是英文請翻譯成中文，不要保留英文原句。"
-        "不要開頭寒暄，直接寫原因。"
-    )
+# ── 免費中文翻譯（Google Translate via deep-translator）─────
+_translator = None
+
+
+def _get_translator():
+    """Lazy init Google translator. 失敗回 None。"""
+    global _translator
+    if _translator is None:
+        try:
+            from deep_translator import GoogleTranslator
+            _translator = GoogleTranslator(source="auto", target="zh-TW")
+        except Exception as e:
+            # 把錯誤詳情寫進 log，方便診斷（例如 module 找不到 / SSL 問題）
+            try:
+                log_path = PROJECT_ROOT / "logs" / "translate.log"
+                log_path.parent.mkdir(exist_ok=True)
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write(f"{datetime.now(TZ).strftime('%Y-%m-%d %H:%M:%S')} [INIT ERROR {type(e).__name__}] {str(e)[:300]}\n")
+            except Exception:
+                pass
+            _translator = False  # 標記初始化失敗，避免反覆嘗試
+    return _translator if _translator is not False else None
+
+
+def _translate_log(msg: str) -> None:
+    """寫翻譯診斷 log 到檔案（pythonw 沒有 stdout）。"""
     try:
-        resp = claude.messages.create(
-            model="claude-opus-4-6",
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return resp.content[0].text.strip()
+        log_path = PROJECT_ROOT / "logs" / "translate.log"
+        log_path.parent.mkdir(exist_ok=True)
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"{datetime.now(TZ).strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
+    except Exception:
+        pass
+
+
+def _translate_to_zh(text: str) -> str:
+    """把英文新聞標題翻成繁體中文。失敗或已是中文就回原字串。"""
+    if not text:
+        return text
+    # 簡單判斷：若含 CJK 字元 > 30% 就視為中文，不翻
+    cjk_count = sum(1 for c in text if "一" <= c <= "鿿")
+    if cjk_count > len(text) * 0.3:
+        return text
+    t = _get_translator()
+    if t is None:
+        _translate_log(f"[init failed] {text[:50]}")
+        return text
+    try:
+        result = t.translate(text)
+        if result:
+            _translate_log(f"[OK] {text[:40]} → {result[:40]}")
+            return result
+        _translate_log(f"[empty result] {text[:50]}")
+        return text
     except Exception as e:
-        return f"（AI 解釋失敗：{str(e)[:40]}）"
+        _translate_log(f"[FAIL {type(e).__name__}] {str(e)[:80]} | {text[:50]}")
+        return text
+
+
+# ── 異動原因解釋（優先 Claude，沒設定就用 Google 翻譯）─────────────
+def _explain_mover(symbol: str, name_hint: str, pct: float, headlines: list[str]) -> str:
+    """請 Claude 用 2 行解釋為什麼大漲/大跌；沒設定 Claude 則用 Google 翻譯英文標題。"""
+    claude = get_claude()
+
+    # ── Claude 路徑（有 API key 才走）──
+    if claude:
+        direction = "大漲" if pct > 0 else "大跌"
+        news_block = "\n".join(f"- {h}" for h in headlines) if headlines else "（無近期新聞）"
+        prompt = (
+            f"{symbol}（{name_hint}）今日{direction} {pct:+.2f}%。\n"
+            f"最近新聞標題（可能是英文）：\n{news_block}\n\n"
+            "請**全部用繁體中文**回答，2 行內，每行不超過 35 字。"
+            "格式：第一行主因，第二行佐證或延伸。"
+            "若新聞是英文請翻譯成中文，不要保留英文原句。"
+            "不要開頭寒暄，直接寫原因。"
+        )
+        try:
+            resp = claude.messages.create(
+                model="claude-opus-4-6",
+                max_tokens=200,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return resp.content[0].text.strip()
+        except Exception as e:
+            # Claude 失敗 → fallback 到 Google 翻譯
+            pass
+
+    # ── Google 翻譯路徑（免費 fallback）──
+    if not headlines:
+        return "（無近期新聞）"
+    # 取前 1-2 條標題，翻譯後組合
+    top_headlines = headlines[:2]
+    translated = []
+    for h in top_headlines:
+        zh = _translate_to_zh(h)
+        translated.append(zh[:80])  # 限制單行長度
+    return "\n".join(translated)
 
 
 # ── 格式化今日報告 ────────────────────────────────
@@ -558,8 +648,198 @@ def _build_morning_report() -> str:
             lines.append("")
 
     # ── 今日提醒 ────────────────────────────
+    us_open = _us_open_taipei_time().strftime("%H:%M")
+    dst_tag = "（夏令 EDT）" if _is_us_dst() else "（冬令 EST）"
     lines.append("═══ 📅 **今日提醒** ═══")
-    lines.append("🇹🇼 09:00 台股開盤  |  🇺🇸 21:30 美股開盤")
+    lines.append(f"🇹🇼 09:00 台股開盤  |  13:30 台股收盤  |  🇺🇸 {us_open} 美股開盤 {dst_tag}")
+
+    return "\n".join(lines)
+
+
+# ── 13:35 台股收盤報告 ─────────────────────────────
+def _build_closing_report() -> str:
+    """台股收盤後（13:35）的結算報告：今日台股大盤收盤、台股持倉當日 P&L、±3% 異動原因。"""
+    now_dt = datetime.now(TZ)
+    weekday = "一二三四五六日"[now_dt.weekday()]
+    now = now_dt.strftime("%Y-%m-%d") + f" (週{weekday}) " + now_dt.strftime("%H:%M")
+    lines = [f"🔔 **Krystal 台股收盤結算** `{now}`", ""]
+
+    # ── 大盤（只看台股）──────────────────────
+    indices = _fetch_indices()
+    if indices:
+        tw_idx = [i for i in indices if "TW" in i.get("symbol", "") or "台" in i.get("label", "")]
+        if tw_idx:
+            lines.append("═══ 🇹🇼 **台股大盤收盤** ═══")
+            lines.append("```")
+            for idx in tw_idx:
+                sign = "+" if idx["pct"] >= 0 else ""
+                arrow = "🔴" if idx["pct"] >= 0 else "🟢"
+                lines.append(f"{idx['label']:<14} {idx['last']:>10,.2f}  {arrow}{sign}{idx['pct']:.2f}%  ({sign}{idx['chg']:,.1f})")
+            lines.append("```")
+            lines.append("")
+
+    # ── 讀持倉 ──────────────────────────────
+    try:
+        from sheets_utils import read_sheet_data_with_cache
+        df = read_sheet_data_with_cache("broker_positions")
+        positions = df.to_dict('records') if not df.empty else []
+    except Exception as e:
+        lines.append(f"⚠️ 讀取持倉失敗：{e}")
+        return "\n".join(lines)
+
+    tw_positions = [p for p in positions if str(p.get("broker", "")).strip() == "元大"]
+    if not tw_positions:
+        lines.append("⚠️ 目前無台股持倉。")
+        return "\n".join(lines)
+
+    movers: list[dict] = []
+
+    # ── 台股持倉今日結算 ─────────────────────
+    lines.append("═══ 🇹🇼 **台股持倉今日結算** ═══")
+    lines.append("```")
+    lines.append(f"{'代碼':<7} {'名稱':<10} {'股數':>5}  {'均價':>7}  {'收盤':>7}  {'今日%':>6}  {'損益':>9}")
+    lines.append("─" * 64)
+    tw_total_pnl = 0.0
+    tw_day_change = 0.0
+    for p in tw_positions:
+        sym = str(p.get("symbol", "")).strip()
+        qty = int(_safe_float(p.get("position", 0)))
+        avg = _safe_float(p.get("avgCost", 0))
+        mkt = _safe_float(p.get("marketPrice", 0))
+        pnl = _safe_float(p.get("unrealizedPNL", 0))
+        tw_total_pnl += pnl
+        yf_sym = _to_yf_symbol(sym, "元大")
+        name = _name_of(sym, yf_sym)
+        q = _fetch_quote_and_news(yf_sym, want_news=False)
+        day_pct = q.get("pct", 0.0)
+        day_chg = q.get("chg", 0.0)
+        tw_day_change += day_chg * qty
+        tag = " 🚀" if day_pct >= MOVER_THRESHOLD else (" ⚠️" if day_pct <= -MOVER_THRESHOLD else "")
+        sign = "+" if pnl >= 0 else ""
+        psign = "+" if day_pct >= 0 else ""
+        lines.append(f"{sym:<7} {name:<10} {qty:>5}  {avg:>7.2f}  {mkt:>7.2f}  {psign}{day_pct:>5.2f}%  {sign}{pnl:>8,.0f}{tag}")
+        if abs(day_pct) >= MOVER_THRESHOLD:
+            movers.append({"market": "TW", "symbol": sym, "yf": yf_sym, "name": name or sym, "pct": day_pct})
+    lines.append("─" * 64)
+    s = "+" if tw_total_pnl >= 0 else ""
+    ds = "+" if tw_day_change >= 0 else ""
+    lines.append(f"{'累計':<7} {'':<10} {'':>5}  {'':>7}  {'':>7}  {'':>6}  {s}{tw_total_pnl:>8,.0f}")
+    lines.append(f"{'今日':<7} {'':<10} {'':>5}  {'':>7}  {'':>7}  {'':>6}  {ds}{tw_day_change:>8,.0f}")
+    lines.append("```")
+    lines.append("")
+
+    # ── 異動標的（±3%）─────────────────────
+    if movers:
+        lines.append("═══ 📰 **今日異動（>±3%）** ═══")
+        lines.append("")
+        for m in movers:
+            q = _fetch_quote_and_news(m["yf"], want_news=True)
+            headlines = q.get("news", [])
+            emoji = "🚀" if m["pct"] > 0 else "⚠️"
+            sign = "+" if m["pct"] >= 0 else ""
+            explanation = _explain_mover(m["symbol"], m["name"], m["pct"], headlines)
+            name_tag = f" {m['name']}" if m["name"] and m["name"] != m["symbol"] else ""
+            lines.append(f"{emoji} **{m['symbol']}**{name_tag} {sign}{m['pct']:.2f}%")
+            for ln in explanation.split("\n"):
+                if ln.strip():
+                    lines.append(f"  {ln.strip()}")
+            lines.append("")
+
+    # ── 接下來 ──────────────────────────────
+    us_open = _us_open_taipei_time().strftime("%H:%M")
+    lines.append("═══ 📅 **接下來** ═══")
+    lines.append(f"🇺🇸 {us_open} 美股開盤  |  收盤後 5 分鐘將推送美股開盤監控")
+
+    return "\n".join(lines)
+
+
+# ── 美股開盤 +5min 報告 ────────────────────────────
+def _build_us_open_report() -> str:
+    """美股開盤後 5 分鐘的監控報告：美股大盤盤前/早盤、美股持倉開盤後漲跌、±3% 異動原因。"""
+    now_dt = datetime.now(TZ)
+    weekday = "一二三四五六日"[now_dt.weekday()]
+    dst_tag = "EDT" if _is_us_dst() else "EST"
+    now = now_dt.strftime("%Y-%m-%d") + f" (週{weekday}) " + now_dt.strftime("%H:%M") + f" 台北 / 美東 {dst_tag}"
+    lines = [f"🌃 **Krystal 美股開盤監控** `{now}`", ""]
+
+    # ── 美股大盤（早盤）──────────────────────
+    indices = _fetch_indices()
+    if indices:
+        us_idx = [i for i in indices if "TW" not in i.get("symbol", "") and "台" not in i.get("label", "")]
+        if us_idx:
+            lines.append("═══ 🇺🇸 **美股大盤（開盤 +5min）** ═══")
+            lines.append("```")
+            for idx in us_idx:
+                sign = "+" if idx["pct"] >= 0 else ""
+                arrow = "🔴" if idx["pct"] >= 0 else "🟢"
+                lines.append(f"{idx['label']:<14} {idx['last']:>10,.2f}  {arrow}{sign}{idx['pct']:.2f}%  ({sign}{idx['chg']:,.1f})")
+            lines.append("```")
+            lines.append("")
+
+    # ── 讀持倉 ──────────────────────────────
+    try:
+        from sheets_utils import read_sheet_data_with_cache
+        df = read_sheet_data_with_cache("broker_positions")
+        positions = df.to_dict('records') if not df.empty else []
+    except Exception as e:
+        lines.append(f"⚠️ 讀取持倉失敗：{e}")
+        return "\n".join(lines)
+
+    ib_positions     = [p for p in positions if str(p.get("broker", "")).strip().upper() == "IB"]
+    schwab_positions = [p for p in positions if str(p.get("broker", "")).strip().lower() == "schwab"]
+    us_positions = [(p, "IB") for p in ib_positions] + [(p, "Schwab") for p in schwab_positions]
+
+    if not us_positions:
+        lines.append("⚠️ 目前無美股持倉。")
+        return "\n".join(lines)
+
+    movers: list[dict] = []
+
+    # ── 美股持倉開盤後 ───────────────────────
+    lines.append("═══ 🇺🇸 **美股持倉（開盤 +5min）** ═══")
+    lines.append("```")
+    lines.append(f"{'代碼':<7} {'名稱':<14} {'券商':<7} {'股數':>5}  {'均價':>7}  {'現價':>7}  {'今日%':>6}  {'損益$':>8}")
+    lines.append("─" * 76)
+    us_total_pnl = 0.0
+    for p, broker in us_positions:
+        sym = str(p.get("symbol", "")).strip()
+        qty = int(_safe_float(p.get("position", 0)))
+        avg = _safe_float(p.get("avgCost", 0))
+        mkt = _safe_float(p.get("marketPrice", 0))
+        pnl = _safe_float(p.get("unrealizedPNL", 0))
+        us_total_pnl += pnl
+        yf_sym = _to_yf_symbol(sym, broker)
+        name = _name_of(sym, yf_sym)
+        q = _fetch_quote_and_news(yf_sym, want_news=False)
+        day_pct = q.get("pct", 0.0)
+        tag = " 🚀" if day_pct >= MOVER_THRESHOLD else (" ⚠️" if day_pct <= -MOVER_THRESHOLD else "")
+        sign = "+" if pnl >= 0 else ""
+        psign = "+" if day_pct >= 0 else ""
+        lines.append(f"{sym:<7} {name:<14} {broker:<7} {qty:>5}  {avg:>7.2f}  {mkt:>7.2f}  {psign}{day_pct:>5.2f}%  {sign}{pnl:>7,.0f}{tag}")
+        if abs(day_pct) >= MOVER_THRESHOLD:
+            movers.append({"market": "US", "symbol": sym, "yf": yf_sym, "name": name or sym, "pct": day_pct})
+    lines.append("─" * 76)
+    s = "+" if us_total_pnl >= 0 else ""
+    lines.append(f"{'累計':<7} {'':<14} {'':<7} {'':>5}  {'':>7}  {'':>7}  {'':>6}  {s}{us_total_pnl:>7,.0f}")
+    lines.append("```")
+    lines.append("")
+
+    # ── 異動標的（±3%）─────────────────────
+    if movers:
+        lines.append("═══ 📰 **開盤異動（>±3%）** ═══")
+        lines.append("")
+        for m in movers:
+            q = _fetch_quote_and_news(m["yf"], want_news=True)
+            headlines = q.get("news", [])
+            emoji = "🚀" if m["pct"] > 0 else "⚠️"
+            sign = "+" if m["pct"] >= 0 else ""
+            explanation = _explain_mover(m["symbol"], m["name"], m["pct"], headlines)
+            name_tag = f" {m['name']}" if m["name"] and m["name"] != m["symbol"] else ""
+            lines.append(f"{emoji} **{m['symbol']}**{name_tag} {sign}{m['pct']:.2f}%")
+            for ln in explanation.split("\n"):
+                if ln.strip():
+                    lines.append(f"  {ln.strip()}")
+            lines.append("")
 
     return "\n".join(lines)
 
@@ -591,13 +871,70 @@ async def morning_report():
         await channel.send(report[i:i+1900])
 
 
+# ── 每日 13:35 台股收盤結算 ────────────────────────
+@tasks.loop(time=time(13, 35, tzinfo=TZ))
+async def closing_report():
+    if CHANNEL_ID == 0:
+        return
+    # 週六/週日跳過
+    if datetime.now(TZ).weekday() >= 5:
+        return
+    channel = client.get_channel(CHANNEL_ID)
+    if channel is None:
+        return
+    loop = asyncio.get_running_loop()
+    report = await loop.run_in_executor(None, _build_closing_report)
+    for i in range(0, len(report), 1900):
+        await channel.send(report[i:i+1900])
+
+
+# ── 美股開盤 +5min 監控（夏令 21:35 / 冬令 22:35）──
+# 兩個 loop 都註冊，每天執行時自己判斷是否該觸發
+@tasks.loop(time=time(21, 35, tzinfo=TZ))
+async def us_open_report_summer():
+    """夏令時間版本（21:35）。若當天是冬令，則跳過。"""
+    if not _is_us_dst():
+        return
+    await _send_us_open_report()
+
+
+@tasks.loop(time=time(22, 35, tzinfo=TZ))
+async def us_open_report_winter():
+    """冬令時間版本（22:35）。若當天是夏令，則跳過。"""
+    if _is_us_dst():
+        return
+    await _send_us_open_report()
+
+
+async def _send_us_open_report():
+    if CHANNEL_ID == 0:
+        return
+    # 美股週末休市：美東週六/週日跳過
+    now_us = datetime.now(TZ_US)
+    if now_us.weekday() >= 5:
+        return
+    channel = client.get_channel(CHANNEL_ID)
+    if channel is None:
+        return
+    loop = asyncio.get_running_loop()
+    report = await loop.run_in_executor(None, _build_us_open_report)
+    for i in range(0, len(report), 1900):
+        await channel.send(report[i:i+1900])
+
+
 # ── on_ready ─────────────────────────────────────
 @client.event
 async def on_ready():
     await tree.sync()
     morning_sync.start()
     morning_report.start()
-    print(f"[Bot] 上線：{client.user} | 頻道：{CHANNEL_ID} | 排程：07:00 同步 / 08:00 早報")
+    closing_report.start()
+    us_open_report_summer.start()
+    us_open_report_winter.start()
+    us_open = _us_open_taipei_time().strftime("%H:%M")
+    dst_tag = "EDT" if _is_us_dst() else "EST"
+    print(f"[Bot] 上線：{client.user} | 頻道：{CHANNEL_ID}")
+    print(f"[Bot] 排程：07:00 同步 / 08:00 早報 / 13:35 台股收盤 / {us_open} 美股開盤+5min ({dst_tag})")
 
 
 # ── Slash: /今日報告 ──────────────────────────────
@@ -618,6 +955,32 @@ async def cmd_morning(interaction: discord.Interaction):
     await interaction.response.defer()
     loop = asyncio.get_running_loop()
     report = await loop.run_in_executor(None, _build_morning_report)
+    for i in range(0, len(report), 1900):
+        if i == 0:
+            await interaction.followup.send(report[i:i+1900])
+        else:
+            await interaction.channel.send(report[i:i+1900])
+
+
+# ── Slash: /收盤 ──────────────────────────────────
+@tree.command(name="收盤", description="立即產生台股收盤結算報告")
+async def cmd_closing(interaction: discord.Interaction):
+    await interaction.response.defer()
+    loop = asyncio.get_running_loop()
+    report = await loop.run_in_executor(None, _build_closing_report)
+    for i in range(0, len(report), 1900):
+        if i == 0:
+            await interaction.followup.send(report[i:i+1900])
+        else:
+            await interaction.channel.send(report[i:i+1900])
+
+
+# ── Slash: /美股開盤 ──────────────────────────────
+@tree.command(name="美股開盤", description="立即產生美股開盤 +5min 監控報告")
+async def cmd_us_open(interaction: discord.Interaction):
+    await interaction.response.defer()
+    loop = asyncio.get_running_loop()
+    report = await loop.run_in_executor(None, _build_us_open_report)
     for i in range(0, len(report), 1900):
         if i == 0:
             await interaction.followup.send(report[i:i+1900])
