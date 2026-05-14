@@ -236,19 +236,56 @@ def read_trades() -> pd.DataFrame:
 
 
 def append_trade(trade_dict: Dict[str, Any]) -> bool:
+    """寫入一筆 trade。動態讀 sheet header 對齊欄位，避免欄位順序硬編碼錯位。
+    呼叫端傳的 dict key 可以是中文或英文（id/ID/日期/...），會自動 map。"""
     try:
         sheet = get_sheet("trades")
         if sheet is None:
             logger.warning("⚠️ Sheets disabled → skip append_trade")
             return True
 
-        cols = [
-            "id", "日期", "券商", "標的", "方向", "進場價", "出場價",
-            "數量", "狀態", "策略", "進場原因", "出場原因", "備註"
-        ]
-        row = [trade_dict.get(c, "") for c in cols]
+        # 讀回 sheet 真實 header，動態對齊（避免硬編碼欄位順序錯位）
+        try:
+            existing_vals = sheet.get_all_values()
+            header = existing_vals[0] if existing_vals else []
+        except Exception:
+            header = []
+
+        # fallback：sheet 還沒 header 時用標準 15 欄
+        if not header:
+            header = ["日期", "券商", "標的", "方向", "進場價", "出場價", "數量",
+                      "狀態", "策略", "進場原因", "出場原因", "損益", "損益%",
+                      "備註", "ID"]
+            sheet.append_row(header, value_input_option="USER_ENTERED")
+
+        # dict key 別名（trade_dict 可以混用中英）
+        aliases = {
+            "ID":       ("ID", "id"),
+            "日期":     ("日期", "date"),
+            "券商":     ("券商", "broker"),
+            "標的":     ("標的", "symbol"),
+            "方向":     ("方向", "side", "direction"),
+            "進場價":   ("進場價", "entry_price"),
+            "出場價":   ("出場價", "exit_price"),
+            "數量":     ("數量", "qty", "quantity"),
+            "狀態":     ("狀態", "status"),
+            "策略":     ("策略", "strategy"),
+            "進場原因": ("進場原因", "entry_reason"),
+            "出場原因": ("出場原因", "exit_reason"),
+            "損益":     ("損益", "pnl", "net_pnl"),
+            "損益%":    ("損益%", "pnl_pct"),
+            "備註":     ("備註", "notes"),
+        }
+
+        def _lookup(col_name):
+            for key in aliases.get(col_name, (col_name,)):
+                if key in trade_dict and trade_dict[key] not in (None, ""):
+                    return trade_dict[key]
+            return ""
+
+        row = [_lookup(col) for col in header]
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        logger.info("✅ 新增 trade 完成")
+        logger.info(f"✅ 新增 trade：{trade_dict.get('標的') or trade_dict.get('symbol', '?')} 損益={_lookup('損益')}")
         return True
     except Exception as e:
         logger.error(f"❌ 新增 trade 失敗：{e}")
@@ -455,54 +492,101 @@ def read_broker_positions() -> pd.DataFrame:
 
 def overwrite_broker_positions(positions_list: List[Dict[str, Any]]) -> bool:
     """
-    根據最新數據覆寫 broker_positions sheet
+    根據最新數據覆寫 broker_positions sheet。
+    重要：保留使用者手動填寫的 strategy / notes（以 broker+symbol 對齊）。
     """
     try:
         sheet = get_sheet("broker_positions")
         if sheet is None:
             return False
 
-        # 保留原本在 Sheet 上的其他券商數據 (除了 IB)，或者直接全覆寫
-        # 這裡建議先讀取現有的，過濾掉 IB，再加入新的 IB
-        from .sheets_utils import read_sheet_data_with_cache # 避免循環引用
-    except Exception:
-        pass
+        # ── 讀回現有 sheet，記錄每個 (broker, symbol) 的手動欄位 ──
+        try:
+            existing_vals = sheet.get_all_values()
+        except Exception as e:
+            logger.warning(f"讀取現有 broker_positions 失敗（將以新值覆寫，可能洗掉手填欄位）: {e}")
+            existing_vals = []
 
-    try:
-        sheet = get_sheet("broker_positions")
-        if sheet is None: return False
-        
-        # 簡單起見：目前的邏輯可能是全量替換，或按券商替換
-        # 為了穩定，我們先實作「全量覆寫」，這要求傳入所有的持倉（包含 Yuanta, Schwab 等）
-        # 如果只想替換 IB，需要更複雜的 logic。我們先實作全量寫入。
-        header = ["timestamp", "broker", "symbol", "secType", "exchange", "currency", "position", "avgCost", "marketPrice", "marketValue", "unrealizedPNL", "sellable", "limitUp", "limitDown"]
+        existing_header = existing_vals[0] if existing_vals else []
+        def _idx(*candidates):
+            for c in candidates:
+                if c in existing_header:
+                    return existing_header.index(c)
+            return -1
+
+        b_i = _idx("broker", "券商")
+        s_i = _idx("symbol", "標的")
+        strat_i = _idx("strategy", "策略")
+        note_i  = _idx("notes", "備註")
+
+        manual_map: Dict[tuple, Dict[str, str]] = {}
+        if b_i >= 0 and s_i >= 0 and (strat_i >= 0 or note_i >= 0):
+            for r in existing_vals[1:]:
+                if len(r) <= max(b_i, s_i): continue
+                key = (str(r[b_i]).strip().lower(), str(r[s_i]).strip())
+                if not key[0] or not key[1]: continue
+                manual_map[key] = {
+                    "strategy": r[strat_i] if strat_i >= 0 and len(r) > strat_i else "",
+                    "notes":    r[note_i]  if note_i  >= 0 and len(r) > note_i  else "",
+                }
+
+        # 沿用現有 header（保留使用者新增的欄位）；若 sheet 是空白才用預設
+        default_header = ["timestamp", "broker", "symbol", "secType", "exchange",
+                          "currency", "position", "avgCost", "marketPrice",
+                          "marketValue", "unrealizedPNL", "sellable", "limitUp",
+                          "limitDown", "strategy", "notes"]
+        header = list(existing_header) if existing_header else default_header
+        # 若現有 header 沒 strategy / notes，補在最後（避免使用者後續手填又被洗）
+        if not any(c in header for c in ("strategy", "策略")):
+            header.append("strategy")
+        if not any(c in header for c in ("notes", "備註")):
+            header.append("notes")
+        h_idx = {col: i for i, col in enumerate(header)}
+
+        def _set(row, candidates, val):
+            for c in candidates:
+                if c in h_idx:
+                    row[h_idx[c]] = val
+                    return
+
         rows = [header]
         for p in positions_list:
-            # Map different naming conventions
+            row = [""] * len(header)
             cur_price = p.get("marketPrice", p.get("currentPrice", ""))
             pnl = p.get("unrealizedPNL", p.get("unrealizedPnL", ""))
-            
-            row = [
-                p.get("timestamp", ""),
-                p.get("broker", ""),
-                p.get("symbol", ""),
-                p.get("secType", "STK"),
-                p.get("exchange", ""),
-                p.get("currency", "USD" if p.get("broker") == "IB" else "TWD"),
-                p.get("position", ""),
-                p.get("avgCost", ""),
-                cur_price,
-                p.get("marketValue", ""),
-                pnl,
-                p.get("sellable", ""),
-                p.get("limitUp", ""),
-                p.get("limitDown", "")
-            ]
+            broker_val = p.get("broker", "")
+            symbol_val = p.get("symbol", "")
+
+            _set(row, ("timestamp", "時間"), p.get("timestamp", ""))
+            _set(row, ("broker", "券商"), broker_val)
+            _set(row, ("symbol", "標的"), symbol_val)
+            _set(row, ("secType",), p.get("secType", "STK"))
+            _set(row, ("exchange",), p.get("exchange", ""))
+            _set(row, ("currency",), p.get("currency", "USD" if str(broker_val).lower() == "ib" else "TWD"))
+            _set(row, ("position",), p.get("position", ""))
+            _set(row, ("avgCost",), p.get("avgCost", ""))
+            _set(row, ("marketPrice", "currentPrice"), cur_price)
+            _set(row, ("marketValue",), p.get("marketValue", ""))
+            _set(row, ("unrealizedPNL", "unrealizedPnL"), pnl)
+            _set(row, ("sellable",), p.get("sellable", ""))
+            _set(row, ("limitUp",), p.get("limitUp", ""))
+            _set(row, ("limitDown",), p.get("limitDown", ""))
+
+            # 還原手動欄位：用 (broker_lower, symbol) 對齊
+            kept = manual_map.get((str(broker_val).strip().lower(), str(symbol_val).strip()), {})
+            _set(row, ("strategy", "策略"), kept.get("strategy", ""))
+            _set(row, ("notes", "備註"),    kept.get("notes", ""))
+
             rows.append(row)
-        
+
         sheet.clear()
         sheet.update(rows, value_input_option="USER_ENTERED")
-        logger.info(f"✅ broker_positions 覆寫成功 (共 {len(positions_list)} 筆)")
+        preserved = sum(1 for r in rows[1:]
+                        if (("strategy" in h_idx and r[h_idx["strategy"]]) or
+                            ("策略"     in h_idx and r[h_idx["策略"]]) or
+                            ("notes"    in h_idx and r[h_idx["notes"]]) or
+                            ("備註"     in h_idx and r[h_idx["備註"]])))
+        logger.info(f"✅ broker_positions 覆寫成功 ({len(positions_list)} 筆，保留 {preserved} 筆手動 strategy/notes)")
         return True
     except Exception as e:
         logger.error(f"❌ overwrite_broker_positions 失敗：{e}")
@@ -529,60 +613,86 @@ def sync_broker_positions_and_log_trades(broker_name: str, new_positions: list) 
         
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # 檢查舊部位是否有變動或出清
-        # [已禁用 2026-05-12] 因 append_trade 欄位順序錯位，這段會寫垃圾資料到 trades sheet
-        # 而且 broker name normalization 不一致導致 false-positive。先停用，等修好整套
-        # broker name normalize + append_trade schema 對齊後再開啟。
-        AUTO_DETECT_CLOSE = False  # ← 設 True 才會自動寫入
+        # 檢查舊部位是否有變動或出清 → 寫入 trades sheet 紀錄已實現損益
+        # 修復記錄：append_trade 已改為動態對齊 sheet header，欄位錯位 bug 已修
+        AUTO_DETECT_CLOSE = True
+
+        def _to_float(v, default=0.0):
+            try:
+                if v in (None, ""): return default
+                return float(str(v).replace(",", "").replace("$", "").replace("NT", "").strip())
+            except Exception:
+                return default
+
+        def _calc_pnl(entry_price, exit_price, qty):
+            """已實現損益 = (出場價 − 進場價) × 數量。回傳 (損益, 損益%)"""
+            ep = _to_float(entry_price); xp = _to_float(exit_price); q = _to_float(qty)
+            if ep == 0 or q == 0:
+                return ("", "")
+            pnl = round((xp - ep) * q, 2)
+            pnl_pct = round((xp - ep) / ep * 100, 2)
+            return (pnl, pnl_pct)
+
         for old_p in old_broker_pos:
             sym = str(old_p.get('symbol', ''))
-            old_qty = float(old_p.get('position', 0))
+            old_qty = _to_float(old_p.get('position', 0))
             if sym not in new_map:
                 # 已出清
                 logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已出清"
                             + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
                 if AUTO_DETECT_CLOSE:
+                    entry = old_p.get('avgCost', '')
+                    exit_p = old_p.get('marketPrice', old_p.get('currentPrice', ''))
+                    pnl, pnl_pct = _calc_pnl(entry, exit_p, old_qty)
                     trade_record = {
-                        "id": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                        "ID": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
                         "日期": ts,
                         "券商": broker_name,
                         "標的": sym,
                         "方向": "出清",
-                        "進場價": old_p.get('avgCost', ''),
-                        "出場價": old_p.get('marketPrice', old_p.get('currentPrice', '')),
+                        "進場價": entry,
+                        "出場價": exit_p,
                         "數量": old_qty,
-                        "狀態": "已實現",
-                        "策略": "",
-                        "進場原因": "系統自動偵測",
-                        "出場原因": "系統自動偵測",
-                        "備註": "自 broker_positions 同步時自動記錄"
+                        "狀態": "已平倉",
+                        "策略": old_p.get('strategy', ''),
+                        "進場原因": "",
+                        "出場原因": "自動偵測平倉（broker sync）",
+                        "損益": pnl,
+                        "損益%": pnl_pct,
+                        "備註": "broker_positions 同步偵測，價格為同步時的 marketPrice",
                     }
                     append_trade(trade_record)
             else:
-                new_qty = float(new_map[sym].get('position', 0))
+                new_qty = _to_float(new_map[sym].get('position', 0))
                 if new_qty < old_qty:
                     # 部分出清
                     logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 減少部位 ({old_qty} -> {new_qty})"
                                 + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
                     if AUTO_DETECT_CLOSE:
+                        entry = old_p.get('avgCost', '')
+                        exit_p = new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', ''))
+                        partial_qty = old_qty - new_qty
+                        pnl, pnl_pct = _calc_pnl(entry, exit_p, partial_qty)
                         trade_record = {
-                            "id": f"partial_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                            "ID": f"partial_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
                             "日期": ts,
                             "券商": broker_name,
                             "標的": sym,
                             "方向": "部分出清",
-                            "進場價": old_p.get('avgCost', ''),
-                            "出場價": new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', '')),
-                            "數量": old_qty - new_qty,
-                            "狀態": "已實現",
-                            "策略": "",
-                            "進場原因": "系統自動偵測",
-                            "出場原因": "系統自動偵測",
-                            "備註": "自 broker_positions 同步時自動記錄"
+                            "進場價": entry,
+                            "出場價": exit_p,
+                            "數量": partial_qty,
+                            "狀態": "已平倉",
+                            "策略": old_p.get('strategy', ''),
+                            "進場原因": "",
+                            "出場原因": "自動偵測減倉（broker sync）",
+                            "損益": pnl,
+                            "損益%": pnl_pct,
+                            "備註": f"原 {old_qty} → {new_qty}，減 {partial_qty}",
                         }
                         append_trade(trade_record)
                 elif new_qty > old_qty:
-                    # 增加部位
+                    # 增加部位（不寫 trades，只 log）
                     logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 增加部位 ({old_qty} -> {new_qty})。")
         
         # 合併並覆寫

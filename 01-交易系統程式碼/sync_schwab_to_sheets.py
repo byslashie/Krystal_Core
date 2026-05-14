@@ -98,6 +98,23 @@ def main():
             all_vals = sheet.get_all_values()
             header = all_vals[0] if all_vals else []
             broker_idx = next((header.index(c) for c in ['券商', 'broker', 'Broker'] if c in header), None)
+            symbol_idx = next((header.index(c) for c in ['symbol', '標的'] if c in header), None)
+            strat_idx  = next((header.index(c) for c in ['strategy', '策略'] if c in header), None)
+            note_idx   = next((header.index(c) for c in ['notes', '備註']   if c in header), None)
+
+            # ── 同 symbol 的手動 strategy / notes 先快取，重寫時還原 ──
+            manual_map = {}
+            if broker_idx is not None and symbol_idx is not None and (strat_idx is not None or note_idx is not None):
+                for r in all_vals[1:]:
+                    if len(r) <= max(broker_idx, symbol_idx): continue
+                    if r[broker_idx].lower() not in ('schwab', 'charles schwab'): continue
+                    sym = str(r[symbol_idx]).strip()
+                    if not sym: continue
+                    manual_map[sym] = {
+                        'strategy': r[strat_idx] if strat_idx is not None and len(r) > strat_idx else '',
+                        'notes':    r[note_idx]  if note_idx  is not None and len(r) > note_idx  else '',
+                    }
+
             if broker_idx is not None:
                 rows_del = [r_idx for r_idx, r_vals in enumerate(all_vals[1:], start=2)
                             if len(r_vals) > broker_idx and r_vals[broker_idx].lower() in ('schwab', 'charles schwab')]
@@ -107,16 +124,24 @@ def main():
             for p in positions:
                 row_data = [''] * len(header)
                 qty, avg = p['position'], p['avgCost']
+                sym = p['symbol']
+                kept = manual_map.get(str(sym).strip(), {})
                 mapping = {
                     '時間': now_str, 'timestamp': now_str,
                     '券商': 'Schwab', 'broker': 'Schwab',
-                    'symbol': p['symbol'], 'secType': 'STK',
+                    'symbol': sym, '標的': sym, 'secType': 'STK',
                     'exchange': 'US', 'currency': 'USD',
                     'position': qty, 'avgCost': avg,
                     'totalCost': round(qty * avg, 2) if qty and avg else '',
                     'currentPrice': p.get('marketPrice', ''),
+                    'marketPrice':  p.get('marketPrice', ''),
                     'marketValue': p.get('marketValue', ''),
                     'unrealizedPnL': p.get('unrealizedPNL', ''),
+                    'unrealizedPNL': p.get('unrealizedPNL', ''),
+                    'strategy': kept.get('strategy', ''),
+                    '策略':     kept.get('strategy', ''),
+                    'notes':    kept.get('notes', ''),
+                    '備註':     kept.get('notes', ''),
                 }
                 for k, v in mapping.items():
                     if k in header:
@@ -125,7 +150,8 @@ def main():
             if new_rows:
                 sheet.append_rows(new_rows, value_input_option='USER_ENTERED')
             wrote_sheets = len(new_rows)
-            logger.info(f"✅ 已寫入 Google Sheets broker_positions: {wrote_sheets} 筆")
+            preserved = sum(1 for sym in [p['symbol'] for p in positions] if manual_map.get(str(sym).strip()))
+            logger.info(f"✅ 已寫入 Google Sheets broker_positions: {wrote_sheets} 筆（保留 {preserved} 筆手動 strategy/notes）")
     except Exception as e:
         logger.warning(f"⚠️ Schwab → Sheets 寫入失敗: {e}")
 
