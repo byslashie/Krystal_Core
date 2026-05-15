@@ -637,34 +637,39 @@ def sync_broker_positions_and_log_trades(broker_name: str, new_positions: list) 
             sym = str(old_p.get('symbol', ''))
             old_qty = _to_float(old_p.get('position', 0))
             if sym not in new_map:
-                # 已出清
-                logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已出清"
-                            + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
-                if AUTO_DETECT_CLOSE:
-                    entry = old_p.get('avgCost', '')
-                    exit_p = old_p.get('marketPrice', old_p.get('currentPrice', ''))
-                    pnl, pnl_pct = _calc_pnl(entry, exit_p, old_qty)
-                    trade_record = {
-                        "ID": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
-                        "日期": ts,
-                        "券商": broker_name,
-                        "標的": sym,
-                        "方向": "出清",
-                        "進場價": entry,
-                        "出場價": exit_p,
-                        "數量": old_qty,
-                        "狀態": "已平倉",
-                        "策略": old_p.get('strategy', ''),
-                        "進場原因": "",
-                        "出場原因": "自動偵測平倉（broker sync）",
-                        "損益": pnl,
-                        "損益%": pnl_pct,
-                        "備註": "broker_positions 同步偵測，價格為同步時的 marketPrice",
-                    }
-                    append_trade(trade_record)
+                # ⚠️ 已出清或數據不完整？
+                # 只有當新數據明確顯示 position=0 時，才認為是出清
+                # 如果新數據根本不包含該符號，可能是數據同步不完整，先 skip
+                logger.warning(f"⚠️ {broker_name} 的 {sym} 在新數據中不存在（可能是同步不完整），跳過自動出清檢測")
             else:
                 new_qty = _to_float(new_map[sym].get('position', 0))
-                if new_qty < old_qty:
+                if new_qty == 0:
+                    # 🟢 明確出清：新數據顯示 position=0
+                    logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 已完全出清 ({old_qty} -> 0)"
+                                + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
+                    if AUTO_DETECT_CLOSE:
+                        entry = old_p.get('avgCost', '')
+                        exit_p = new_map[sym].get('marketPrice', new_map[sym].get('currentPrice', ''))
+                        pnl, pnl_pct = _calc_pnl(entry, exit_p, old_qty)
+                        trade_record = {
+                            "ID": f"closed_{broker_name}_{sym}_{int(datetime.now().timestamp())}",
+                            "日期": ts,
+                            "券商": broker_name,
+                            "標的": sym,
+                            "方向": "出清",
+                            "進場價": entry,
+                            "出場價": exit_p,
+                            "數量": old_qty,
+                            "狀態": "已平倉",
+                            "策略": old_p.get('strategy', ''),
+                            "進場原因": "",
+                            "出場原因": "自動偵測平倉（broker sync）",
+                            "損益": pnl,
+                            "損益%": pnl_pct,
+                            "備註": "broker_positions 同步偵測，價格為同步時的 marketPrice",
+                        }
+                        append_trade(trade_record)
+                elif new_qty < old_qty:
                     # 部分出清
                     logger.info(f"🔍 偵測到 {broker_name} 的 {sym} 減少部位 ({old_qty} -> {new_qty})"
                                 + ("，寫入 trades。" if AUTO_DETECT_CLOSE else "（自動寫入已停用）"))
