@@ -545,6 +545,24 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+.vision-image {
+    width: 100%;
+    border-radius: 2.5rem;
+    box-shadow: var(--shadow-widget);
+    margin-bottom: 1rem;
+    object-fit: cover;
+    max-height: 450px;
+    border: 1px solid var(--glass-border);
+}
+.image-caption {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 3rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
 @media (max-width: 1000px) {
     .chart-sec, .mandala-grid, .dual-track-grid, .space-grid { grid-template-columns: 1fr; }
     .hero h1, .lifestyle-hero h1 { font-size: 3rem; }
@@ -962,6 +980,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         <div class="section-header">居住空間 / HOME AS A SANCTUARY</div>
         <div class="space-grid">
             <div class="space-card">
+                <img src="./assets/luxury_bathroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="浴室">
                 <h4>🛁 浴室（核心空間）</h4>
                 <ul>
                     <li>獨立浴缸（深泡、可看景）</li>
@@ -971,32 +990,39 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
                 </ul>
             </div>
             <div class="space-card">
-                <h4>🛏️ 臥室</h4>
+                <img src="./assets/trading_workspace.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="交易工作室">
+                <h4>💼 交易工作室 / 書房</h4>
                 <ul>
+                    <li><strong style="color: var(--primary);">升降工作桌</strong> + 多螢幕看盤配置</li>
+                    <li>大面採光落地窗，讓空間通透</li>
+                    <li>能讓我安心交易 4 小時的環境</li>
+                    <li>質感沙發 + 舒適閱讀角</li>
+                </ul>
+            </div>
+            <div class="space-card">
+                <img src="./assets/cozy_bedroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="極致舒適臥室">
+                <h4>🛏️ 極致舒適臥室</h4>
+                <ul>
+                    <li><strong style="color: var(--primary);">睡覺地方很舒服</strong>，絕對放鬆</li>
                     <li>King size 床 + 五星級寢具（埃及棉、羽絨）</li>
-                    <li>遮光窗簾 + 床頭可調燈</li>
-                    <li>衣帽間（walk-in closet）</li>
+                    <li>遮光窗簾 + 床頭可調暖光燈</li>
                 </ul>
             </div>
             <div class="space-card">
-                <h4>💼 客廳 / 書房</h4>
+                <img src="./assets/walk_in_closet.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="專屬衣帽間">
+                <h4>👗 專屬衣帽間 (Walk-in Closet)</h4>
                 <ul>
-                    <li>大面採光 + 落地窗</li>
-                    <li>能讓我安心交易 4 小時的工作桌</li>
-                    <li>質感沙發 + 閱讀角</li>
-                </ul>
-            </div>
-            <div class="space-card">
-                <h4>🍳 廚房</h4>
-                <ul>
-                    <li>中島 + 開放式設計</li>
-                    <li>高蛋白備餐空間</li>
+                    <li><strong style="color: var(--primary);">自己的衣帽間</strong>，從容打理自己</li>
+                    <li>系統化收納層架與暖色 LED 條燈</li>
+                    <li>中島飾品櫃或穿鞋絨布沙發椅</li>
                 </ul>
             </div>
         </div>
 
         <!-- 海外 Base 候選 -->
         <div class="section-header">海外 Base 候選 / OVERSEAS BASES</div>
+        <img src="./assets/latte_art_dalat.png" class="vision-image" alt="大叻咖啡拉花">
+        <div class="image-caption">2026 Q4 越南獨旅的想像：在大叻陽光灑落的咖啡館練習拉花</div>
         <div class="base-table">
             <table>
                 <thead>
