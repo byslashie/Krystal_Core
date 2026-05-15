@@ -64,6 +64,10 @@ def sync_ib():
         
         sync_broker_positions_and_log_trades("IB", new_ib_positions)
 
+        # 同步到本地 SQLite + CSV，保留 strategy/notes
+        from sheets_utils import sync_broker_positions_to_local
+        sync_broker_positions_to_local()
+
         logger.info(f"✅ IB 數據同步完成！(資產: ${snapshot_data['net_liquidation']}, 持倉數: {len(new_ib_positions)})")
         return True
 

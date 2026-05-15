@@ -913,3 +913,93 @@ def append_strategy_version(version_dict: Dict[str, Any]) -> bool:
     except Exception as e:
         logger.error(f"❌ 保存策略版本失敗：{e}")
         return False
+
+
+# ======================
+# broker_positions 本地同步 (保留 strategy/notes)
+# ======================
+
+def sync_broker_positions_to_local(db_path: str = None) -> bool:
+    """
+    從 Google Sheets 同步 broker_positions 到本地 SQLite + CSV
+    確保 strategy 和 notes 不被覆寫
+    """
+    try:
+        import sqlite3
+        from pathlib import Path
+
+        if db_path is None:
+            db_path = os.path.join(os.path.dirname(__file__), 'dashboard_v8', 'broker_positions.db')
+
+        df = read_broker_positions()
+        if df.empty:
+            logger.warning("⚠️ broker_positions 為空，跳過同步")
+            return False
+
+        # 連接 SQLite 並同步數據
+        conn = sqlite3.connect(str(db_path))
+        c = conn.cursor()
+
+        now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        rows_updated = 0
+
+        for _, row in df.iterrows():
+            broker = str(row.get('broker', '')).strip()
+            symbol = str(row.get('symbol', '')).strip()
+
+            if not broker or not symbol:
+                continue
+
+            # 先從 DB 讀取現有的 strategy/notes（如果有的話）
+            c.execute('SELECT strategy, notes FROM broker_positions WHERE broker=? AND symbol=?',
+                     (broker, symbol))
+            existing = c.fetchone()
+            existing_strategy = existing[0] if existing and existing[0] else row.get('strategy', '')
+            existing_notes = existing[1] if existing and existing[1] else row.get('notes', '')
+
+            # 優先保留手動填寫的 strategy/notes
+            strategy = row.get('strategy', '') or existing_strategy
+            notes = row.get('notes', '') or existing_notes
+
+            c.execute('''INSERT INTO broker_positions
+                (broker, symbol, position, avgCost, currentPrice, marketValue,
+                 unrealizedPNL, currency, timestamp, strategy, notes)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(broker, symbol) DO UPDATE SET
+                    position=excluded.position, avgCost=excluded.avgCost,
+                    currentPrice=excluded.currentPrice, marketValue=excluded.marketValue,
+                    unrealizedPNL=excluded.unrealizedPNL, currency=excluded.currency,
+                    timestamp=excluded.timestamp, synced_at=CURRENT_TIMESTAMP,
+                    strategy=COALESCE(strategy, excluded.strategy),
+                    notes=COALESCE(notes, excluded.notes)''',
+                (broker, symbol,
+                 float(row.get('position', 0)), float(row.get('avgCost', 0)),
+                 float(row.get('marketPrice', row.get('currentPrice', 0))),
+                 float(row.get('marketValue', 0)), float(row.get('unrealizedPNL', 0)),
+                 row.get('currency', 'USD'), row.get('timestamp', now_str),
+                 strategy, notes))
+            rows_updated += 1
+
+        conn.commit()
+
+        # 導出到 CSV
+        c.execute('SELECT * FROM broker_positions ORDER BY timestamp DESC')
+        columns = [description[0] for description in c.description]
+        csv_rows = c.fetchall()
+        conn.close()
+
+        csv_path = os.path.join(os.path.dirname(__file__), 'data', 'cache', 'broker_positions.csv')
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+
+        with open(csv_path, 'w', encoding='utf-8') as f:
+            f.write(','.join(columns) + '\n')
+            for row in csv_rows:
+                f.write(','.join(str(v) if v is not None else '' for v in row) + '\n')
+
+        logger.info(f"✅ broker_positions 已同步：{rows_updated} 筆更新，CSV 已導出")
+        return True
+    except Exception as e:
+        logger.error(f"❌ 同步 broker_positions 到本地失敗：{e}")
+        import traceback
+        traceback.print_exc()
+        return False

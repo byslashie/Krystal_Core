@@ -167,7 +167,8 @@ def main():
                     position=excluded.position, avgCost=excluded.avgCost,
                     currentPrice=excluded.currentPrice, marketValue=excluded.marketValue,
                     unrealizedPnL=excluded.unrealizedPnL, currency=excluded.currency,
-                    timestamp=excluded.timestamp, synced_at=CURRENT_TIMESTAMP''',
+                    timestamp=excluded.timestamp, synced_at=CURRENT_TIMESTAMP,
+                    strategy=COALESCE(strategy, excluded.strategy)''',
                 (p['symbol'], p['position'], p['avgCost'],
                  p.get('marketPrice'), p.get('marketValue'), p.get('unrealizedPNL'),
                  'Schwab', 'USD', now_str))
@@ -177,6 +178,13 @@ def main():
         logger.info(f"✅ 已更新本地 DB broker_positions: {wrote_db} 筆")
     except Exception as e:
         logger.warning(f"⚠️ Schwab → DB 寫入失敗: {e}")
+
+    # 同步到本地 SQLite + CSV，保留 strategy/notes
+    try:
+        from sheets_utils import sync_broker_positions_to_local
+        sync_broker_positions_to_local(str(DB_PATH))
+    except Exception as e:
+        logger.warning(f"⚠️ 本地同步失敗：{e}")
 
     # 通知
     try:
