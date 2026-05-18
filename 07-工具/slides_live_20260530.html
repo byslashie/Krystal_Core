@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>素人如何用 AI 打造選股系統 · 斜槓姐姐 LIVE 2026.05.30</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange-50: hsl(20,90%,96%);
+  --orange-100: hsl(20,88%,91%);
+  --orange-200: hsl(20,85%,82%);
+  --orange-300: hsl(20,82%,72%);
+  --orange-400: hsl(20,80%,62%);
+  --orange-500: hsl(20,80%,57%);
+  --orange-600: hsl(16,76%,50%);
+  --orange-700: hsl(12,72%,42%);
+  --navy-100: hsl(218,50%,88%);
+  --navy-300: hsl(218,38%,62%);
+  --navy-500: hsl(218,50%,35%);
+  --navy-700: hsl(218,60%,22%);
+  --navy-900: hsl(222,60%,11%);
+  --coral: hsl(341,100%,71%);
+  --cyan: hsl(187,72%,56%);
+  --gold: hsl(31,60%,60%);
+  --grad-warm: linear-gradient(135deg, hsl(20,80%,57%) 0%, hsl(341,100%,71%) 100%);
+  --grad-cool: linear-gradient(135deg, hsl(218,60%,22%) 0%, hsl(187,72%,56%) 100%);
+  --gray-50: hsl(35,30%,97%);
+  --gray-100: hsl(35,22%,94%);
+  --gray-200: hsl(30,16%,88%);
+  --gray-900: hsl(222,35%,11%);
+  --bg-app: var(--gray-50);
+  --bg-canvas: #FFFFFF;
+  --bg-sunken: var(--gray-100);
+  --text-strong: var(--gray-900);
+  --text-base: hsl(25,11%,24%);
+  --text-mute: hsl(25,8%,46%);
+  --border-soft: hsla(25,16%,80%,0.6);
+  --glass-bg: hsla(0,0%,100%,0.65);
+  --glass-stroke: hsla(0,0%,100%,0.7);
+  --shadow-md: 0 4px 12px hsla(220,30%,11%,0.06), 0 2px 4px hsla(220,30%,11%,0.03);
+  --shadow-lg: 0 12px 32px hsla(220,30%,11%,0.08);
+  --glow-warm: 0 8px 24px hsla(20,80%,57%,0.30);
+  --font-sans: "Inter","Noto Sans TC",system-ui,sans-serif;
+  --font-display: "Outfit","Noto Sans TC",system-ui,sans-serif;
+  --font-mono: "JetBrains Mono",ui-monospace,monospace;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-2xl: 24px;
+  --r-pill: 999px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--navy-900);
+  font-family: var(--font-sans);
+}
+
+/* ===== SLIDE CONTAINER ===== */
+.slideshow {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  padding: 56px 80px 88px;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===== PERSISTENT UI ===== */
+.persistent-logo {
+  position: fixed;
+  bottom: 26px;
+  left: 36px;
+  z-index: 100;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: hsla(0,0%,100%,0.55);
+  pointer-events: none;
+  text-shadow: 0 1px 4px hsla(0,0%,0%,0.3);
+}
+
+.persistent-logo span {
+  background: var(--grad-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.persistent-page {
+  position: fixed;
+  bottom: 26px;
+  right: 36px;
+  z-index: 100;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: hsla(0,0%,100%,0.45);
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  text-shadow: 0 1px 4px hsla(0,0%,0%,0.3);
+}
+
+/* ===== SHARED COMPONENTS ===== */
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange-500);
+  margin-bottom: 14px;
+}
+
+/* ===================================================
+   COVER SLIDE
+=================================================== */
+.s-cover {
+  background:
+    radial-gradient(circle at 18% 28%, hsla(20,80%,57%,0.6), transparent 45%),
+    radial-gradient(circle at 80% 75%, hsla(341,100%,71%,0.4), transparent 45%),
+    radial-gradient(circle at 60% 15%, hsla(187,72%,56%,0.5), transparent 40%),
+    linear-gradient(135deg, hsl(222,60%,11%) 0%, hsl(218,60%,22%) 100%);
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-bottom: 110px;
+}
+
+.s-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(hsla(0,0%,100%,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(0,0%,100%,0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+}
+
+.cover-tagline {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--orange-400);
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.blink-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange-500);
+  animation: blink 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px hsla(20,80%,57%,0.8);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.12; }
+}
+
+.cover-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6.5vw, 76px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-title em {
+  font-style: italic;
+  background: var(--grad-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cover-sub {
+  font-size: 17px;
+  color: hsla(0,0%,100%,0.52);
+  font-weight: 400;
+  line-height: 1.65;
+  margin-bottom: 48px;
+  max-width: 580px;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-footer-meta {
+  display: flex;
+  gap: 36px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: hsla(0,0%,100%,0.32);
+  letter-spacing: 0.07em;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===================================================
+   DIVIDER SLIDE
+=================================================== */
+.s-divider {
+  background: var(--gray-50);
+  align-items: flex-start;
+  justify-content: center;
+  padding-bottom: 80px;
+}
+
+.divider-num {
+  font-family: var(--font-display);
+  font-size: clamp(100px, 18vw, 180px);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--orange-500);
+  opacity: 0.15;
+  position: absolute;
+  right: 64px;
+  top: 50%;
+  transform: translateY(-58%);
+  letter-spacing: -0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.divider-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange-500);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.divider-title {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 5.2vw, 60px);
+  font-weight: 800;
+  color: var(--text-strong);
+  line-height: 1.12;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  max-width: 70%;
+}
+
+.divider-sub {
+  font-size: 18px;
+  color: var(--text-mute);
+  font-weight: 400;
+  max-width: 500px;
+  position: relative;
+  z-index: 1;
+  line-height: 1.6;
+}
+
+.divider-accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--grad-warm);
+}
+
+/* ===================================================
+   CONTENT SLIDE
+=================================================== */
+.s-content {
+  background: var(--gray-50);
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.content-title {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.8vw, 46px);
+  font-weight: 800;
+  color: var(--text-strong);
+  line-height: 1.18;
+  margin-bottom: 24px;
+}
+
+.content-body {
+  font-size: 18px;
+  color: var(--text-base);
+  line-height: 1.75;
+  max-width: 660px;
+}
+
+.content-body li {
+  list-style: none;
+  padding-left: 22px;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.content-body li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--orange-500);
+}
+
+/* ===================================================
+   STAT SLIDE
+=================================================== */
+.s-stat {
+  background: var(--gray-50);
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.stat-card {
+  background: var(--bg-canvas);
+  border-radius: var(--r-xl);
+  padding: 26px 22px;
+  border-top: 3px solid var(--orange-500);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.5vw, 44px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--orange-500);
+}
+
+.stat-value.pos { color: hsl(0,68%,52%); }
+.stat-value.warn { color: hsl(31,80%,46%); }
+
+.stat-desc {
+  font-size: 13px;
+  color: var(--text-mute);
+  line-height: 1.5;
+}
+
+.stat-note {
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+/* ===================================================
+   QUOTE SLIDE
+=================================================== */
+.s-quote {
+  background: var(--gray-50);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.quote-mark {
+  font-family: var(--font-display);
+  font-size: clamp(88px, 15vw, 150px);
+  font-weight: 900;
+  line-height: 0.65;
+  background: var(--grad-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  display: block;
+  user-select: none;
+}
+
+.quote-text {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 42px);
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1.42;
+  max-width: 720px;
+  margin-bottom: 32px;
+}
+
+.quote-source {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-mute);
+  letter-spacing: 0.07em;
+}
+
+/* ===================================================
+   SLIDE 05 — COMPARE
+=================================================== */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.compare-col {
+  border-radius: var(--r-xl);
+  padding: 28px 26px;
+}
+
+.compare-col.before {
+  background: var(--gray-100);
+  border: 1px solid var(--border-soft);
+}
+
+.compare-col.after {
+  background: linear-gradient(135deg, hsla(20,80%,57%,0.07), hsla(341,100%,71%,0.05));
+  border: 1px solid hsla(20,80%,57%,0.22);
+}
+
+.compare-col-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+.compare-col.before .compare-col-label { color: var(--text-mute); }
+.compare-col.after .compare-col-label { color: var(--orange-600); }
+
+.compare-col ul { list-style: none; }
+
+.compare-col ul li {
+  padding: 9px 0;
+  font-size: 16px;
+  color: var(--text-base);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.5;
+}
+
+.compare-col ul li:last-child { border-bottom: none; }
+
+.compare-col.before ul li::before {
+  content: '✕';
+  color: hsl(0,0%,65%);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.compare-col.after ul li::before {
+  content: '✓';
+  color: var(--orange-500);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ===================================================
+   SLIDE 07 — BLOCKS
+=================================================== */
+.block-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 26px;
+}
+
+.block-item {
+  border-radius: var(--r-lg);
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: transform 0.2s ease;
+}
+
+.block-item:nth-child(1) {
+  background: hsla(20,80%,57%,0.10);
+  border-left: 4px solid hsl(20,80%,74%);
+  width: 52%;
+}
+
+.block-item:nth-child(2) {
+  background: hsla(20,80%,50%,0.15);
+  border-left: 4px solid hsl(20,80%,62%);
+  width: 70%;
+}
+
+.block-item:nth-child(3) {
+  background: hsla(20,76%,44%,0.20);
+  border-left: 4px solid var(--orange-500);
+  width: 88%;
+}
+
+.block-num {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--orange-600);
+  opacity: 0.65;
+  min-width: 22px;
+}
+
+.block-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+/* ===================================================
+   SLIDE 08 — CODE BLOCK
+=================================================== */
+.code-block {
+  background: hsl(222,60%,11%);
+  border-radius: var(--r-xl);
+  padding: 26px 30px;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: hsl(210,22%,80%);
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+  white-space: pre;
+}
+
+.code-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--grad-warm);
+}
+
+.code-block .c-comment { color: hsl(218,35%,50%); }
+.code-block .c-string  { color: hsl(30,82%,68%); }
+.code-block .c-num     { color: hsl(187,70%,62%); }
+.code-block .c-keyword { color: hsl(341,78%,72%); }
+.code-block .c-label   { color: hsl(20,83%,68%); }
+
+/* ===================================================
+   SLIDE 10 — STEPS
+=================================================== */
+.steps-row {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: 28px;
+}
+
+.step-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.step-connector {
+  position: absolute;
+  top: 23px;
+  left: 50%;
+  right: -50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--orange-400), var(--orange-200));
+}
+
+.step-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--grad-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17px;
+  color: #fff;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--glow-warm);
+  flex-shrink: 0;
+}
+
+.step-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange-600);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.step-desc {
+  font-size: 15px;
+  color: var(--text-base);
+  line-height: 1.55;
+  max-width: 190px;
+}
+
+/* ===================================================
+   SLIDE 13 — GIFT
+=================================================== */
+.gift-list {
+  list-style: none;
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gift-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-canvas);
+  border-radius: var(--r-xl);
+  padding: 18px 24px;
+  box-shadow: var(--shadow-md);
+  font-size: 17px;
+  color: var(--text-base);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.gift-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orange-500);
+  flex-shrink: 0;
+}
+
+.cta-badge {
+  display: inline-block;
+  background: var(--grad-warm);
+  color: #fff;
+  border-radius: var(--r-pill);
+  padding: 13px 32px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-top: 26px;
+  box-shadow: var(--glow-warm);
+}
+
+/* ===================================================
+   STAT SLIDE 11 — semantic labels
+=================================================== */
+.stat-value.semantic {
+  font-size: clamp(20px, 2.2vw, 26px);
+  color: var(--text-strong);
+  font-weight: 800;
+}
+</style>
+</head>
+<body>
+
+<div class="persistent-logo"><span>斜槓姐姐</span></div>
+<div class="persistent-page" id="page-counter">01 / 15</div>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ========== SLIDE 01: COVER ========== -->
+  <section class="slide s-cover active" data-index="0">
+    <div class="cover-tagline">
+      <span class="blink-dot"></span>
+      AI × XQ × 台股
+    </div>
+    <div class="cover-title">
+      素人如何用 AI<br><em>打造選股系統</em>
+    </div>
+    <div class="cover-sub">
+      不需要懂程式，只需要會問對問題 · 2026.05.30 直播
+    </div>
+    <div class="cover-footer-meta">
+      <span>byslashie.com</span>
+      <span>LIVE 2026.05.30</span>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 02: STAT ========== -->
+  <section class="slide s-stat" data-index="1">
+    <div class="tag">先看結果再說</div>
+    <div class="content-title">這是用 5 個 AI Prompt 做出來的</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">年化報酬</div>
+        <div class="stat-value pos">+48.17%</div>
+        <div class="stat-desc">10 年回測平均</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">夏普比率</div>
+        <div class="stat-value">1.69</div>
+        <div class="stat-desc">風險調整後報酬</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">最大回撤</div>
+        <div class="stat-value warn">-30.38%</div>
+        <div class="stat-desc">最差情境下跌幅</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">回測年期</div>
+        <div class="stat-value">10 年</div>
+        <div class="stat-desc">2015 — 2024</div>
+      </div>
+    </div>
+    <div class="stat-note">接下來告訴你怎麼做到</div>
+  </section>
+
+  <!-- ========== SLIDE 03: WHO AM I ========== -->
+  <section class="slide s-content" data-index="2">
+    <div class="tag">WHO AM I</div>
+    <div class="content-title">我是 Krystal，斜槓姐姐</div>
+    <ul class="content-body">
+      <li>高共感的小資女，用系統思維管理生活和交易</li>
+      <li>相信理財交易沒你想的那麼難</li>
+      <li>2025 年化報酬 +94.18%，管理資產 ~500 萬</li>
+    </ul>
+  </section>
+
+  <!-- ========== SLIDE 04: DIVIDER 01 ========== -->
+  <section class="slide s-divider" data-index="3">
+    <div class="divider-num">01</div>
+    <div class="divider-label">Chapter</div>
+    <div class="divider-title">為什麼要用 AI？</div>
+    <div class="divider-sub">以前 vs 現在的差距</div>
+    <div class="divider-accent"></div>
+  </section>
+
+  <!-- ========== SLIDE 05: COMPARE ========== -->
+  <section class="slide s-content" data-index="4">
+    <div class="tag">THE SHIFT</div>
+    <div class="content-title">學 XScript，曾經要花多久？</div>
+    <div class="compare-grid">
+      <div class="compare-col before">
+        <div class="compare-col-label">以前</div>
+        <ul>
+          <li>學程式語法</li>
+          <li>看文件</li>
+          <li>寫錯重來</li>
+          <li>放棄</li>
+        </ul>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-col-label">現在</div>
+        <ul>
+          <li>告訴 AI 你的想法</li>
+          <li>5 分鐘拿到程式碼</li>
+          <li>貼入 XQ 跑回測</li>
+          <li>完成</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 06: DIVIDER 02 ========== -->
+  <section class="slide s-divider" data-index="5">
+    <div class="divider-num">02</div>
+    <div class="divider-label">Chapter</div>
+    <div class="divider-title">積木選股法</div>
+    <div class="divider-sub">把複雜的選股邏輯變成可堆疊的模組</div>
+    <div class="divider-accent"></div>
+  </section>
+
+  <!-- ========== SLIDE 07: BLOCKS ========== -->
+  <section class="slide s-content" data-index="6">
+    <div class="tag">CONCEPT</div>
+    <div class="content-title">像積木一樣疊加選股條件</div>
+    <p class="content-body" style="max-width:600px;">
+      每個積木是一個選股維度，一層一層疊，最後組成完整策略
+    </p>
+    <div class="block-visual">
+      <div class="block-item">
+        <div class="block-num">01</div>
+        <div class="block-label">積木 1 — 營收創新高</div>
+      </div>
+      <div class="block-item">
+        <div class="block-num">02</div>
+        <div class="block-label">積木 2 — 外資買超</div>
+      </div>
+      <div class="block-item">
+        <div class="block-num">03</div>
+        <div class="block-label">積木 3 — 技術面確認</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 08: PROMPT ========== -->
+  <section class="slide s-content" data-index="7">
+    <div class="tag">PROMPT</div>
+    <div class="content-title">怎麼告訴 AI 你的想法？</div>
+    <div class="code-block"><span class="c-comment"># 告訴 AI 你的選股策略</span>
+
+我想設計一個<span class="c-string">台股選股策略</span>：
+- 近 <span class="c-num">3</span> 個月平均營收創 <span class="c-num">12</span> 個月新高
+- 外資近 <span class="c-num">5</span> 日買超
+- 站上 <span class="c-num">20</span> 日均線
+
+請幫我：
+<span class="c-num">1</span>. 分析邏輯合理性
+<span class="c-num">2</span>. 建議過濾條件
+<span class="c-num">3</span>. 用 <span class="c-label">XQ</span> 的 <span class="c-label">XS</span> 語法寫出程式碼</div>
+  </section>
+
+  <!-- ========== SLIDE 09: DIVIDER 03 ========== -->
+  <section class="slide s-divider" data-index="8">
+    <div class="divider-num">03</div>
+    <div class="divider-label">Chapter</div>
+    <div class="divider-title">LIVE DEMO</div>
+    <div class="divider-sub">現場示範 AI 生成策略 → XQ 回測</div>
+    <div class="divider-accent"></div>
+  </section>
+
+  <!-- ========== SLIDE 10: DEMO FLOW ========== -->
+  <section class="slide s-content" data-index="9">
+    <div class="tag">DEMO FLOW</div>
+    <div class="content-title">接下來你會看到什麼</div>
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-connector"></div>
+        <div class="step-circle">1</div>
+        <div class="step-label">STEP 1</div>
+        <div class="step-desc">把想法告訴 Claude AI</div>
+      </div>
+      <div class="step-item">
+        <div class="step-connector"></div>
+        <div class="step-circle">2</div>
+        <div class="step-label">STEP 2</div>
+        <div class="step-desc">AI 生成 XS 程式碼</div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle">3</div>
+        <div class="step-label">STEP 3</div>
+        <div class="step-desc">貼入 XQ 跑回測，看結果</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 11: STAT (READING) ========== -->
+  <section class="slide s-stat" data-index="10">
+    <div class="tag">READING RESULTS</div>
+    <div class="content-title">怎麼判斷一個策略好不好？</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">CAGR</div>
+        <div class="stat-value semantic">年化報酬</div>
+        <div class="stat-desc">越高越好，&gt;15% 優秀</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sharpe</div>
+        <div class="stat-value semantic">夏普比率</div>
+        <div class="stat-desc">&gt;1 及格，&gt;1.5 優秀</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">MDD</div>
+        <div class="stat-value semantic">最大回撤</div>
+        <div class="stat-desc">越小越穩，&lt;20% 合理</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Win Rate</div>
+        <div class="stat-value semantic">勝率</div>
+        <div class="stat-desc">&gt;50% 是基本盤</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 12: QUOTE ========== -->
+  <section class="slide s-quote" data-index="11">
+    <span class="quote-mark">"</span>
+    <div class="quote-text">
+      你不需要成為工程師，<br>你只需要學會問對問題
+    </div>
+    <div class="quote-source">— Krystal · 斜槓姐姐</div>
+  </section>
+
+  <!-- ========== SLIDE 13: GIFT ========== -->
+  <section class="slide s-content" data-index="12">
+    <div class="tag">GIFT</div>
+    <div class="content-title">今天的禮物包</div>
+    <ul class="gift-list">
+      <li>
+        <div class="gift-dot"></div>
+        🎁&nbsp;<strong>完整 XS 策略程式碼</strong>（今天 DEMO 的版本）
+      </li>
+      <li>
+        <div class="gift-dot"></div>
+        📝&nbsp;<strong>AI Prompt 模板 × 3</strong>（策略設計 / 回測分析 / 日誌 review）
+      </li>
+      <li>
+        <div class="gift-dot"></div>
+        📄&nbsp;<strong>使用說明 PDF</strong>
+      </li>
+    </ul>
+    <div class="cta-badge">留言打「積木」→ 填表領取</div>
+  </section>
+
+  <!-- ========== SLIDE 14: Q&A ========== -->
+  <section class="slide s-divider" data-index="13">
+    <div class="divider-num" style="font-size:clamp(60px,10vw,110px);opacity:0.18;">Q&amp;A</div>
+    <div class="divider-label">互動時間</div>
+    <div class="divider-title">有問題嗎？</div>
+    <div class="divider-sub">現在問，或留言區告訴我</div>
+    <div class="divider-accent"></div>
+  </section>
+
+  <!-- ========== SLIDE 15: CLOSING COVER ========== -->
+  <section class="slide s-cover" data-index="14">
+    <div class="cover-tagline">
+      <span class="blink-dot"></span>
+      感謝今天的陪伴
+    </div>
+    <div class="cover-title">
+      如果有幫助<br><em>分享給一位想開始的朋友</em>
+    </div>
+    <div class="cover-sub">
+      下一集主題，等你決定 — 留言告訴我
+    </div>
+    <div class="cover-footer-meta">
+      <span>byslashie.com</span>
+      <span>Threads @byslashie</span>
+    </div>
+  </section>
+
+</div><!-- /slideshow -->
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total  = slides.length;
+  const counter = document.getElementById('page-counter');
+  let cur = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+    counter.textContent = pad(cur + 1) + ' / ' + pad(total);
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault(); goTo(cur + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goTo(cur - 1);
+    }
+  });
+
+  // Touch swipe
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function (e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) goTo(dx < 0 ? cur + 1 : cur - 1);
+  }, { passive: true });
+
+  // Click to advance (right half = next, left half = prev)
+  document.addEventListener('click', function (e) {
+    // ignore clicks on interactive elements
+    if (e.target.closest('a, button')) return;
+    goTo(e.clientX > window.innerWidth / 2 ? cur + 1 : cur - 1);
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>

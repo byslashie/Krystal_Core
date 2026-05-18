@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>斜槓姐姐 — Slide Spec v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* ========== Same token system as v5 ========== */
+  :root, [data-theme="light"] {
+    --orange-50:hsl(20,90%,96%); --orange-100:hsl(20,88%,91%); --orange-200:hsl(20,85%,82%);
+    --orange-300:hsl(20,82%,72%); --orange-400:hsl(20,80%,62%); --orange-500:hsl(20,80%,57%);
+    --orange-600:hsl(16,76%,50%); --orange-700:hsl(12,72%,42%); --orange-800:hsl(10,68%,34%);
+    --navy-100:hsl(218,50%,88%); --navy-300:hsl(218,38%,62%); --navy-500:hsl(218,50%,35%);
+    --navy-700:hsl(218,60%,22%); --navy-900:hsl(222,60%,11%);
+    --coral:hsl(341,100%,71%); --cyan:hsl(187,72%,56%); --gold:hsl(31,60%,60%);
+    --grad-warm:linear-gradient(135deg,hsl(20,80%,57%) 0%,hsl(341,100%,71%) 100%);
+    --grad-cool:linear-gradient(135deg,hsl(218,60%,22%) 0%,hsl(187,72%,56%) 100%);
+    --grad-aurora:linear-gradient(135deg,hsl(20,80%,57%) 0%,hsl(341,100%,71%) 50%,hsl(187,72%,56%) 100%);
+    --gray-50:hsl(35,30%,97%); --gray-100:hsl(35,22%,94%); --gray-200:hsl(30,16%,88%);
+    --gray-300:hsl(25,12%,80%); --gray-400:hsl(25,9%,60%); --gray-500:hsl(25,8%,46%);
+    --gray-600:hsl(25,9%,34%); --gray-700:hsl(25,11%,24%); --gray-900:hsl(222,35%,11%);
+    --bg-app:var(--gray-50); --bg-canvas:#FFFFFF; --bg-sunken:var(--gray-100);
+    --text-strong:var(--gray-900); --text-base:var(--gray-700); --text-mute:var(--gray-500); --text-soft:var(--gray-400);
+    --border-soft:hsla(25,16%,80%,0.6); --border-strong:hsla(25,16%,70%,0.7);
+    --glass-bg:hsla(0,0%,100%,0.65); --glass-stroke:hsla(0,0%,100%,0.7); --glass-blur:blur(20px);
+    --pos:hsl(4,72%,47%); --warn:hsl(38,92%,50%); --info:hsl(207,75%,55%);
+    --shadow-xs:0 1px 2px hsla(220,30%,11%,0.04);
+    --shadow-sm:0 2px 4px hsla(220,30%,11%,0.04),0 1px 2px hsla(220,30%,11%,0.03);
+    --shadow-md:0 4px 12px hsla(220,30%,11%,0.06),0 2px 4px hsla(220,30%,11%,0.03);
+    --shadow-lg:0 12px 32px hsla(220,30%,11%,0.08);
+    --glow-warm:0 8px 24px hsla(20,80%,57%,0.30);
+    --glow-cool:0 0 24px hsla(187,72%,56%,0.45);
+    --font-sans:"Inter","Noto Sans TC",system-ui,sans-serif;
+    --font-display:"Outfit","Noto Sans TC",system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    --r-xs:4px; --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px; --r-2xl:24px; --r-pill:999px;
+  }
+  [data-theme="dark"] {
+    --bg-app:hsl(222,35%,9%); --bg-canvas:hsl(222,30%,13%); --bg-sunken:hsl(222,40%,6%);
+    --text-strong:hsl(35,30%,96%); --text-base:hsl(35,18%,84%); --text-mute:hsl(220,10%,60%); --text-soft:hsl(220,10%,42%);
+    --border-soft:hsla(220,15%,30%,0.7); --border-strong:hsla(220,15%,40%,0.7);
+    --glass-bg:hsla(222,26%,16%,0.55); --glass-stroke:hsla(0,0%,100%,0.06);
+    --shadow-md:0 4px 12px hsla(0,0%,0%,0.4);
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    background: var(--bg-app);
+    color: var(--text-base);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 8% 12%, hsla(20,80%,57%,0.10), transparent 35%),
+      radial-gradient(circle at 92% 88%, hsla(187,72%,56%,0.12), transparent 40%),
+      radial-gradient(circle at 78% 18%, hsla(341,100%,71%,0.08), transparent 30%);
+    background-attachment: fixed;
+    transition: background 0.3s, color 0.3s;
+  }
+  [data-theme="dark"] body {
+    background-image:
+      radial-gradient(circle at 8% 12%, hsla(20,80%,57%,0.14), transparent 35%),
+      radial-gradient(circle at 92% 88%, hsla(187,72%,56%,0.10), transparent 40%);
+  }
+  code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--bg-sunken); padding: 2px 7px;
+    border-radius: var(--r-xs); color: var(--orange-700);
+    border: 1px solid var(--border-soft);
+  }
+  [data-theme="dark"] code { color: var(--orange-300); }
+
+  /* ===== Theme switch ===== */
+  .theme-switch {
+    position: fixed; top: 20px; right: 24px; z-index: 100;
+    display: flex; background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-stroke); border-radius: var(--r-pill);
+    padding: 4px; box-shadow: var(--shadow-md);
+  }
+  .theme-switch button {
+    border: none; background: transparent; color: var(--text-mute);
+    font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: var(--r-pill); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .theme-switch button.active {
+    background: var(--grad-warm); color: white;
+    box-shadow: var(--glow-warm);
+  }
+
+  /* ========== Cover ========== */
+  .cover {
+    background:
+      radial-gradient(circle at 20% 30%, hsla(341, 100%, 71%, 0.40), transparent 50%),
+      radial-gradient(circle at 80% 70%, hsla(20, 80%, 57%, 0.45), transparent 50%),
+      radial-gradient(circle at 60% 20%, hsla(187, 72%, 56%, 0.40), transparent 45%),
+      linear-gradient(135deg, hsl(222, 60%, 11%) 0%, hsl(218, 60%, 22%) 50%, hsl(215, 50%, 30%) 100%);
+    color: var(--gray-50);
+    padding: 80px 56px 72px;
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(hsla(0,0%,100%,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(0,0%,100%,0.04) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+  .cover-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+  .cover-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-display); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    background: hsla(0,0%,100%,0.08); backdrop-filter: var(--glass-blur);
+    border: 1px solid hsla(0,0%,100%,0.18);
+    padding: 8px 14px; border-radius: var(--r-pill);
+    margin-bottom: 28px; color: white;
+  }
+  .cover-tag .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange-400); box-shadow: 0 0 12px var(--orange-400);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.55;transform:scale(0.8);} }
+  .cover h1 {
+    font-family: var(--font-display); font-size: 72px; line-height: 1.05;
+    font-weight: 800; color: white; margin: 0 0 6px; letter-spacing: -0.03em;
+  }
+  .cover h1 em {
+    font-style: italic;
+    background: linear-gradient(90deg, var(--orange-300), var(--coral));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 700;
+  }
+  .cover-sub { font-size: 17px; opacity: 0.85; margin-top: 20px; max-width: 580px; color: white; line-height: 1.65; }
+  .cover-meta { margin-top: 52px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .cover-meta .pill {
+    background: hsla(0,0%,100%,0.06); backdrop-filter: var(--glass-blur);
+    border: 1px solid hsla(0,0%,100%,0.14); padding: 12px 18px;
+    border-radius: var(--r-lg); min-width: 140px;
+  }
+  .cover-meta .pill .k {
+    font-family: var(--font-display); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--orange-300); font-weight: 700;
+  }
+  .cover-meta .pill .v {
+    font-size: 14px; color: white; font-weight: 700; margin-top: 4px; font-family: var(--font-display);
+  }
+  .cover-version {
+    position: absolute; top: 28px; left: 56px;
+    font-family: var(--font-mono); font-size: 11px; color: white; opacity: 0.45;
+    z-index: 1; letter-spacing: 0.1em;
+  }
+
+  /* ========== Page wrapper ========== */
+  .page { max-width: 960px; margin: 0 auto; padding: 64px 56px 120px; }
+
+  /* ========== TOC (glass) ========== */
+  .toc {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-stroke); border-radius: var(--r-xl);
+    padding: 24px 28px; margin-bottom: 64px; box-shadow: var(--shadow-md);
+    position: relative; overflow: hidden;
+  }
+  .toc::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 80px; height: 4px;
+    background: var(--grad-warm); border-radius: 0 0 var(--r-pill) 0;
+  }
+  .toc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .toc-tag {
+    font-family: var(--font-display); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--orange-600);
+  }
+  [data-theme="dark"] .toc-tag { color: var(--orange-400); }
+  .toc-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--orange-400), transparent); }
+  .toc-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 28px; }
+  .toc-list a {
+    color: var(--text-base); text-decoration: none; padding: 8px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 500; transition: color 0.15s, transform 0.15s;
+  }
+  .toc-list a:hover { color: var(--orange-600); transform: translateX(2px); }
+  [data-theme="dark"] .toc-list a:hover { color: var(--orange-400); }
+  .toc-list a .n {
+    font-family: var(--font-mono); color: var(--text-soft); font-size: 11px; margin-right: 10px;
+  }
+
+  /* ========== Sections ========== */
+  .section { margin-bottom: 80px; }
+  .section-header {
+    display: flex; align-items: baseline; gap: 14px;
+    padding-bottom: 14px; margin-bottom: 28px; position: relative;
+  }
+  .section-header::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, var(--orange-500), var(--coral) 20%, transparent 55%);
+  }
+  .section-num {
+    font-family: var(--font-display); font-size: 12px; color: var(--orange-700);
+    font-weight: 700; letter-spacing: 0.08em;
+    background: var(--orange-50); border: 1px solid var(--orange-200);
+    padding: 4px 10px; border-radius: var(--r-sm);
+  }
+  [data-theme="dark"] .section-num {
+    background: hsla(20,80%,57%,0.12); border-color: hsla(20,80%,57%,0.25); color: var(--orange-300);
+  }
+  .section-title {
+    font-family: var(--font-display); font-size: 32px; color: var(--text-strong);
+    font-weight: 800; margin: 0; letter-spacing: -0.02em;
+  }
+  .section-sub { margin-left: auto; font-size: 12px; color: var(--text-soft); font-style: italic; }
+
+  h3.sub {
+    font-family: var(--font-display); font-size: 20px; color: var(--text-strong);
+    font-weight: 700; margin: 36px 0 14px;
+    display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
+  }
+  h3.sub::before {
+    content: ''; width: 4px; height: 18px;
+    background: var(--grad-warm); border-radius: 2px;
+  }
+
+  .lead { font-size: 16px; color: var(--text-mute); line-height: 1.75; margin-bottom: 22px; }
+
+  /* ========== Tables (glass) ========== */
+  table {
+    width: 100%; border-collapse: collapse; margin: 12px 0 22px;
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    font-size: 13px; border: 1px solid var(--glass-stroke);
+    border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+  }
+  th, td {
+    text-align: left; padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle; color: var(--text-base);
+  }
+  thead th {
+    background: hsla(20,50%,95%,0.45);
+    font-family: var(--font-display); font-size: 10px; font-weight: 700;
+    color: var(--text-mute); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  [data-theme="dark"] thead th { background: hsla(220,30%,20%,0.5); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: hsla(20,80%,57%,0.04); }
+  td.mono, th.mono { font-family: var(--font-mono); font-size: 12px; }
+  td strong { color: var(--text-strong); font-weight: 700; }
+
+  /* ========== Callout ========== */
+  .callout {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-stroke); border-left: 3px solid var(--orange-500);
+    padding: 18px 22px; border-radius: 0 var(--r-lg) var(--r-lg) 0;
+    margin: 14px 0 22px; font-size: 13px; color: var(--text-base);
+    box-shadow: var(--shadow-sm);
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.danger { border-left-color: var(--pos); }
+  .callout.tech { border-left-color: var(--cyan); }
+  .callout strong { color: var(--text-strong); font-weight: 700; }
+  .callout ul { margin: 8px 0 0; padding-left: 18px; }
+  .callout li { padding: 4px 0; }
+
+  /* ========== Spec rows ========== */
+  .spec-row {
+    display: grid; grid-template-columns: 180px 1fr;
+    padding: 11px 0; border-bottom: 1px solid var(--border-soft); gap: 24px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-label {
+    font-family: var(--font-display); font-size: 11px; color: var(--text-mute);
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+  }
+  .spec-val { font-family: var(--font-mono); font-size: 13px; color: var(--text-strong); }
+
+  /* ========== Slide previews — 16:9 thumbs ========== */
+  .slide-preview {
+    margin: 18px 0 14px;
+    position: relative;
+  }
+  .slide-frame {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--glass-stroke);
+  }
+  .slide-frame .label {
+    position: absolute;
+    bottom: -32px; left: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+    letter-spacing: 0.08em;
+  }
+  /* Grid overlay for slide frames */
+  .slide-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px 16px;
+    margin: 20px 0;
+  }
+  .slide-grid.three { grid-template-columns: repeat(3, 1fr); }
+
+  /* === SLIDE: Cover === */
+  .s-cover {
+    background:
+      radial-gradient(circle at 18% 28%, hsla(20,80%,57%,0.6), transparent 45%),
+      radial-gradient(circle at 80% 75%, hsla(341,100%,71%,0.4), transparent 45%),
+      radial-gradient(circle at 60% 15%, hsla(187,72%,56%,0.5), transparent 40%),
+      linear-gradient(135deg, hsl(222,60%,11%) 0%, hsl(218,60%,22%) 100%);
+    color: white;
+    padding: 8% 7%;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .s-cover::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(hsla(0,0%,100%,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(0,0%,100%,0.04) 1px, transparent 1px);
+    background-size: 6.5% 11%;
+  }
+  .s-cover .tagline {
+    font-family: var(--font-display); font-size: 12px;
+    font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--orange-300); margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .s-cover .title {
+    font-family: var(--font-display); font-size: 60px;
+    font-weight: 800; line-height: 1.05; letter-spacing: -0.03em;
+    margin: 0; position: relative; z-index: 1;
+  }
+  .s-cover .title em {
+    font-style: italic;
+    background: linear-gradient(90deg, var(--orange-300), var(--coral));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .s-cover .sub {
+    font-family: var(--font-sans); font-size: 16px;
+    color: hsla(0,0%,100%,0.8); margin-top: 14px;
+    max-width: 60%; position: relative; z-index: 1;
+  }
+  .s-cover .footer-meta {
+    position: absolute; bottom: 6%; left: 7%; right: 7%;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 11px; color: hsla(0,0%,100%,0.5);
+    z-index: 1;
+  }
+
+  /* === SLIDE: Section divider === */
+  .s-divider {
+    background: var(--gray-50);
+    padding: 10% 7%;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .s-divider::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 80% 80%, hsla(20,80%,57%,0.15), transparent 45%),
+      radial-gradient(circle at 20% 20%, hsla(187,72%,56%,0.10), transparent 45%);
+  }
+  .s-divider .num {
+    font-family: var(--font-mono); font-size: 60px;
+    font-weight: 500; color: var(--orange-500);
+    line-height: 1; opacity: 0.9; letter-spacing: -0.04em;
+    position: relative; z-index: 1;
+  }
+  .s-divider .title {
+    font-family: var(--font-display); font-size: 56px;
+    font-weight: 800; color: var(--gray-900); letter-spacing: -0.03em;
+    margin-top: 12px; position: relative; z-index: 1;
+  }
+  .s-divider .sub {
+    font-family: var(--font-sans); font-size: 16px; color: var(--text-mute);
+    margin-top: 12px; position: relative; z-index: 1;
+  }
+  .s-divider .accent {
+    width: 80px; height: 4px;
+    background: var(--grad-warm); border-radius: var(--r-pill);
+    margin-top: 24px; position: relative; z-index: 1;
+  }
+
+  /* === SLIDE: Content (text-heavy) === */
+  .s-content {
+    background: var(--gray-50);
+    padding: 7% 7% 6%;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .s-content::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 92% 88%, hsla(187,72%,56%,0.08), transparent 35%);
+  }
+  .s-content .tag {
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange-600); margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .s-content .title {
+    font-family: var(--font-display); font-size: 36px;
+    font-weight: 700; color: var(--gray-900); letter-spacing: -0.02em;
+    line-height: 1.2; margin: 0; position: relative; z-index: 1;
+  }
+  .s-content .body {
+    font-family: var(--font-sans); font-size: 14px;
+    color: var(--text-base); line-height: 1.7;
+    margin-top: 18px; max-width: 80%; position: relative; z-index: 1;
+  }
+  .s-content .body p { margin: 6px 0; }
+  .s-content .footer {
+    position: absolute; bottom: 3.5%; right: 7%;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-mute); letter-spacing: 0.06em;
+  }
+  .s-content .pagenum {
+    position: absolute; bottom: 3.5%; left: 7%;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-mute); letter-spacing: 0.06em;
+  }
+
+  /* === SLIDE: Stat / Data === */
+  .s-stat {
+    background: var(--gray-50);
+    padding: 6% 7%;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .s-stat::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 10% 10%, hsla(20,80%,57%,0.12), transparent 35%),
+      radial-gradient(circle at 90% 90%, hsla(341,100%,71%,0.10), transparent 35%);
+  }
+  .s-stat .tag {
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange-600); margin-bottom: 10px; z-index: 1; position: relative;
+  }
+  .s-stat .title {
+    font-family: var(--font-display); font-size: 30px; font-weight: 700;
+    color: var(--gray-900); letter-spacing: -0.02em; margin: 0 0 16px;
+    z-index: 1; position: relative;
+  }
+  .s-stat-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    z-index: 1; position: relative;
+  }
+  .s-stat-card {
+    background: hsla(0,0%,100%,0.65); backdrop-filter: blur(20px);
+    border: 1px solid hsla(0,0%,100%,0.7);
+    border-radius: 14px; padding: 14px;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .s-stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--orange-500);
+  }
+  .s-stat-card.warn::before { background: var(--warn); }
+  .s-stat-card.pos::before { background: var(--pos); }
+  .s-stat-card.info::before { background: var(--info); }
+  .s-stat-card .lab {
+    font-family: var(--font-sans); font-size: 10px; color: var(--text-mute);
+    margin-bottom: 4px;
+  }
+  .s-stat-card .num {
+    font-family: var(--font-display); font-size: 26px; font-weight: 800;
+    color: var(--gray-900); letter-spacing: -0.02em; line-height: 1;
+  }
+  .s-stat-card .num.pos { color: var(--pos); }
+  .s-stat-card .num.warn { color: hsl(38,92%,42%); }
+  .s-stat-card .delta {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-mute); margin-top: 3px;
+  }
+
+  /* === SLIDE: Quote === */
+  .s-quote {
+    background: var(--gray-50);
+    padding: 8% 8%;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .s-quote::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, hsla(20,80%,57%,0.10), transparent 55%);
+  }
+  .s-quote .mark {
+    font-family: "Outfit", serif; font-size: 100px; font-weight: 800;
+    color: var(--orange-500); line-height: 0.7;
+    z-index: 1; position: relative; letter-spacing: -0.05em;
+    background: var(--grad-warm); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .s-quote .text {
+    font-family: var(--font-display); font-size: 32px; font-weight: 700;
+    color: var(--gray-900); line-height: 1.35; letter-spacing: -0.02em;
+    margin-top: 12px; z-index: 1; position: relative;
+  }
+  .s-quote .attr {
+    font-family: var(--font-sans); font-size: 13px; color: var(--text-mute);
+    margin-top: 14px; z-index: 1; position: relative;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .s-quote .attr::before {
+    content: ''; width: 20px; height: 1px;
+    background: var(--orange-500);
+  }
+
+  /* === SLIDE: Two column === */
+  .s-twocol {
+    background: var(--gray-50);
+    padding: 7%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4%;
+    position: relative;
+  }
+  .s-twocol::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 92% 8%, hsla(187,72%,56%,0.10), transparent 40%);
+  }
+  .s-twocol-left, .s-twocol-right { z-index: 1; position: relative; display: flex; flex-direction: column; justify-content: center; }
+  .s-twocol .tag {
+    font-family: var(--font-display); font-size: 10px;
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange-600); margin-bottom: 8px;
+  }
+  .s-twocol .title {
+    font-family: var(--font-display); font-size: 28px;
+    font-weight: 700; color: var(--gray-900); letter-spacing: -0.02em;
+    line-height: 1.2; margin: 0 0 12px;
+  }
+  .s-twocol .body { font-family: var(--font-sans); font-size: 13px; color: var(--text-base); line-height: 1.7; }
+  .s-twocol-right {
+    background: hsla(0,0%,100%,0.65); backdrop-filter: blur(20px);
+    border: 1px solid hsla(0,0%,100%,0.7); border-radius: 14px;
+    padding: 20px; box-shadow: var(--shadow-sm);
+    justify-content: flex-start;
+  }
+  .s-twocol .placeholder {
+    border: 2px dashed var(--orange-300); border-radius: 12px;
+    padding: 28px; text-align: center; color: var(--orange-700);
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.15em;
+    margin-top: 10px;
+  }
+
+  /* === SLIDE: Full-bleed image === */
+  .s-bleed {
+    background: var(--grad-aurora);
+    padding: 7%;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    color: white;
+  }
+  .s-bleed::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 30%, hsla(0,0%,0%,0.35) 100%);
+  }
+  .s-bleed .tag {
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: hsla(0,0%,100%,0.9); margin-bottom: 8px; z-index: 1; position: relative;
+  }
+  .s-bleed .title {
+    font-family: var(--font-display); font-size: 44px;
+    font-weight: 800; color: white; letter-spacing: -0.03em; line-height: 1.1;
+    margin: 0; z-index: 1; position: relative;
+  }
+
+  /* === SLIDE: Comparison === */
+  .s-compare {
+    background: var(--gray-50);
+    padding: 6% 7%;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .s-compare .title {
+    font-family: var(--font-display); font-size: 26px;
+    font-weight: 700; color: var(--gray-900); letter-spacing: -0.02em;
+    margin: 0 0 18px;
+  }
+  .s-compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1;
+  }
+  .s-compare-card {
+    background: hsla(0,0%,100%,0.65); backdrop-filter: blur(20px);
+    border: 1px solid hsla(0,0%,100%,0.7); border-radius: 14px;
+    padding: 16px; position: relative; box-shadow: var(--shadow-sm);
+  }
+  .s-compare-card.do { border-top: 3px solid var(--orange-500); }
+  .s-compare-card.dont { border-top: 3px solid var(--navy-700); }
+  .s-compare-card .h {
+    font-family: var(--font-display); font-size: 13px;
+    font-weight: 700; color: var(--gray-900); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .s-compare-card .h .b {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+  }
+  .s-compare-card.do .h .b { background: var(--orange-500); }
+  .s-compare-card.dont .h .b { background: var(--navy-700); }
+  .s-compare-card ul { margin: 0; padding-left: 16px; font-family: var(--font-sans); font-size: 11.5px; line-height: 1.6; color: var(--text-base); }
+
+  /* === SLIDE: Closing === */
+  .s-closing {
+    background: linear-gradient(135deg, hsl(222,60%,11%) 0%, hsl(218,60%,22%) 100%);
+    color: white;
+    padding: 8% 7%;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  }
+  .s-closing::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, hsla(20,80%,57%,0.30), transparent 50%);
+  }
+  .s-closing .label {
+    font-family: var(--font-display); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--orange-300); margin-bottom: 16px; z-index: 1; position: relative;
+  }
+  .s-closing .big {
+    font-family: var(--font-display); font-size: 56px; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.1; z-index: 1; position: relative;
+  }
+  .s-closing .big em {
+    font-style: italic;
+    background: linear-gradient(90deg, var(--orange-300), var(--coral));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .s-closing .footer {
+    position: absolute; bottom: 6%; font-family: var(--font-mono); font-size: 11px;
+    color: hsla(0,0%,100%,0.5); letter-spacing: 0.1em;
+  }
+
+  /* ========== Anatomy / layout diagram ========== */
+  .anatomy {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-stroke); border-radius: var(--r-xl);
+    padding: 24px; margin: 18px 0; box-shadow: var(--shadow-md);
+  }
+  .anatomy-frame {
+    aspect-ratio: 16 / 9;
+    background: var(--gray-50);
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+  }
+  .anatomy-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(hsla(20,80%,57%,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(20,80%,57%,0.06) 1px, transparent 1px);
+    background-size: 6.25% 11.11%; /* 16x9 grid */
+  }
+  .anatomy-safe {
+    position: absolute;
+    top: 6%; left: 7%; right: 7%; bottom: 6%;
+    border: 1px dashed var(--orange-500);
+    border-radius: var(--r-md);
+  }
+  .anatomy-zone {
+    position: absolute;
+    background: hsla(20,80%,57%,0.10);
+    border: 1px solid hsla(20,80%,57%,0.4);
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--orange-700); font-weight: 600;
+    padding: 4px 8px;
+  }
+  .anatomy-zone.cool { background: hsla(187,72%,56%,0.08); border-color: hsla(187,72%,56%,0.35); color: hsl(187,72%,30%); }
+  .anatomy-zone.coral { background: hsla(341,100%,71%,0.08); border-color: hsla(341,100%,71%,0.30); color: hsl(341,80%,40%); }
+  [data-theme="dark"] .anatomy-frame { background: var(--bg-canvas); }
+
+  /* ========== Tokens block ========== */
+  .tokens {
+    background: linear-gradient(135deg, hsl(222,35%,11%), hsl(218,50%,18%));
+    color: hsl(35,30%,92%);
+    padding: 22px 26px; border-radius: var(--r-lg);
+    font-family: var(--font-mono); font-size: 12.5px; line-height: 1.85;
+    margin: 14px 0 22px; overflow-x: auto; position: relative;
+    border: 1px solid hsla(187,72%,56%,0.18);
+  }
+  .tokens::before {
+    content: '◉ PPTXGENJS'; position: absolute; top: 12px; right: 18px;
+    font-family: var(--font-display); font-size: 9px;
+    letter-spacing: 0.25em; color: var(--cyan);
+  }
+  .tokens .k { color: hsl(20,90%,70%); }
+  .tokens .v { color: hsl(35,30%,92%); }
+  .tokens .c { color: hsl(220,14%,50%); font-style: italic; }
+  .tokens .s { color: hsl(187,72%,70%); }
+  .tokens .n { color: hsl(341,90%,78%); }
+
+  /* ========== Footer ========== */
+  footer {
+    border-top: 1px solid var(--border-soft); margin-top: 80px;
+    padding: 36px 0; text-align: center;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-soft);
+  }
+  footer .brand {
+    font-family: var(--font-display); font-size: 16px; color: var(--text-strong);
+    font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em;
+  }
+</style>
+</head>
+<body>
+
+<div class="theme-switch">
+  <button id="lightBtn" class="active" onclick="setTheme('light')">☀ Light</button>
+  <button id="darkBtn" onclick="setTheme('dark')">☾ Dark</button>
+</div>
+
+<!-- ============ COVER ============ -->
+<header class="cover">
+  <div class="cover-version">SLIDE SPEC // 2026.05 // v1.0</div>
+  <div class="cover-inner">
+    <div class="cover-tag"><span class="dot"></span>Presentation System · 16:9</div>
+    <h1>斜槓姐姐<br/><em>Slide</em> Spec</h1>
+    <p class="cover-sub">
+      投影片完整規格書 — 涵蓋畫布尺寸、安全邊距、版型系統、字級配色、座標規格、PPTX 對應參數。
+      適用於所有對外簡報：課程、開箱、訂閱說明、合作提案。
+    </p>
+    <div class="cover-meta">
+      <div class="pill"><div class="k">Canvas</div><div class="v">1920 × 1080</div></div>
+      <div class="pill"><div class="k">Aspect</div><div class="v">16:9</div></div>
+      <div class="pill"><div class="k">Layouts</div><div class="v">7 templates</div></div>
+      <div class="pill"><div class="k">Version</div><div class="v">v1.0 · 2026.05</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ============ TOC ============ -->
+<nav class="toc">
+  <div class="toc-head">
+    <span class="toc-tag">目錄 · Table of Contents</span>
+    <span class="toc-line"></span>
+  </div>
+  <div class="toc-list">
+    <a href="#s0"><span><span class="n">00</span>畫布與安全邊距</span><span>↗</span></a>
+    <a href="#s5"><span><span class="n">05</span>版型 04 · 圖文並列</span><span>↗</span></a>
+    <a href="#s1"><span><span class="n">01</span>版型總覽（7 種）</span><span>↗</span></a>
+    <a href="#s6"><span><span class="n">06</span>版型 05 · 對照</span><span>↗</span></a>
+    <a href="#s2"><span><span class="n">02</span>版型 01 · 封面</span><span>↗</span></a>
+    <a href="#s7"><span><span class="n">07</span>版型 06 · 大字引言</span><span>↗</span></a>
+    <a href="#s3"><span><span class="n">03</span>版型 02 · 章節</span><span>↗</span></a>
+    <a href="#s8"><span><span class="n">08</span>版型 07 · 收尾</span><span>↗</span></a>
+    <a href="#s4"><span><span class="n">04</span>版型 03 · 數據</span><span>↗</span></a>
+    <a href="#s9"><span><span class="n">09</span>製作規範與輸出</span><span>↗</span></a>
+  </div>
+</nav>
+
+<!-- ============ 00 CANVAS ============ -->
+<section class="section" id="s0">
+  <div class="section-header">
+    <span class="section-num">00</span>
+    <h2 class="section-title">畫布與安全邊距</h2>
+    <span class="section-sub">必讀 · 所有版型共通</span>
+  </div>
+
+  <p class="lead">所有簡報必須以 <strong>1920×1080（16:9）</strong>作為標準畫布。建立內距 6% / 7% 的安全邊距，並遵守版心網格 — 重要元素絕不出框。</p>
+
+  <h3 class="sub">版心解構</h3>
+  <div class="anatomy">
+    <div class="anatomy-frame">
+      <div class="anatomy-grid"></div>
+      <div class="anatomy-safe"></div>
+      <!-- Tag line zone -->
+      <div class="anatomy-zone" style="top:8%; left:7%; width:24%; height:5%;">① Tag line</div>
+      <!-- Title zone -->
+      <div class="anatomy-zone" style="top:16%; left:7%; width:62%; height:18%;">② 主標題</div>
+      <!-- Accent line -->
+      <div class="anatomy-zone coral" style="top:38%; left:7%; width:5%; height:0.5%;">③ Accent line</div>
+      <!-- Body zone -->
+      <div class="anatomy-zone cool" style="top:42%; left:7%; right:38%; height:40%; width:55%;">④ 主內容區</div>
+      <!-- Watermark zone -->
+      <div class="anatomy-zone coral" style="bottom:4%; right:7%; width:18%; height:4%;">⑤ 浮水印</div>
+      <!-- Page number -->
+      <div class="anatomy-zone" style="bottom:4%; left:7%; width:8%; height:4%;">⑥ 頁碼</div>
+    </div>
+  </div>
+
+  <div class="spec-row"><div class="spec-label">畫布尺寸</div><div class="spec-val">1920 × 1080 px（16:9）</div></div>
+  <div class="spec-row"><div class="spec-label">安全邊距 上下</div><div class="spec-val">64 px（5.93%）</div></div>
+  <div class="spec-row"><div class="spec-label">安全邊距 左右</div><div class="spec-val">134 px（7%）</div></div>
+  <div class="spec-row"><div class="spec-label">內容版心</div><div class="spec-val">1652 × 952 px</div></div>
+  <div class="spec-row"><div class="spec-label">基準格 Grid</div><div class="spec-val">16 col · gutter 24 px · margin 134 px</div></div>
+  <div class="spec-row"><div class="spec-label">最小字級</div><div class="spec-val">14 px（內文）/ 18 pt 印刷</div></div>
+  <div class="spec-row"><div class="spec-label">最大字級</div><div class="spec-val">88 px（H1）/ 標題</div></div>
+  <div class="spec-row"><div class="spec-label">浮水印位置</div><div class="spec-val">右下 x: 1700 / y: 1010 · 「斜槓姐姐」11 pt · navy-700 · α 0.4</div></div>
+  <div class="spec-row"><div class="spec-label">頁碼位置</div><div class="spec-val">左下 x: 134 / y: 1010 · Mono 10 pt · text-mute · 「03 / 24」</div></div>
+
+  <h3 class="sub">通用元素</h3>
+  <div class="callout tech">
+    <strong>每一頁必出現：</strong>
+    <ul>
+      <li><strong>① Tag line</strong> — 頁首小標 · Outfit 700 · 13 px · orange-600 · 字距 0.18em UPPER</li>
+      <li><strong>② 主標題</strong> — Outfit 700–800 · 32–48 px · gray-900 · letter-spacing -0.02em</li>
+      <li><strong>③ Accent line</strong> — 80×4 px · grad-warm 漸層 · radius pill</li>
+      <li><strong>④ 主內容</strong> — Inter 400 · 14–17 px · text-base · line-height 1.7</li>
+      <li><strong>⑤ 浮水印</strong> — 右下 · 「斜槓姐姐」+ 小 Logo · α 0.4</li>
+      <li><strong>⑥ 頁碼</strong> — 左下 · Mono · 「03 / 24」格式</li>
+    </ul>
+  </div>
+
+  <div class="callout warn">
+    <strong>禁止</strong>
+    <ul>
+      <li>❌ 文字、圖片、Logo 越過安全邊距</li>
+      <li>❌ 同頁出現超過 2 個 H 級標題</li>
+      <li>❌ 連續使用同一版型超過 2 頁（影響視覺節奏）</li>
+      <li>❌ 內文字級小於 14 px</li>
+      <li>❌ 自創顏色 — 必須使用 design tokens</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 01 OVERVIEW ============ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2 class="section-title">版型總覽</h2>
+    <span class="section-sub">7 種版型 + 比例建議</span>
+  </div>
+
+  <p class="lead">本系統提供 7 種版型。每場簡報應混合 4–6 種，避免單一版型連續使用，創造視覺節奏感。</p>
+
+  <table>
+    <thead><tr><th class="mono" style="width:60px">編號</th><th style="width:120px">版型</th><th>用途</th><th style="width:90px">建議比例</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">01</td><td><strong>封面 Cover</strong></td><td>第一頁、章節大封面、簡報結尾頁</td><td>1 頁</td></tr>
+      <tr><td class="mono">02</td><td><strong>章節 Section</strong></td><td>各章節開頭、轉場頁</td><td>2–4 頁</td></tr>
+      <tr><td class="mono">03</td><td><strong>內文 Content</strong></td><td>主要說明頁 · 標題 + 段落內文</td><td>30–40%</td></tr>
+      <tr><td class="mono">04</td><td><strong>數據 Stat</strong></td><td>4 卡片數字儀表板 · 績效報告</td><td>10–20%</td></tr>
+      <tr><td class="mono">05</td><td><strong>圖文 Two-column</strong></td><td>左文 + 右圖（或圖表）並列</td><td>20–25%</td></tr>
+      <tr><td class="mono">06</td><td><strong>對照 Comparison</strong></td><td>DO / DON'T · 前 / 後 · A / B</td><td>5–10%</td></tr>
+      <tr><td class="mono">07</td><td><strong>大字引言 Quote</strong></td><td>金句、轉場、強調觀點</td><td>5–10%</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">背景色策略</h3>
+  <table>
+    <thead><tr><th style="width:160px">背景類型</th><th>使用版型</th><th>使用比例</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Aurora 漸層 + Grid</strong></td><td>封面、結尾</td><td>5%（首尾）</td></tr>
+      <tr><td><strong>暖灰 + 點光暈</strong></td><td>內文、數據、章節、對照、引言</td><td>80% 主流</td></tr>
+      <tr><td><strong>Full Aurora 漸層</strong></td><td>大字引言、特殊強調、章節跳脫</td><td>5–10%</td></tr>
+      <tr><td><strong>深底 Navy</strong></td><td>結尾頁、低調章節</td><td>5%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>節奏原則</strong> · 每 3–4 頁穿插一個深底或漸層頁，避免讀者疲勞。每章節末尾用「引言」或「對照」收束。
+  </div>
+</section>
+
+<!-- ============ 02 COVER ============ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2 class="section-title">版型 01 · 封面</h2>
+    <span class="section-sub">Aurora glow background</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-cover" style="width:100%; height:100%;">
+        <div class="tagline">EP.12 · 量化交易入門</div>
+        <div class="title">學會看懂<br/>市場的<em>節奏</em></div>
+        <div class="sub">姐姐用 30 分鐘，帶你看懂三個必學指標 — 從零基礎到第一筆交易。</div>
+        <div class="footer-meta">
+          <span>byslashie.com</span>
+          <span>2026.05.17</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">背景</div><div class="spec-val">三色 radial-gradient + navy 線性底 + 1px 白色格線</div></div>
+  <div class="spec-row"><div class="spec-label">Tag line</div><div class="spec-val">x: 134 · y: 220 · Outfit 700 · 14 pt · orange-300 · UPPER 0.22em</div></div>
+  <div class="spec-row"><div class="spec-label">H1 主標題</div><div class="spec-val">x: 134 · y: 280 · Outfit 800 · 72–88 px · 白色 · LH 1.05</div></div>
+  <div class="spec-row"><div class="spec-label">H1 強調字</div><div class="spec-val">grad-warm gradient-text（橘→粉）· italic</div></div>
+  <div class="spec-row"><div class="spec-label">Sub 副標</div><div class="spec-val">x: 134 · y: 580 · Inter 400 · 18 pt · 白色 α 0.85 · max-width 60%</div></div>
+  <div class="spec-row"><div class="spec-label">Footer URL</div><div class="spec-val">x: 134 · y: 1010 · Mono 12 pt · 白色 α 0.5</div></div>
+  <div class="spec-row"><div class="spec-label">Footer 日期</div><div class="spec-val">x: 1786 (right) · y: 1010 · Mono 12 pt · 白色 α 0.5</div></div>
+
+  <h3 class="sub">使用情境</h3>
+  <ul>
+    <li>簡報第一頁</li>
+    <li>大主題章節分頁（搭配章節編號變動）</li>
+    <li>結尾「Thank You」頁（變體 — 見版型 07）</li>
+  </ul>
+</section>
+
+<!-- ============ 03 SECTION DIVIDER ============ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2 class="section-title">版型 02 · 章節</h2>
+    <span class="section-sub">Section divider</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-divider" style="width:100%; height:100%;">
+        <div class="num">02</div>
+        <div class="title">什麼是<br/>相對強度？</div>
+        <div class="sub">RS 就像班排，看誰跑得比大盤快</div>
+        <div class="accent"></div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">背景</div><div class="spec-val">暖灰 #F5EBDD（或 gray-50）+ 右下 Aurora 點光暈</div></div>
+  <div class="spec-row"><div class="spec-label">章節編號</div><div class="spec-val">x: 134 · y: 360 · Outfit 500 · 84–96 px · orange-500 · LH 1 · LS -0.04em</div></div>
+  <div class="spec-row"><div class="spec-label">章節標題</div><div class="spec-val">x: 134 · y: 480 · Outfit 800 · 64–72 px · gray-900</div></div>
+  <div class="spec-row"><div class="spec-label">章節 sub</div><div class="spec-val">x: 134 · y: 720 · Inter 400 italic · 18 pt · text-mute</div></div>
+  <div class="spec-row"><div class="spec-label">Accent line</div><div class="spec-val">x: 134 · y: 780 · 80 × 6 px · grad-warm · radius pill</div></div>
+
+  <h3 class="sub">使用情境</h3>
+  <ul>
+    <li>進入新主題 / 新章節之前</li>
+    <li>給觀眾「換氣」的轉場</li>
+    <li>每場簡報建議 2–4 張</li>
+  </ul>
+</section>
+
+<!-- ============ 04 STAT ============ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2 class="section-title">版型 03 · 數據</h2>
+    <span class="section-sub">Stat dashboard · 4 glass cards</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-stat" style="width:100%; height:100%;">
+        <div class="tag">本月績效報告</div>
+        <div class="title">姐姐的量化策略 · 5 月成績單</div>
+        <div class="s-stat-cards">
+          <div class="s-stat-card pos">
+            <div class="lab">累積報酬</div>
+            <div class="num pos">+32.80%</div>
+            <div class="delta">20 個交易日</div>
+          </div>
+          <div class="s-stat-card pos">
+            <div class="lab">跑贏大盤</div>
+            <div class="num pos">+26.63%</div>
+            <div class="delta">vs 0050</div>
+          </div>
+          <div class="s-stat-card warn">
+            <div class="lab">勝率</div>
+            <div class="num warn">69.2%</div>
+            <div class="delta">9 勝 / 4 負</div>
+          </div>
+          <div class="s-stat-card warn">
+            <div class="lab">盈虧比</div>
+            <div class="num warn">1.32</div>
+            <div class="delta">已扣交易成本</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">背景</div><div class="spec-val">暖灰 + 左上橘光暈 + 右下粉光暈</div></div>
+  <div class="spec-row"><div class="spec-label">Tag line</div><div class="spec-val">x: 134 · y: 180 · Outfit 700 · 14 pt · orange-600 · UPPER 0.18em</div></div>
+  <div class="spec-row"><div class="spec-label">標題</div><div class="spec-val">x: 134 · y: 230 · Outfit 700 · 40–48 px · gray-900</div></div>
+  <div class="spec-row"><div class="spec-label">Stat 卡片</div><div class="spec-val">y: 420 · 4 欄 · gap 24 px · 每張 372 × 240 px</div></div>
+  <div class="spec-row"><div class="spec-label">卡片背景</div><div class="spec-val">hsla(0,0%,100%,0.65) + backdrop-blur 20px</div></div>
+  <div class="spec-row"><div class="spec-label">卡片邊框</div><div class="spec-val">1px solid hsla(0,0%,100%,0.7) · radius 14 px</div></div>
+  <div class="spec-row"><div class="spec-label">頂部彩條</div><div class="spec-val">3 px · 全寬 · orange/pos/warn/info 對應狀態</div></div>
+  <div class="spec-row"><div class="spec-label">Label</div><div class="spec-val">Inter 400 · 12 pt · text-mute</div></div>
+  <div class="spec-row"><div class="spec-label">大數字</div><div class="spec-val">Outfit 800 · 56–72 px · 對應色 · letter-spacing -0.02em · tabular-nums</div></div>
+  <div class="spec-row"><div class="spec-label">Delta 說明</div><div class="spec-val">JetBrains Mono 700 · 11 pt · text-mute</div></div>
+
+  <h3 class="sub">頂部彩條配色規則</h3>
+  <table>
+    <thead><tr><th style="width:120px">狀態</th><th class="mono">色票</th><th>使用</th></tr></thead>
+    <tbody>
+      <tr><td><strong>正報酬</strong></td><td class="mono">--pos #C13B2C</td><td>上漲、累積收益、跑贏</td></tr>
+      <tr><td><strong>警告</strong></td><td class="mono">--warn #F59E0B</td><td>勝率偏低、盈虧比未達標</td></tr>
+      <tr><td><strong>資訊</strong></td><td class="mono">--info #3B82F6</td><td>中立資訊、樣本數、天數</td></tr>
+      <tr><td><strong>品牌</strong></td><td class="mono">--orange-500</td><td>預設、主要強調</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 05 TWO-COL ============ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2 class="section-title">版型 04 · 圖文並列</h2>
+    <span class="section-sub">Two-column layout</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-twocol" style="width:100%; height:100%;">
+        <div class="s-twocol-left">
+          <div class="tag">指標說明</div>
+          <div class="title">RS 是什麼？</div>
+          <div class="body">
+            相對強度（RS）是一個非常實用的指標 — 它告訴你一檔股票在過去一段時間，相對於大盤的表現好壞。<br/><br/>
+            如果 RS &gt; 1，代表這檔股票跑贏大盤；&lt; 1 代表跑輸。簡單一個數字，看出強勢股。
+          </div>
+        </div>
+        <div class="s-twocol-right">
+          <div class="placeholder">📈 圖表 / 截圖 / 照片<br/>1280 × 720</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">畫布切分</div><div class="spec-val">左 50% 文字 · 中間 gap 4% · 右 46% 圖片或卡片</div></div>
+  <div class="spec-row"><div class="spec-label">左 Tag line</div><div class="spec-val">x: 134 · y: 280 · Outfit 700 · 12 pt · orange-600 UPPER</div></div>
+  <div class="spec-row"><div class="spec-label">左標題</div><div class="spec-val">x: 134 · y: 330 · Outfit 700 · 44 px · gray-900</div></div>
+  <div class="spec-row"><div class="spec-label">左內文</div><div class="spec-val">x: 134 · y: 450 · Inter 400 · 16 pt · text-base · LH 1.7 · max-width 720 px</div></div>
+  <div class="spec-row"><div class="spec-label">右容器</div><div class="spec-val">x: 1000 · y: 200 · 786 × 680 px · glass card · radius 14</div></div>
+  <div class="spec-row"><div class="spec-label">右容器內距</div><div class="spec-val">32 px</div></div>
+
+  <h3 class="sub">右側可放</h3>
+  <ul>
+    <li>📈 圖表（K 線、報酬曲線、回測結果）</li>
+    <li>📷 螢幕截圖（軟體介面、券商畫面）</li>
+    <li>🖼 主視覺照片（生活情境圖）</li>
+    <li>📋 重點列表（最多 5 點）</li>
+    <li>🎯 大圖標 + 短說明</li>
+  </ul>
+</section>
+
+<!-- ============ 06 COMPARISON ============ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2 class="section-title">版型 05 · 對照</h2>
+    <span class="section-sub">DO / DON'T · A / B</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-compare" style="width:100%; height:100%;">
+        <div class="title">兩種看市場的方式</div>
+        <div class="s-compare-grid">
+          <div class="s-compare-card do">
+            <div class="h"><span class="b">✓</span>姐姐這樣看</div>
+            <ul>
+              <li>先看 RS 排序，篩出強勢股</li>
+              <li>用 KD 確認動能還在</li>
+              <li>每週固定檢視，不追熱</li>
+              <li>記錄每筆交易的原因</li>
+            </ul>
+          </div>
+          <div class="s-compare-card dont">
+            <div class="h"><span class="b">✗</span>避開這樣做</div>
+            <ul>
+              <li>看新聞臨時起意買進</li>
+              <li>追求單筆翻倍的飆股</li>
+              <li>沒設停損就重壓</li>
+              <li>賠了不檢討，賺了不記錄</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">標題</div><div class="spec-val">x: 134 · y: 180 · Outfit 700 · 36 px · gray-900</div></div>
+  <div class="spec-row"><div class="spec-label">卡片配置</div><div class="spec-val">2 欄 · gap 24 px · 每張 816 × 580 px</div></div>
+  <div class="spec-row"><div class="spec-label">卡片背景</div><div class="spec-val">glass · backdrop-blur 20px · radius 14</div></div>
+  <div class="spec-row"><div class="spec-label">DO 頂部</div><div class="spec-val">3 px solid var(--orange-500)</div></div>
+  <div class="spec-row"><div class="spec-label">DON'T 頂部</div><div class="spec-val">3 px solid var(--navy-700)</div></div>
+  <div class="spec-row"><div class="spec-label">卡片標題</div><div class="spec-val">Outfit 700 · 22 px · 含徽章（24×24 圓 · 對應色背景 + 白字）</div></div>
+  <div class="spec-row"><div class="spec-label">列表項</div><div class="spec-val">Inter 400 · 15 px · LH 1.7 · 4–5 點為限</div></div>
+
+  <h3 class="sub">變體應用</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:140px"><strong>DO / DON'T</strong></td><td>正確 vs 錯誤做法</td></tr>
+      <tr><td><strong>BEFORE / AFTER</strong></td><td>學前 vs 學後、舊版 vs 新版</td></tr>
+      <tr><td><strong>A / B 方案</strong></td><td>兩種策略並列比較</td></tr>
+      <tr><td><strong>新手 / 老手</strong></td><td>不同程度的處理方式</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 07 QUOTE ============ -->
+<section class="section" id="s7">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2 class="section-title">版型 06 · 大字引言</h2>
+    <span class="section-sub">Aurora 漸層強調</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-quote" style="width:100%; height:100%;">
+        <div class="mark">"</div>
+        <div class="text">投資自己<br/>是<em style="background: var(--grad-warm); -webkit-background-clip:text; background-clip:text; color:transparent; font-family: 'DM Serif Display', 'Outfit', serif; font-style:italic;">報酬率</em>最高的決定。</div>
+        <div class="attr">姐姐 · 量化交易筆記 #047</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">背景</div><div class="spec-val">暖灰 + 中央 Aurora 光暈（hsla 橘 0.10）</div></div>
+  <div class="spec-row"><div class="spec-label">引號 mark</div><div class="spec-val">x: 200 · y: 280 · Outfit 800 · 180 px · grad-warm text-gradient</div></div>
+  <div class="spec-row"><div class="spec-label">引言文字</div><div class="spec-val">x: 200 · y: 440 · Outfit 700 · 56–72 px · gray-900 · LH 1.35</div></div>
+  <div class="spec-row"><div class="spec-label">強調字</div><div class="spec-val">grad-warm gradient-text · italic</div></div>
+  <div class="spec-row"><div class="spec-label">attribution</div><div class="spec-val">x: 200 · y: 880 · Inter 400 · 18 pt · text-mute · 前綴 20×1 px 橘色細線</div></div>
+
+  <h3 class="sub">使用情境</h3>
+  <ul>
+    <li>章節結尾的 take-away</li>
+    <li>引用大師或姐姐自己的金句</li>
+    <li>轉換情緒、給觀眾停頓的呼吸點</li>
+    <li>結尾頁的精神標語</li>
+  </ul>
+
+  <div class="callout">
+    <strong>變體</strong> · 也可以用 <strong>Full Aurora 背景</strong>（三色漸層全鋪）讓引言頁更具衝擊力 — 文字改為白色 + 黑色引號。
+  </div>
+</section>
+
+<!-- ============ 08 CLOSING ============ -->
+<section class="section" id="s8">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2 class="section-title">版型 07 · 收尾</h2>
+    <span class="section-sub">Thank you · Call to action</span>
+  </div>
+
+  <div class="slide-preview">
+    <div class="slide-frame">
+      <div class="s-closing" style="width:100%; height:100%;">
+        <div class="label">Build · Learn · Earn</div>
+        <div class="big">下週見 ✦<br/><em>姐姐</em> 陪你看市場</div>
+        <div class="footer">byslashie.com · @byslashie</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">座標規格</h3>
+  <div class="spec-row"><div class="spec-label">背景</div><div class="spec-val">navy-900 → navy-700 線性 + 中央橘色光暈</div></div>
+  <div class="spec-row"><div class="spec-label">Label</div><div class="spec-val">置中 · y: 380 · Outfit 700 · 14 pt · orange-300 UPPER 0.22em</div></div>
+  <div class="spec-row"><div class="spec-label">主文字</div><div class="spec-val">置中 · y: 440 · Outfit 800 · 88 px · 白色 · LH 1.1</div></div>
+  <div class="spec-row"><div class="spec-label">強調字</div><div class="spec-val">grad-warm gradient-text · italic</div></div>
+  <div class="spec-row"><div class="spec-label">Footer</div><div class="spec-val">置中 · y: 1010 · Mono 14 pt · 白色 α 0.5 · letter-spacing 0.1em</div></div>
+
+  <h3 class="sub">CTA 文案範例</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:160px"><strong>課程簡報</strong></td><td>「下週見 ✦ 姐姐陪你看市場」</td></tr>
+      <tr><td><strong>合作提案</strong></td><td>「期待 ✦ 與你一起<em>創造</em>價值」</td></tr>
+      <tr><td><strong>會員說明</strong></td><td>「準備好了嗎？✦ <em>一起</em>打造雙重收入」</td></tr>
+      <tr><td><strong>季度回顧</strong></td><td>「Q2，✦ 我們<em>再見</em>」</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 09 PRODUCTION ============ -->
+<section class="section" id="s9">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2 class="section-title">製作規範與輸出</h2>
+    <span class="section-sub">For producers · For engineers</span>
+  </div>
+
+  <h3 class="sub">字體輸出規則</h3>
+  <table>
+    <thead><tr><th style="width:140px">場景</th><th>字體</th><th>備援</th></tr></thead>
+    <tbody>
+      <tr><td><strong>螢幕簡報</strong></td><td>Outfit · Inter · Noto Sans TC</td><td>確認電腦已安裝</td></tr>
+      <tr><td><strong>匯出 PDF</strong></td><td>嵌入字型（Adobe Acrobat 或 PowerPoint「嵌入字型」勾選）</td><td>避免換機器破版</td></tr>
+      <tr><td><strong>PowerPoint 提供他人</strong></td><td>Calibri（標題粗）+ Calibri（內文）+ Consolas（數字）</td><td>Outfit 替代為 Calibri Bold</td></tr>
+      <tr><td><strong>Keynote</strong></td><td>Outfit + Inter + 微軟正黑體</td><td>Mac 內建</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">圖片與圖表規則</h3>
+  <div class="spec-row"><div class="spec-label">圖片解析度</div><div class="spec-val">≥ 1920 px 寬 · 72 dpi 螢幕 · 300 dpi 印刷</div></div>
+  <div class="spec-row"><div class="spec-label">圖片圓角</div><div class="spec-val">14 px · 與卡片一致</div></div>
+  <div class="spec-row"><div class="spec-label">圖片陰影</div><div class="spec-val">shadow-md · 0 4px 12px rgba(0,0,0,0.06)</div></div>
+  <div class="spec-row"><div class="spec-label">圖表配色</div><div class="spec-val">主線 orange-500 · 對照線 navy-300 · 區域填色 orange-100</div></div>
+  <div class="spec-row"><div class="spec-label">圖表座標軸</div><div class="spec-val">text-mute #6b7280 · 1 px solid · gridline border-soft</div></div>
+
+  <h3 class="sub">動畫規則</h3>
+  <table>
+    <thead><tr><th style="width:160px">動畫類型</th><th>建議</th><th>禁用</th></tr></thead>
+    <tbody>
+      <tr><td><strong>進場動畫</strong></td><td>Fade（淡入）· Fade up（淡入向上）· 0.4s</td><td>Bounce、Swivel、Cube</td></tr>
+      <tr><td><strong>切換 transition</strong></td><td>None 或 Fade · 0.3s</td><td>Cube、Reveal、Page Curl</td></tr>
+      <tr><td><strong>數字 counter</strong></td><td>從 0 動畫到目標值 · 1.2s · ease-out</td><td>瞬間出現</td></tr>
+      <tr><td><strong>強調 emphasis</strong></td><td>Pulse 一次 · Color change</td><td>Spin、Teeter</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">PPTXGENJS 對應 Tokens（給工程師）</h3>
+<div class="tokens">
+<span class="c">// 顏色（pptxgenjs 不需要 # 號）</span><br/>
+const BRAND = {<br/>
+&nbsp;&nbsp;<span class="k">orange</span>:&nbsp;<span class="v">'E8763B'</span>,&nbsp;<span class="c">// 主色 · CTA / Tag</span><br/>
+&nbsp;&nbsp;<span class="k">orangeDark</span>: <span class="v">'C4502A'</span>,&nbsp;<span class="c">// hover / 深</span><br/>
+&nbsp;&nbsp;<span class="k">navy</span>:&nbsp;&nbsp;&nbsp;<span class="v">'1F3A5F'</span>,&nbsp;<span class="c">// 封面背景</span><br/>
+&nbsp;&nbsp;<span class="k">navyDeep</span>:<span class="v">'13243D'</span>,&nbsp;<span class="c">// 深底</span><br/>
+&nbsp;&nbsp;<span class="k">coral</span>:&nbsp;&nbsp;<span class="v">'FF6B9D'</span>,&nbsp;<span class="c">// Aurora 強調</span><br/>
+&nbsp;&nbsp;<span class="k">cyan</span>:&nbsp;&nbsp;&nbsp;<span class="v">'4DD0E1'</span>,&nbsp;<span class="c">// 科技點綴</span><br/>
+&nbsp;&nbsp;<span class="k">gold</span>:&nbsp;&nbsp;&nbsp;<span class="v">'D4A574'</span>,&nbsp;<span class="c">// VIP / 金心</span><br/>
+&nbsp;&nbsp;<span class="k">sand</span>:&nbsp;&nbsp;&nbsp;<span class="v">'F5EBDD'</span>,&nbsp;<span class="c">// 內容頁背景</span><br/>
+&nbsp;&nbsp;<span class="k">paper</span>:&nbsp;&nbsp;<span class="v">'FFFFFF'</span>,&nbsp;<span class="c">// 卡片表面</span><br/>
+&nbsp;&nbsp;<span class="k">ink</span>:&nbsp;&nbsp;&nbsp;&nbsp;<span class="v">'13243D'</span>,&nbsp;<span class="c">// 主文字</span><br/>
+&nbsp;&nbsp;<span class="k">muted</span>:&nbsp;&nbsp;<span class="v">'6B7280'</span>,&nbsp;<span class="c">// 次要文字</span><br/>
+&nbsp;&nbsp;<span class="k">pos</span>:&nbsp;&nbsp;&nbsp;&nbsp;<span class="v">'C13B2C'</span>,&nbsp;<span class="c">// 上漲</span><br/>
+&nbsp;&nbsp;<span class="k">warn</span>:&nbsp;&nbsp;&nbsp;<span class="v">'F59E0B'</span>,&nbsp;<span class="c">// 警告</span><br/>
+};<br/>
+<br/>
+<span class="c">// 字型（PPT 安全替代）</span><br/>
+const FONT = {<br/>
+&nbsp;&nbsp;<span class="k">displayBold</span>: <span class="v">'Calibri'</span>,&nbsp;<span class="c">// bold:true 代替 Outfit</span><br/>
+&nbsp;&nbsp;<span class="k">sans</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="v">'Calibri'</span>,&nbsp;<span class="c">// 內文 Inter</span><br/>
+&nbsp;&nbsp;<span class="k">mono</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="v">'Consolas'</span>,<span class="c">// JetBrains Mono</span><br/>
+};<br/>
+<br/>
+<span class="c">// 投影片尺寸</span><br/>
+const SLIDE = {<br/>
+&nbsp;&nbsp;<span class="k">width</span>:&nbsp;&nbsp;&nbsp;&nbsp;<span class="n">13.333</span>,&nbsp;<span class="c">// inch (1920px @ 144dpi)</span><br/>
+&nbsp;&nbsp;<span class="k">height</span>:&nbsp;&nbsp;&nbsp;<span class="n">7.5</span>,&nbsp;&nbsp;&nbsp;<span class="c">// inch (1080px)</span><br/>
+&nbsp;&nbsp;<span class="k">marginX</span>:&nbsp;&nbsp;<span class="n">0.93</span>,&nbsp;&nbsp;<span class="c">// 134 px / 144 dpi</span><br/>
+&nbsp;&nbsp;<span class="k">marginY</span>:&nbsp;&nbsp;<span class="n">0.44</span>,&nbsp;&nbsp;<span class="c">// 64 px / 144 dpi</span><br/>
+};<br/>
+<br/>
+<span class="c">// 字級對照（PowerPoint pt）</span><br/>
+const SIZE = {<br/>
+&nbsp;&nbsp;<span class="k">heroXL</span>:&nbsp;<span class="n">60</span>,&nbsp;&nbsp;<span class="c">// 封面 H1</span><br/>
+&nbsp;&nbsp;<span class="k">heroL</span>:&nbsp;&nbsp;<span class="n">44</span>,&nbsp;&nbsp;<span class="c">// 章節標題</span><br/>
+&nbsp;&nbsp;<span class="k">h1</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="n">32</span>,&nbsp;&nbsp;<span class="c">// 內文標題</span><br/>
+&nbsp;&nbsp;<span class="k">h2</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="n">24</span>,&nbsp;&nbsp;<span class="c">// 區塊副標</span><br/>
+&nbsp;&nbsp;<span class="k">body</span>:&nbsp;&nbsp;&nbsp;<span class="n">16</span>,&nbsp;&nbsp;<span class="c">// 內文</span><br/>
+&nbsp;&nbsp;<span class="k">caption</span>:<span class="n">12</span>,&nbsp;&nbsp;<span class="c">// 說明文字</span><br/>
+&nbsp;&nbsp;<span class="k">label</span>:&nbsp;&nbsp;<span class="n">11</span>,&nbsp;&nbsp;<span class="c">// Tag UPPER</span><br/>
+&nbsp;&nbsp;<span class="k">bigNum</span>:&nbsp;<span class="n">56</span>,&nbsp;&nbsp;<span class="c">// Stat 大數字</span><br/>
+};
+</div>
+
+  <h3 class="sub">命名規則 · 圖層 / 檔案</h3>
+  <div class="spec-row"><div class="spec-label">檔名格式</div><div class="spec-val">slashie_[主題]_[版本]_YYYYMMDD.pptx</div></div>
+  <div class="spec-row"><div class="spec-label">範例</div><div class="spec-val">slashie_RS指標_v2_20260517.pptx</div></div>
+  <div class="spec-row"><div class="spec-label">圖層命名</div><div class="spec-val">01_BG / 02_TagLine / 03_Title / 04_Body / 05_Footer</div></div>
+  <div class="spec-row"><div class="spec-label">資產資料夾</div><div class="spec-val">/assets/[主題]/images · /assets/[主題]/charts · /assets/brand/</div></div>
+
+  <h3 class="sub">最終檢查清單</h3>
+  <div class="callout">
+    <strong>每場簡報出貨前必檢</strong>
+    <ul>
+      <li>☑ 全部頁面遵守 6%/7% 安全邊距</li>
+      <li>☑ 浮水印 + 頁碼出現在所有非封面/章節頁</li>
+      <li>☑ 同版型沒有連續 3 頁以上</li>
+      <li>☑ 字型已嵌入 PDF 匯出</li>
+      <li>☑ 所有顏色都使用 design tokens（無自創）</li>
+      <li>☑ 數字使用 tabular-nums（對齊）</li>
+      <li>☑ 圖片皆為 ≥1920 px 寬</li>
+      <li>☑ 動畫只用 Fade / Fade up</li>
+      <li>☑ 封面 + 章節 + 結尾頁俱全</li>
+      <li>☑ 中英文混排留適當字距（0.04–0.06em）</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="brand">斜槓姐姐 — Slide Spec</div>
+  Presentation System v1.0 · 2026.05 · byslashie.com<br/>
+  7 templates · Aurora gradients · Glass cards · 1920 × 1080
+</footer>
+
+</div>
+
+<script>
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('slashie-theme', theme);
+  document.getElementById('lightBtn').classList.toggle('active', theme === 'light');
+  document.getElementById('darkBtn').classList.toggle('active', theme === 'dark');
+}
+const saved = localStorage.getItem('slashie-theme') || 'light';
+setTheme(saved);
+</script>
+
+</body>
+</html>

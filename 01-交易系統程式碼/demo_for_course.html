@@ -312,6 +312,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     </div>
   </div>
   <nav class="nav">
+    <button class="nav-btn" onclick="showPage('p0',this)" id="btn-p0">📦 盤中庫存</button>
     <button class="nav-btn active" onclick="showPage('p1',this)" id="btn-p1">📊 系統總覽</button>
     <button class="nav-btn" onclick="showPage('p2',this)" id="btn-p2">🌏 Top-Down 總經</button>
     <button class="nav-btn" onclick="showPage('p3',this)" id="btn-p3">📁 策略管理</button>
@@ -329,6 +330,222 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 <!-- MAIN -->
 <div class="layout">
 <main class="main">
+
+<!-- ════════════════════════════════════════
+     PAGE 0: 盤中庫存
+════════════════════════════════════════ -->
+<div class="page" id="p0">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="page-heading">📦 盤中庫存</div>
+    <span class="demo-tag">假資料</span>
+  </div>
+  <div class="page-sub">直播盤中庫存監控 — 持倉損益即時追蹤</div>
+
+  <!-- KPI -->
+  <div class="kpi-grid kpi-4" style="margin-bottom:20px">
+    <div class="kpi-card">
+      <div class="kpi-label">💼 總市值</div>
+      <div class="kpi-val">$2,847,320</div>
+      <div class="kpi-sub">台幣 · 3 券商合計</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📈 未實現損益</div>
+      <div class="kpi-val green">+$412,580</div>
+      <div class="kpi-sub up">▲ +16.9% 整體報酬</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📅 今日損益</div>
+      <div class="kpi-val green">+$34,210</div>
+      <div class="kpi-sub up">▲ +1.2% 今日</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">🗂️ 持倉檔數</div>
+      <div class="kpi-val blue">12</div>
+      <div class="kpi-sub">台股 8 · 美股 4</div>
+    </div>
+  </div>
+
+  <!-- 持倉表格 -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th>策略</th>
+          <th style="text-align:right">持股數</th>
+          <th style="text-align:right">均價</th>
+          <th style="text-align:right">現價</th>
+          <th style="text-align:right">損益金額</th>
+          <th style="text-align:right">損益%</th>
+          <th style="text-align:right">市值</th>
+          <th>券商</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="b">2330</td>
+          <td>台積電</td>
+          <td><span class="badge bg-blue">外資選股</span></td>
+          <td class="num" style="text-align:right">200</td>
+          <td class="num" style="text-align:right">780.0</td>
+          <td class="num" style="text-align:right">1,020.0</td>
+          <td class="num g" style="text-align:right">+48,000</td>
+          <td class="num g" style="text-align:right">+30.8%</td>
+          <td class="num" style="text-align:right">204,000</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">3034</td>
+          <td>聯詠</td>
+          <td><span class="badge bg-green">動能突破</span></td>
+          <td class="num" style="text-align:right">300</td>
+          <td class="num" style="text-align:right">412.5</td>
+          <td class="num" style="text-align:right">498.0</td>
+          <td class="num g" style="text-align:right">+25,650</td>
+          <td class="num g" style="text-align:right">+20.7%</td>
+          <td class="num" style="text-align:right">149,400</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">6669</td>
+          <td>緯穎</td>
+          <td><span class="badge bg-green">動能突破</span></td>
+          <td class="num" style="text-align:right">50</td>
+          <td class="num" style="text-align:right">2,180.0</td>
+          <td class="num" style="text-align:right">2,650.0</td>
+          <td class="num g" style="text-align:right">+23,500</td>
+          <td class="num g" style="text-align:right">+21.6%</td>
+          <td class="num" style="text-align:right">132,500</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">2454</td>
+          <td>聯發科</td>
+          <td><span class="badge bg-blue">外資選股</span></td>
+          <td class="num" style="text-align:right">100</td>
+          <td class="num" style="text-align:right">1,050.0</td>
+          <td class="num" style="text-align:right">1,230.0</td>
+          <td class="num g" style="text-align:right">+18,000</td>
+          <td class="num g" style="text-align:right">+17.1%</td>
+          <td class="num" style="text-align:right">123,000</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">00631L</td>
+          <td>元大台灣50正2</td>
+          <td><span class="badge bg-yellow">KD 翻揚</span></td>
+          <td class="num" style="text-align:right">5,000</td>
+          <td class="num" style="text-align:right">28.5</td>
+          <td class="num" style="text-align:right">32.8</td>
+          <td class="num g" style="text-align:right">+21,500</td>
+          <td class="num g" style="text-align:right">+15.1%</td>
+          <td class="num" style="text-align:right">164,000</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">2603</td>
+          <td>長榮</td>
+          <td><span class="badge bg-yellow">KD 翻揚</span></td>
+          <td class="num" style="text-align:right">500</td>
+          <td class="num" style="text-align:right">198.0</td>
+          <td class="num" style="text-align:right">224.0</td>
+          <td class="num g" style="text-align:right">+13,000</td>
+          <td class="num g" style="text-align:right">+13.1%</td>
+          <td class="num" style="text-align:right">112,000</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">3037</td>
+          <td>欣興</td>
+          <td><span class="badge bg-yellow">KD 翻揚</span></td>
+          <td class="num" style="text-align:right">200</td>
+          <td class="num" style="text-align:right">188.0</td>
+          <td class="num" style="text-align:right">210.0</td>
+          <td class="num g" style="text-align:right">+4,400</td>
+          <td class="num g" style="text-align:right">+11.7%</td>
+          <td class="num" style="text-align:right">42,000</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">6176</td>
+          <td>瑞儀</td>
+          <td><span class="badge bg-yellow">KD 翻揚</span></td>
+          <td class="num" style="text-align:right">300</td>
+          <td class="num" style="text-align:right">145.0</td>
+          <td class="num" style="text-align:right">138.0</td>
+          <td class="num r" style="text-align:right">-2,100</td>
+          <td class="num r" style="text-align:right">-4.8%</td>
+          <td class="num" style="text-align:right">41,400</td>
+          <td><span class="badge bg-purple">元大</span></td>
+        </tr>
+        <tr>
+          <td class="b">NVDA</td>
+          <td>輝達</td>
+          <td><span class="badge bg-blue">外資選股</span></td>
+          <td class="num" style="text-align:right">30</td>
+          <td class="num" style="text-align:right">$48.2</td>
+          <td class="num" style="text-align:right">$237.4</td>
+          <td class="num g" style="text-align:right">+$5,676</td>
+          <td class="num g" style="text-align:right">+392.5%</td>
+          <td class="num" style="text-align:right">$7,122</td>
+          <td><span class="badge bg-blue">Schwab</span></td>
+        </tr>
+        <tr>
+          <td class="b">TQQQ</td>
+          <td>那指三倍槓桿</td>
+          <td><span class="badge bg-green">動能突破</span></td>
+          <td class="num" style="text-align:right">150</td>
+          <td class="num" style="text-align:right">$68.5</td>
+          <td class="num" style="text-align:right">$79.0</td>
+          <td class="num g" style="text-align:right">+$1,575</td>
+          <td class="num g" style="text-align:right">+15.3%</td>
+          <td class="num" style="text-align:right">$11,850</td>
+          <td><span class="badge bg-blue">Schwab</span></td>
+        </tr>
+        <tr>
+          <td class="b">QQQ</td>
+          <td>那斯達克 ETF</td>
+          <td><span class="badge bg-green">動能突破</span></td>
+          <td class="num" style="text-align:right">10</td>
+          <td class="num" style="text-align:right">$650.0</td>
+          <td class="num" style="text-align:right">$720.0</td>
+          <td class="num g" style="text-align:right">+$700</td>
+          <td class="num g" style="text-align:right">+10.8%</td>
+          <td class="num" style="text-align:right">$7,200</td>
+          <td><span class="badge bg-blue">Schwab</span></td>
+        </tr>
+        <tr>
+          <td class="b">ACWX</td>
+          <td>全球股市 ETF</td>
+          <td><span class="badge bg-blue">外資選股</span></td>
+          <td class="num" style="text-align:right">60</td>
+          <td class="num" style="text-align:right">$64.0</td>
+          <td class="num" style="text-align:right">$75.7</td>
+          <td class="num g" style="text-align:right">+$702</td>
+          <td class="num g" style="text-align:right">+18.3%</td>
+          <td class="num" style="text-align:right">$4,542</td>
+          <td><span class="badge bg-yellow">IB</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- AI 小結 -->
+  <div class="chart-card" style="border-left:4px solid var(--purple);background:var(--bg-raised)">
+    <div class="chart-title">🤖 AI 盤中庫存健檢</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.9">
+      目前 <strong style="color:var(--purple)">10 檔獲利、2 檔虧損</strong>，整體部位健康。
+      <br>• <strong style="color:var(--green)">強勢留倉：</strong>台積電 (+30.8%)、輝達 (+392.5%) 動能仍強，不急出場。
+      <br>• <strong style="color:var(--red)">注意虧損：</strong>瑞儀 (-4.8%) 接近停損線，觀察今日收盤是否跌破月線。
+      <br>• <strong style="color:var(--accent)">AI 建議：</strong>現金水位 18%，若台積電收盤創新高可考慮追加 1 成部位。
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text-muted);text-align:right;margin-top:8px">
+    資料更新：<span id="p0-update-time">--</span> ｜ 以上為課程示範假資料
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════
      PAGE 1: 系統總覽
@@ -1176,6 +1393,8 @@ function toggleTheme() {
 function updateClock() {
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', {hour12:false});
+  const p0t = document.getElementById('p0-update-time');
+  if (p0t) p0t.textContent = now.toLocaleTimeString('zh-TW', {hour12:false});
 }
 setInterval(updateClock, 1000);
 updateClock();

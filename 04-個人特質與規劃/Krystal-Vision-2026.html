@@ -551,8 +551,8 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     box-shadow: var(--shadow-widget);
     margin-bottom: 1rem;
     object-fit: cover;
-    max-height: 450px;
     border: 1px solid var(--glass-border);
+    display: block;
 }
 .image-caption {
     text-align: center;
@@ -561,6 +561,59 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     margin-bottom: 3rem;
     font-weight: 600;
     letter-spacing: 1px;
+}
+
+/* Vision Board 2030 主圖區 */
+.vision-board-section {
+    margin-bottom: 4rem;
+    position: relative;
+}
+.vision-board-section .vision-image {
+    border-radius: 3rem;
+    box-shadow: 0 20px 60px rgba(212, 175, 55, 0.15), 0 8px 20px rgba(0,0,0,0.08);
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.vision-board-section .vision-image:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 28px 70px rgba(212, 175, 55, 0.2), 0 12px 24px rgba(0,0,0,0.1);
+}
+.vision-board-caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    margin-bottom: 3rem;
+}
+.vision-board-caption .caption-left {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.vision-board-caption .caption-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.caption-pill {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.caption-pill.purple { background: rgba(147, 51, 234, 0.08); color: var(--secondary); }
+.caption-pill.teal   { background: rgba(20, 184, 166, 0.08); color: var(--accent); }
+
+/* glass-card (used in Weekly Center) */
+.glass-card {
+    background: white;
+    border-radius: 2rem;
+    box-shadow: var(--shadow-widget);
+    border: 1px solid var(--glass-border);
 }
 
 @media (max-width: 1000px) {
@@ -574,7 +627,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
 
 <div class="nav-container">
     <div class="nav-inner">
-        <div class="nav-logo">KRYSTAL 2026 · v1.2</div>
+        <div class="nav-logo">KRYSTAL · SOUL & SYSTEM 2030</div>
         <div class="nav-links">
             <a class="nav-link active" onclick="showView('vision', this)">Vision Dash</a>
             <a class="nav-link" onclick="showView('lifestyle', this)">Lifestyle 2030</a>
@@ -608,6 +661,21 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
             </div>
         </div>
     </section>
+
+    <!-- VISION BOARD 2030 -->
+    <div class="vision-board-section">
+        <img src="assets/krystal_soul_system_2030.png" alt="Krystal Soul & System 2030" class="vision-image">
+        <div class="vision-board-caption">
+            <span class="caption-left">SOUL & SYSTEM 2030 · DESIGN MY LIFE · BUILD MY LEGACY</span>
+            <div class="caption-pills">
+                <span class="caption-pill">Trading</span>
+                <span class="caption-pill teal">Lifestyle</span>
+                <span class="caption-pill purple">Healing</span>
+                <span class="caption-pill">Travel</span>
+                <span class="caption-pill purple">Impact</span>
+            </div>
+        </div>
+    </div>
 
     <!-- ENERGY PIE CHARTS -->
     <div class="section-header">能量分配 / ENERGY ALLOCATION</div>
@@ -844,7 +912,7 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
     </div>
 
     <footer>
-        Krystal Soul & System Evolution · v1.2 30 歲校準於 2026-05-13 · "Freedom is the only metric that matters."
+        Krystal · Soul & System 2030 · v1.2 校準於 2026-05-13 · 更新於 2026-05-17 · "Freedom is the only metric that matters."
     </footer>
     </div> <!-- End main-content -->
     </div> <!-- End layout-wrapper -->
@@ -980,41 +1048,39 @@ footer { text-align: center; padding: 5rem 2rem; color: var(--text-dim); font-si
         <div class="section-header">居住空間 / HOME AS A SANCTUARY</div>
         <div class="space-grid">
             <div class="space-card">
-                <img src="./assets/luxury_bathroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="浴室">
-                <h4>🛁 浴室（核心空間）</h4>
+                <img src="./assets/warm_luxury_bathroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="溫潤奢華浴室">
+                <h4>🛁 浴室（溫潤奢華風）</h4>
                 <ul>
-                    <li>獨立浴缸（深泡、可看景）</li>
-                    <li><strong style="color: var(--primary);">橢圓形雙面盆</strong>（自己 + 伴侶各一）</li>
-                    <li>乾濕分離 + 大尺寸淋浴間</li>
-                    <li>暖氣 / 暖風機 / 浴巾加熱架</li>
+                    <li>獨立浴缸（深泡、絕佳採光看景）</li>
+                    <li><strong style="color: var(--primary);">胡桃木質與暖色大理石</strong>雙面盆</li>
+                    <li>柔和暖光氛圍 + 金屬黃銅質地配件</li>
                 </ul>
             </div>
             <div class="space-card">
-                <img src="./assets/trading_workspace.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="交易工作室">
-                <h4>💼 交易工作室 / 書房</h4>
+                <img src="./assets/warm_luxury_workspace.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="溫潤奢華工作室">
+                <h4>💼 交易工作室（溫潤奢華風）</h4>
                 <ul>
-                    <li><strong style="color: var(--primary);">升降工作桌</strong> + 多螢幕看盤配置</li>
-                    <li>大面採光落地窗，讓空間通透</li>
-                    <li>能讓我安心交易 4 小時的環境</li>
-                    <li>質感沙發 + 舒適閱讀角</li>
+                    <li><strong style="color: var(--primary);">深色胡桃木升降工作桌</strong> + 頂規多螢幕看盤</li>
+                    <li>米色高級皮革椅與溫暖的環境光源</li>
+                    <li>融合頂級質感與安穩包覆感的菁英空間</li>
                 </ul>
             </div>
             <div class="space-card">
-                <img src="./assets/cozy_bedroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="極致舒適臥室">
-                <h4>🛏️ 極致舒適臥室</h4>
+                <img src="./assets/warm_luxury_bedroom.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="溫潤奢華臥室">
+                <h4>🛏️ 極致舒適臥室（溫潤奢華風）</h4>
                 <ul>
-                    <li><strong style="color: var(--primary);">睡覺地方很舒服</strong>，絕對放鬆</li>
-                    <li>King size 床 + 五星級寢具（埃及棉、羽絨）</li>
-                    <li>遮光窗簾 + 床頭可調暖光燈</li>
+                    <li><strong style="color: var(--primary);">King size 頂級床鋪</strong>與奶茶色系高級寢具</li>
+                    <li>深色木質背牆配上黃銅床頭暖燈</li>
+                    <li>如同頂級 Boutique Hotel 般溫暖放鬆</li>
                 </ul>
             </div>
             <div class="space-card">
-                <img src="./assets/walk_in_closet.png" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="專屬衣帽間">
-                <h4>👗 專屬衣帽間 (Walk-in Closet)</h4>
+                <img src="./assets/luxury_closet.png?v=2" style="width: 100%; height: 220px; object-fit: cover; border-radius: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);" alt="溫潤奢華衣帽間">
+                <h4>👗 專屬衣帽間（溫潤奢華風）</h4>
                 <ul>
-                    <li><strong style="color: var(--primary);">自己的衣帽間</strong>，從容打理自己</li>
-                    <li>系統化收納層架與暖色 LED 條燈</li>
-                    <li>中島飾品櫃或穿鞋絨布沙發椅</li>
+                    <li><strong style="color: var(--primary);">高級訂製白木紋櫃</strong>與暖色隱藏照明</li>
+                    <li>中央配置高級絨布沙發椅與柔軟地毯</li>
+                    <li>兼具奢華展示與溫暖私密感的打理空間</li>
                 </ul>
             </div>
         </div>
@@ -1217,52 +1283,54 @@ const weeklyData = {
             title: "🤖 交易系統 (Krystal Core)",
             color: "var(--accent)",
             items: [
-                "[x] Discord bot 加入 07:00 自動同步 + 08:00 早報排程",
-                "[x] 修復 IB / Schwab 同步問題（5/12 09:32）",
-                "[x] 修復 RS scores 相對強度計算邏輯",
-                "[x] Dashboard v8 app.py + index.html 大幅更新（+598 行）",
-                "[x] 新增 DATA_AUDIT.md 數據稽核文件",
-                "[x] record_daily_nav.py 補完現金備檔欄位",
-                "[x] Discord bot 自啟動捷徑（Startup folder，已釐清非惡意警報）",
-                "[ ] Schwab Token 重新授權"
+                "[x] ACWX 賣出 — realized_trades + Google Sheets 完整同步",
+                "[x] Discord 早報上線（07:00 券商同步 + 08:00 自動發送）",
+                "[x] false close-out 修復 — 防止 sync 不完整時誤判平倉",
+                "[x] broker_positions sync 保留 strategy / notes 備註",
+                "[x] NAV chart 基準日對齊修復",
+                "[x] Dashboard 即時資料整合（PTT / Macro KPI）",
+                "[x] IB / Schwab RS 分數計算修復",
+                "[ ] Schwab Token 重新授權（PnL 仍為 NULL）",
+                "[*] equity_snapshots 從 5/7 起累積，W20 完整週損益下週才能對比"
             ]
         },
         {
-            title: "📝 願景與規劃 ⭐",
-            color: "var(--primary)",
+            title: "⚡ 靈魂覺醒 ⭐",
+            color: "var(--secondary)",
             items: [
-                "[x] 與 Claude 深度討論：gap year vs 財務自由",
-                "[x] 釐清月投 1.8 萬 + 500 萬起點的真實時程",
-                "[x] 認知校準：2026 達 1000 萬 → 改為 650 萬（中性 25%）",
-                "[x] 新增 [[Lifestyle-Vision-2030]]（五星級生活 × 地理自由）",
-                "[x] 新增 [[Mini-Gap-Launch-Plan]] 三階段架構",
-                "[x] 更新 [[Long-Term-Plans]] v1.1（雙軌 A 3000萬 / B 1億 upside）",
-                "[x] 更新 [[00-Vision-Board]] 對齊上班族真實處境",
-                "[x] HTML v1.1 重生（新增 Lifestyle 2030 分頁）",
-                "[*] 動機重新定義：「翻身」→「選擇權」",
-                "[*] 自媒體路線：商業 KOL → 抒發型優先",
-                "[*] Mini Gap 觸發：資產門檻 → 生活準備度"
+                "[x] 情緒紀錄 20260512.md — 職場對質完整紀錄",
+                "[x] 正面回擊長官「選股中心」不合理指派",
+                "[x] 感受到強烈自我認同與力量（站出來捍衛職業邊界）",
+                "[x] Life-Window-Map v1.2 校準（越南獨旅 + 凍卵 + 關係 deadline）",
+                "[x] quick_reference_v2 決策框架完成",
+                "[ ] 預約下次諮商（W19 P1，持續未執行）",
+                "[ ] 晨間問句：「我的注意力現在在自己身上嗎？」× 5 天",
+                "[*] 核心洞察：我是主動爭取公平的主體，不是被動受害者"
             ]
         },
         {
-            title: "🛡️ 關係與心理邊界",
-            color: "var(--danger)",
+            title: "🌱 健康計劃啟動",
+            color: "var(--accent)",
             items: [
-                "[x] 情緒紀錄 20260512.md 寫完",
-                "[ ] 重讀 4/14 諮商日記",
-                "[ ] 預約下次諮商時間",
-                "[*] 覺察：已用 10 天特休都用在『跟媽媽朋友』— 沒有照顧到自己"
+                "[x] 4 週消化系統驗證計劃 2026-05-16 正式啟動",
+                "[x] 症狀建檔（脹氣、打嗝、腸道菌群、乾癬）",
+                "[ ] 每日填入睡眠紀錄（本週尚無資料）",
+                "[ ] 每日填入運動狀況",
+                "[ ] 飲食觸發症狀記錄",
+                "[*] 目標：W21 開始有實際數據，計劃才有意義"
             ]
         },
         {
             title: "🏝️ 生活、財務與覺察",
-            color: "var(--secondary)",
+            color: "var(--primary)",
             items: [
                 "[x] 0050 月投 1.8 萬持續執行",
+                "[x] 帳戶總市值 NT$2,380,463（+39.1% 未實現）",
+                "[x] YTD +NT$324,690（+16.6%）",
                 "[ ] 訓練 ≥ 3 次",
                 "[ ] 飲食抗發炎",
-                "[*] 2026 剩 5 天特休 — 保留作彈性，不勉強做 mini gap",
-                "[*] 開始想像：2027 Q1 第一次獨旅 19-21 天，會想去哪？"
+                "[*] RS 弱勢：2337 旺宏 RS=0.31，W21 評估是否換倉",
+                "[*] 集中度警示：00631L 佔比 ~33% 🔴"
             ]
         }
     ],

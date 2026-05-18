@@ -42,6 +42,37 @@ Krystal 的工作涉及三個身份，優先級排列如下：
 📄 規則文件：`04-個人特質與規劃\CLAUDE.md`
 ⏰ 工作時段：19:30-21:00（內容）, 22:00-23:00（反思）
 
+## 🎯 Skills 註冊系統
+
+所有 Skills 集中在 `skills/` 資料夾，用以下方式呼叫：
+
+### 已註冊的 Skills
+
+| 命令 | 功能 | 檔案 |
+| --- | --- | --- |
+| `/strategy-reflection` | 8 鏡頭決策框架（交易+哲學+PM+健康） | `krystal_strategy_reflection_partner.md` |
+| `/daily-check` | 四重身份日程檢查（查詢現在應做什麼） | `four_identities_daily_schedule.md` |
+| `/self-media-strategy` | 自媒體內容戰略（三支柱+變現路徑） | `self_media_content_strategy.md` |
+| `/quick-ref` | 快速參考卡（3 秒查閱） | `quick_reference_v2_may2026.md` |
+
+### 使用方式
+
+直接在對話中呼叫或提及：
+
+```
+「用策略反思夥伴分析這個決策」
+「檢查日程」
+「自媒體戰略建議」
+「快速參考」
+```
+
+### Skills 維護
+
+- 📁 位置：`/skills/`
+- 📖 索引：`skills/README.md`
+- 🔄 更新週期：每月檢查
+- 📝 修改規則：編輯 .md → 提交 Git → 同步內存
+
 ## 📅 每日工作時程
 
 ```

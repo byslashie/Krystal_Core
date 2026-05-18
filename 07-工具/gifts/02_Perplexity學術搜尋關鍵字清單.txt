@@ -1,0 +1,97 @@
+═══════════════════════════════════════════════════════════
+  Perplexity 學術搜尋關鍵字清單
+  byslashie.com | Threads @byslashie
+  2026/05 直播課程學員專屬
+═══════════════════════════════════════════════════════════
+
+使用方法：
+1. 開啟 perplexity.ai（免費）
+2. 點選「Academic」模式（或直接切換 Focus = Academic）
+3. 複製下方關鍵字搜尋，Perplexity 會自動引用真實論文
+
+───────────────────────────────────────────────────────────
+🔬 第一類：經典因子基礎論文
+───────────────────────────────────────────────────────────
+
+【動能因子 Momentum】
+  "momentum factor stock returns evidence"
+  "Jegadeesh Titman 1993 momentum returns"
+  "price momentum 12-1 month strategy backtesting"
+
+【價值因子 Value】
+  "value factor Fama French three factor model"
+  "book to market ratio stock returns Fama French"
+  "price to earnings ratio anomaly stock market"
+
+【規模因子 Size】
+  "small cap premium size effect stock returns"
+  "Fama French 1992 size and book-to-market"
+  "market capitalization return premium evidence"
+
+【品質因子 Quality】
+  "quality factor ROE profitability stock returns"
+  "Novy-Marx 2013 profitability factor quality"
+  "earnings quality alpha systematic strategy"
+
+【低波動因子 Low Volatility】
+  "low volatility anomaly stock returns risk adjusted"
+  "Baker Bradley Wurgler 2011 benchmarks as limits to arbitrage"
+  "minimum variance portfolio empirical evidence"
+
+【籌碼面 Institutional Flow】
+  "institutional investor trading stock returns Taiwan"
+  "foreign investor flow Taiwan stock market alpha"
+  "smart money effect institutional ownership returns"
+
+───────────────────────────────────────────────────────────
+🌏 第二類：台灣市場特定研究
+───────────────────────────────────────────────────────────
+
+  "Taiwan stock market factor investing evidence"
+  "TWSE momentum factor anomaly"
+  "Taiwan equity market foreign investor impact returns"
+  "Taiwan individual stock volatility excess returns"
+  "TAIEX market cap factor premium empirical"
+
+───────────────────────────────────────────────────────────
+📊 第三類：多因子組合策略
+───────────────────────────────────────────────────────────
+
+  "multi-factor model portfolio construction"
+  "combining value momentum quality factors"
+  "factor tilts ETF construction methodology"
+  "Fama French five factor model 2015"
+  "AQR factor investing diversification"
+
+───────────────────────────────────────────────────────────
+🛡️ 第四類：風控與回測方法
+───────────────────────────────────────────────────────────
+
+  "backtest overfitting in quantitative strategies"
+  "out of sample testing factor strategy"
+  "maximum drawdown factor strategies risk management"
+  "walk forward optimization stock strategy"
+  "Sharpe ratio vs maximum drawdown portfolio"
+
+───────────────────────────────────────────────────────────
+💡 Perplexity 搜尋技巧
+───────────────────────────────────────────────────────────
+
+1. 加上年份縮小範圍：在關鍵字後加 "2018–2024"
+2. 要求具體引用：問「Which academic papers support X factor?」
+3. 要求中文摘要：搜尋後問「用繁體中文摘要這篇論文的結論」
+4. 驗證真實性：把論文名稱貼到 Google Scholar 確認是否存在
+
+───────────────────────────────────────────────────────────
+🔗 延伸資源
+───────────────────────────────────────────────────────────
+
+  📄 byslashie.com/build-factor-etf-xq/
+     （因子 ETF 完整文章，含三因子模型實作）
+
+  🧵 Threads @byslashie
+     （每週分享量化交易心得）
+
+═══════════════════════════════════════════════════════════
+  斜槓姐姐 · 2026/05 直播課程學員專屬
+═══════════════════════════════════════════════════════════

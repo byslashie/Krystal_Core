@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<title>不會寫程式也能做策略 · byslashie.com · 2026.05.30</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── Brand Tokens ───────────────────────────────────────── */
+:root{
+  --o100:hsl(20,88%,91%); --o200:hsl(20,85%,82%); --o300:hsl(20,82%,72%);
+  --o400:hsl(20,80%,62%); --o500:hsl(20,80%,57%); --o600:hsl(16,76%,50%);
+  --o700:hsl(12,72%,42%);
+  --navy700:hsl(218,60%,22%); --navy900:hsl(222,60%,11%);
+  --coral:hsl(341,100%,71%); --cyan:hsl(187,72%,56%); --gold:hsl(31,60%,60%);
+  --g50:hsl(35,30%,97%); --g100:hsl(35,22%,94%); --g200:hsl(30,16%,88%);
+  --g400:hsl(25,9%,60%); --g500:hsl(25,8%,46%); --g700:hsl(25,11%,24%); --g900:hsl(222,35%,11%);
+  --pos:hsl(4,72%,47%); --warn:hsl(38,92%,50%);
+  --grad-warm:linear-gradient(135deg,hsl(20,80%,57%) 0%,hsl(341,100%,71%) 100%);
+  --grad-aurora:linear-gradient(135deg,hsl(20,80%,57%) 0%,hsl(341,100%,71%) 50%,hsl(187,72%,56%) 100%);
+  --fd:"Outfit","Noto Sans TC",sans-serif;
+  --fb:"Inter","Noto Sans TC",sans-serif;
+  --fm:"JetBrains Mono",monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#111;}
+
+/* ── Slide container ─────────────────────────────────────── */
+.deck{
+  position:relative; width:100vw; height:100vh;
+  display:flex; align-items:center; justify-content:center;
+}
+.slide{
+  position:absolute;
+  width:min(100vw, calc(100vh * 16/9));
+  height:min(100vh, calc(100vw * 9/16));
+  display:none; flex-direction:column;
+  overflow:hidden; font-family:var(--fb);
+  --scale: min(calc(100vw / 1920), calc(100vh / 1080));
+}
+.slide.active{display:flex;}
+
+/* All text scales with slide */
+.slide{font-size:calc(var(--scale, 1) * 16px);}
+
+/* ── Shared layout primitives ───────────────────────────── */
+.s-inner{
+  position:relative; z-index:1;
+  padding: 5.9% 7%; flex:1; display:flex; flex-direction:column;
+}
+.tag{
+  font-family:var(--fd); font-size:.69em; font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--o600);
+  margin-bottom:.5em;
+}
+.h1{
+  font-family:var(--fd); font-size:2.5em; font-weight:800;
+  color:var(--g900); letter-spacing:-.025em; line-height:1.12;
+  margin-bottom:.4em;
+}
+.sub{ font-size:1.05em; color:var(--g500); }
+.accent-line{
+  width:52px; height:4px; border-radius:99px;
+  background:var(--grad-warm); margin-bottom:.65em;
+}
+.watermark{
+  position:absolute; bottom:3.2%; right:6%;
+  font-family:var(--fm); font-size:.6em; color:var(--g400); opacity:.5;
+  letter-spacing:.06em;
+}
+.pagenum{
+  position:absolute; bottom:3.2%; left:7%;
+  font-family:var(--fm); font-size:.6em; color:var(--g400);
+}
+.footer-bar{
+  position:absolute; bottom:3.2%; left:7%; right:7%;
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--fm); font-size:.6em;
+  white-space:nowrap; overflow:hidden;
+}
+
+/* ── COVER ──────────────────────────────────────────────── */
+.s-cover{
+  background:
+    radial-gradient(ellipse at 22% 30%, hsla(20,80%,57%,.65), transparent 45%),
+    radial-gradient(ellipse at 78% 72%, hsla(341,100%,71%,.45), transparent 45%),
+    radial-gradient(ellipse at 62% 18%, hsla(187,72%,56%,.40), transparent 42%),
+    linear-gradient(135deg, hsl(222,60%,11%) 0%, hsl(218,60%,22%) 100%);
+  color:white;
+}
+.s-cover::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    linear-gradient(hsla(0,0%,100%,.04) 1px,transparent 1px),
+    linear-gradient(90deg,hsla(0,0%,100%,.04) 1px,transparent 1px);
+  background-size:6% 11%;
+}
+.s-cover .tag-line{
+  font-family:var(--fd); font-size:.75em; font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--o300);
+  margin-bottom:1.2em;
+}
+.s-cover .h1-cover{
+  font-family:var(--fd); font-size:4.5em; font-weight:800;
+  line-height:1.05; letter-spacing:-.03em; color:white;
+  margin-bottom:.2em;
+}
+.s-cover .h1-cover em{
+  font-style:italic;
+  background:linear-gradient(90deg,var(--o300),var(--coral));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.s-cover .sub-cover{
+  font-size:1.1em; color:hsla(0,0%,100%,.82); margin-top:.9em;
+  max-width:58%;
+}
+
+/* ── SECTION DIVIDER ────────────────────────────────────── */
+.s-divider{
+  background:var(--g50);
+  position:relative;
+}
+.s-divider::before{
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 85% 85%, hsla(20,80%,57%,.18), transparent 45%),
+    radial-gradient(ellipse at 15% 15%, hsla(187,72%,56%,.12), transparent 42%);
+}
+.s-divider .num{
+  font-family:var(--fm); font-size:5.5em; font-weight:500;
+  color:var(--o500); line-height:1; letter-spacing:-.04em;
+  margin-bottom:.1em;
+}
+.s-divider .title{
+  font-family:var(--fd); font-size:3.8em; font-weight:800;
+  color:var(--g900); letter-spacing:-.03em; line-height:1.08;
+}
+.s-divider .div-sub{
+  font-size:1em; color:var(--g500); font-style:italic;
+  margin-top:.6em;
+}
+.s-divider .div-accent{
+  width:52px; height:5px; border-radius:99px;
+  background:var(--grad-warm); margin-top:1.4em;
+}
+
+/* ── CONTENT PAGE ───────────────────────────────────────── */
+.s-content{ background:var(--g50); }
+.s-content::before{
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 94% 90%, hsla(187,72%,56%,.08), transparent 38%);
+}
+
+/* ── CLOSING ────────────────────────────────────────────── */
+.s-closing{
+  background:
+    radial-gradient(ellipse at 50% 50%, hsla(20,80%,57%,.35), transparent 55%),
+    linear-gradient(135deg, hsl(222,60%,11%), hsl(218,60%,22%));
+  color:white; align-items:center; justify-content:center; text-align:center;
+}
+.s-closing::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    linear-gradient(hsla(0,0%,100%,.03) 1px,transparent 1px),
+    linear-gradient(90deg,hsla(0,0%,100%,.03) 1px,transparent 1px);
+  background-size:6% 11%;
+}
+.s-closing .label{
+  font-family:var(--fd); font-size:.75em; font-weight:700;
+  letter-spacing:.22em; text-transform:uppercase; color:var(--o300);
+  margin-bottom:1em; position:relative; z-index:1;
+}
+.s-closing .big{
+  font-family:var(--fd); font-size:3.8em; font-weight:800;
+  letter-spacing:-.03em; line-height:1.1; position:relative; z-index:1;
+}
+.s-closing .big em{
+  font-style:italic;
+  background:linear-gradient(90deg,var(--o300),var(--coral));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+/* ── Shared components ──────────────────────────────────── */
+.step-row{
+  display:flex; gap:.8em; align-items:flex-start;
+  margin-bottom:.7em;
+}
+.step-num{
+  width:1.8em; height:1.8em; border-radius:4px;
+  background:var(--o500); color:white;
+  font-family:var(--fd); font-weight:700; font-size:.95em;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; margin-top:.05em;
+}
+.step-text{ font-size:1.1em; color:var(--g700); line-height:1.55; }
+.hint-box{
+  background:var(--o100); border:1.5px solid var(--o500);
+  border-radius:10px; padding:.7em 1em;
+  font-size:1em; color:var(--o600); font-weight:600;
+  margin-top:auto;
+}
+.cta-bar{
+  background:var(--o500); border-radius:10px;
+  padding:.75em 1.2em; text-align:center;
+  font-family:var(--fd); font-size:1.2em; font-weight:700;
+  color:white; margin-top:auto;
+}
+.compare-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:1.2em; flex:1;
+}
+.compare-card{
+  border-radius:12px; padding:1.2em 1.4em;
+  border: 1px solid var(--g200);
+}
+.compare-card.bad{ background:hsl(235,20%,95%); border-top:3px solid var(--navy700); }
+.compare-card.good{ background:hsl(25,50%,97%); border-top:3px solid var(--o500); }
+.compare-card .ch{ font-family:var(--fd); font-size:1.15em; font-weight:700; color:var(--g900); margin-bottom:.5em; }
+.compare-card li{ font-size:.9em; color:var(--g700); line-height:1.7; margin-left:1.2em; }
+.stat-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:1em;
+  margin-top:.5em;
+}
+.stat-card{
+  background:white; border:1px solid var(--g200);
+  border-radius:12px; padding:1em 1.2em;
+  position:relative; overflow:hidden;
+}
+.stat-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.stat-card.pos::before{ background:var(--pos); }
+.stat-card.warn::before{ background:var(--warn); }
+.stat-card.mute::before{ background:var(--g400); }
+.stat-card .s-lab{ font-size:.75em; color:var(--g500); margin-bottom:.3em; }
+.stat-card .s-num{ font-family:var(--fd); font-size:2.8em; font-weight:800; letter-spacing:-.02em; line-height:1; }
+.stat-card.pos .s-num{ color:var(--pos); }
+.stat-card.warn .s-num{ color:var(--warn); }
+.stat-card.mute .s-num{ color:var(--g400); }
+.stat-card .s-delta{ font-family:var(--fm); font-size:.7em; color:var(--g400); margin-top:.3em; }
+.four-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:1em; flex:1;
+}
+.four-card{
+  background:white; border:1px solid var(--g200); border-top:3px solid var(--o500);
+  border-radius:12px; padding:1em 1.2em;
+}
+.four-card .fc-num{ font-family:var(--fm); font-size:3em; color:var(--o400); line-height:1; }
+.four-card .fc-label{ font-family:var(--fd); font-size:1.1em; font-weight:700; color:var(--g900); margin-top:.3em; }
+.code-block{
+  background:var(--navy900); border-radius:10px;
+  border-left:4px solid var(--o500);
+  padding:1.2em 1.4em; flex:1;
+  font-family:var(--fm); font-size:.95em; line-height:1.75;
+}
+.code-block .c-prompt{ color:var(--o300); }
+.code-block .c-code{ color:hsl(130,40%,75%); }
+.code-block .c-mute{ color:hsl(220,14%,56%); }
+.kw-block{
+  background:var(--navy900); border-left:4px solid var(--o500);
+  border-radius:8px; padding:.9em 1.2em;
+  font-family:var(--fm); font-size:.85em; color:var(--o300);
+  line-height:1.85;
+}
+.tool-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1em; flex:1; }
+.tool-card{
+  background:white; border:1px solid var(--g200); border-radius:12px;
+  padding:1.2em 1.4em;
+}
+.tool-card.navy{ background:hsl(220,40%,96%); border-top:3px solid var(--navy700); }
+.tool-card.orange{ border-top:3px solid var(--o500); }
+.tool-card .tc-name{ font-family:var(--fd); font-size:1.6em; font-weight:800; color:var(--g900); }
+.tool-card .tc-sub{ font-size:.85em; color:var(--o600); font-weight:600; margin:.3em 0; }
+.tool-card .tc-desc{ font-size:.82em; color:var(--g500); }
+.process-row{
+  display:flex; align-items:center; gap:.5em;
+  flex-wrap:wrap; margin-top:.5em;
+}
+.proc-step{
+  background:var(--o500); color:white;
+  font-family:var(--fd); font-size:.85em; font-weight:700;
+  border-radius:6px; padding:.45em .9em;
+}
+.proc-arrow{ color:var(--o400); font-size:1em; }
+.gifts-list{ flex:1; }
+.gift-row{
+  display:flex; gap:.9em; align-items:center;
+  padding:.9em 0; border-bottom:1px solid var(--g200);
+}
+.gift-row:last-child{ border-bottom:none; }
+.gift-num{
+  width:2em; height:2em; background:var(--o500);
+  color:white; border-radius:6px;
+  font-family:var(--fd); font-weight:700; font-size:1em;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.gift-text{ font-size:1.05em; color:white; line-height:1.45; }
+.gift-text strong{ color:var(--o300); display:block; font-family:var(--fd); font-size:1.05em; margin-bottom:.1em; }
+.tag-dark{
+  font-family:var(--fd); font-size:.69em; font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--o300);
+  margin-bottom:.5em;
+}
+
+/* ── Nav controls ───────────────────────────────────────── */
+#controls{
+  position:fixed; bottom:1.5%; left:50%; transform:translateX(-50%);
+  display:flex; gap:.5em; align-items:center; z-index:100;
+  background:hsla(0,0%,0%,.5); backdrop-filter:blur(12px);
+  border-radius:99px; padding:.4em 1em;
+  font-family:var(--fm); font-size:12px; color:hsla(0,0%,100%,.7);
+}
+#controls button{
+  background:hsla(0,0%,100%,.1); border:none; color:white;
+  font-size:14px; padding:.3em .6em; border-radius:6px; cursor:pointer;
+}
+#controls button:hover{ background:var(--o500); }
+#progress{ width:80px; height:3px; background:hsla(0,0%,100%,.2); border-radius:99px; overflow:hidden; }
+#progress-inner{ height:100%; background:var(--o500); transition:width .3s; }
+
+/* ── Speaker notes ── */
+#notes-panel{
+  position:fixed; bottom:0; left:0; right:0;
+  background:hsla(222,60%,8%,.97);
+  backdrop-filter:blur(20px);
+  border-top:2px solid hsl(20,80%,57%);
+  color:white; z-index:200;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  max-height:35vh; display:flex; flex-direction:column;
+}
+#notes-panel.open{ transform:translateY(0); }
+#notes-header{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:.5em 1.4em;
+  border-bottom:1px solid hsla(0,0%,100%,.08);
+  font-family:"JetBrains Mono",monospace; font-size:11px;
+  color:hsla(0,0%,100%,.5);
+}
+#notes-header strong{ color:hsl(20,80%,57%); letter-spacing:.1em; }
+#notes-close{
+  background:none; border:none; color:hsla(0,0%,100%,.5);
+  font-size:16px; cursor:pointer; padding:.2em .4em;
+}
+#notes-close:hover{ color:white; }
+#notes-body{
+  padding:.9em 1.6em 1.2em;
+  font-size:15px; line-height:1.75; color:hsla(0,0%,100%,.88);
+  overflow-y:auto; flex:1;
+  font-family:"Inter","Noto Sans TC",sans-serif;
+}
+#notes-body .notes-cue{
+  display:inline-block; background:hsl(20,80%,57%);
+  color:white; font-size:11px; font-weight:700;
+  padding:.1em .5em; border-radius:4px; margin-right:.4em;
+  font-family:"JetBrains Mono",monospace; letter-spacing:.05em;
+}
+#notes-toggle{
+  position:fixed; bottom:52px; right:20px;
+  background:hsla(222,60%,11%,.9);
+  backdrop-filter:blur(12px);
+  border:1px solid hsl(20,80%,57%);
+  color:hsl(20,80%,57%);
+  font-family:"JetBrains Mono",monospace;
+  font-size:11px; font-weight:700;
+  padding:.45em .9em; border-radius:6px;
+  cursor:pointer; z-index:201;
+  letter-spacing:.08em;
+}
+#notes-toggle:hover{ background:hsl(20,80%,57%); color:white; }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ═══ SLIDE 01 — 封面 ═══ -->
+<div class="slide s-cover">
+  <div class="s-inner" style="justify-content:center;">
+    <div class="tag-line">AI 策略入門班  ·  2026.05.30</div>
+    <div class="h1-cover">不會寫程式<br/><em>也能做策略</em></div>
+    <div class="sub-cover">用 AI 打造你的 XQ 投資助手</div>
+  </div>
+  <div class="footer-bar">
+    <span>byslashie.com</span>
+    <span>Threads @byslashie</span>
+  </div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 02 — 今天議程 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">TODAY'S AGENDA</div>
+    <div class="h1">今天你會學到什麼</div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:.55em; margin-top:.3em;">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">以前建構策略的流程與痛點</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">用 Perplexity + 論文找到有根據的因子</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Claude Skill 一步步釐清目標、建立 XS 策略</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">XQ 回測 → 結果存進 HTML 視覺化分析</div></div>
+    </div>
+  </div>
+  <div class="pagenum">02 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 03 — 以前怎麼做 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">BEFORE · 舊方法</div>
+    <div class="h1">以前建構策略怎麼做？</div>
+    <div class="compare-grid" style="margin-top:.4em;">
+      <div class="compare-card bad">
+        <div class="ch">❌ 舊流程</div>
+        <ul>
+          <li>有想法 → 憑感覺量化</li>
+          <li>隨便找指標回測</li>
+          <li>實單進去就曝虧</li>
+          <li>不知道哪裡改起</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6em;">
+        <div style="background:hsl(4,60%,96%);border-left:3px solid var(--pos);border-radius:8px;padding:.7em 1em;font-size:.9em;color:var(--pos);font-weight:600;">耗時費力 · 靠感覺 · 沒有學術根據</div>
+        <div style="background:var(--g100);border-radius:8px;padding:.7em 1em;font-size:.85em;color:var(--g500);">→ 問題不是你不夠努力，是根基就不對</div>
+      </div>
+    </div>
+  </div>
+  <div class="pagenum">03 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 04 — 現在的流程 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">NOW WITH AI · 新流程</div>
+    <div class="h1">加入 AI 之後</div>
+    <div class="process-row" style="margin-bottom:.6em;">
+      <span class="proc-step">有想法</span><span class="proc-arrow">▶</span>
+      <span class="proc-step">Claude Skill</span><span class="proc-arrow">▶</span>
+      <span class="proc-step">Perplexity 找論文</span><span class="proc-arrow">▶</span>
+      <span class="proc-step">Claude 寫 XS</span><span class="proc-arrow">▶</span>
+      <span class="proc-step">XQ 回測</span><span class="proc-arrow">▶</span>
+      <span class="proc-step">AI 解讀報告</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:.5em;margin-top:.3em;">
+      <div class="step-row"><div class="step-num">✓</div><div class="step-text">每個環節 AI 輔助，有論文根據不是憑感覺</div></div>
+      <div class="step-row"><div class="step-num">✓</div><div class="step-text">省去 80% 試錯時間</div></div>
+      <div class="step-row"><div class="step-num">✓</div><div class="step-text">策略邏輯清晰，知道哪個參數在做什麼</div></div>
+    </div>
+    <div class="hint-box">今天直播：帶你把這個流程完整跑一遍 🎯</div>
+  </div>
+  <div class="pagenum">04 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 05 — 章節 01 ═══ -->
+<div class="slide s-divider">
+  <div class="s-inner" style="justify-content:center;">
+    <div class="num">01</div>
+    <div class="title">為什麼從論文<br/>找因子？</div>
+    <div class="div-sub">學術依據 vs 網路資訊</div>
+    <div class="div-accent"></div>
+  </div>
+  <div class="watermark" style="color:var(--g400);">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 06 — 論文 vs 網路 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">THE PROBLEM</div>
+    <div class="h1">為什麼要找論文？</div>
+    <div class="compare-grid" style="margin-top:.4em;">
+      <div class="compare-card bad">
+        <div class="ch">❌ 網路資訊</div>
+        <ul>
+          <li>來源不明、難以驗證</li>
+          <li>容易過時、流傳錯誤</li>
+          <li>不知道有沒有真的效果</li>
+          <li>別人說好不代表你適用</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <div class="ch">✅ 學術論文</div>
+        <ul>
+          <li>有方法論、可重現驗證</li>
+          <li>清楚的因子條件與範圍</li>
+          <li>建立策略有根有據</li>
+          <li>知道失效的邊界條件</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="pagenum">06 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 07 — 章節 02 ═══ -->
+<div class="slide s-divider">
+  <div class="s-inner" style="justify-content:center;">
+    <div class="num">02</div>
+    <div class="title">找論文<br/>兩種方法</div>
+    <div class="div-sub">免費版 &amp; 進階版</div>
+    <div class="div-accent"></div>
+  </div>
+  <div class="watermark" style="color:var(--g400);">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 08 — Perplexity ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">SIMPLE · 免費 · 零設定</div>
+    <div class="h1">Perplexity Academic 模式</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:.5em;margin-top:.2em;">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">開啟 perplexity.ai → 右上角切換 <strong>Academic</strong> 模式</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">輸入英文關鍵字，例：<code style="font-family:var(--fm);background:var(--g100);padding:.1em .4em;border-radius:4px;font-size:.88em;">momentum factor Taiwan stock</code></div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">把搜尋摘要貼給 Claude，請它分析因子條件</div></div>
+      <div class="kw-block">
+        "momentum factor Taiwan stock"<br/>
+        "quality factor ROE profitability returns"<br/>
+        "Fama French three factor model"<br/>
+        "low volatility anomaly empirical evidence"
+      </div>
+    </div>
+    <div class="hint-box">完全免費，人人可用，今天 DEMO 用這個 ✅</div>
+  </div>
+  <div class="pagenum">08 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 09 — MCP 進階 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">ADVANCED · 我自己用的方式</div>
+    <div class="h1">MCP：Consensus + Scholar Gateway</div>
+    <div class="tool-grid" style="margin-top:.4em;">
+      <div class="tool-card orange">
+        <div class="tc-name">Consensus</div>
+        <div class="tc-sub">找實證結論</div>
+        <div class="tc-desc">輸入研究問題<br/>→ 直接輸出有 / 無支持</div>
+      </div>
+      <div class="tool-card navy">
+        <div class="tc-name">Scholar Gateway</div>
+        <div class="tc-sub">語意搜尋</div>
+        <div class="tc-desc">找最新文獻<br/>→ 多角度交叉驗證</div>
+      </div>
+    </div>
+    <div style="background:var(--g100);border-radius:8px;padding:.7em 1em;margin-top:.8em;font-size:.88em;color:var(--g500);font-style:italic;">
+      需設定 MCP Server，適合進階使用者；今天先用 Perplexity，效果一樣好
+    </div>
+  </div>
+  <div class="pagenum">09 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 10 — 章節 03 ═══ -->
+<div class="slide s-divider">
+  <div class="s-inner" style="justify-content:center;">
+    <div class="num">03</div>
+    <div class="title">Claude Skill<br/>策略建立向導</div>
+    <div class="div-sub">一步步釐清你的策略目標</div>
+    <div class="div-accent"></div>
+  </div>
+  <div class="watermark" style="color:var(--g400);">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 11 — Skill 介紹 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">THE SKILL</div>
+    <div class="h1">什麼是 Claude Skill？</div>
+    <p style="font-size:.95em;color:var(--g700);margin-bottom:.8em;line-height:1.6;">一段 Prompt，貼進 Claude 對話框就能用。<br/>不需要 Claude Pro、不需要設定，開新對話貼上就是你的策略顧問。</p>
+    <div style="flex:1;display:flex;flex-direction:column;gap:.5em;">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">打開 claude.ai → 開新對話</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">把 Skill Prompt 全選複製，貼進去</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Claude 會問你策略方向 → 一步步建立邏輯</div></div>
+    </div>
+    <div class="cta-bar">今天直播結束後，填表就送你這個 Skill！</div>
+  </div>
+  <div class="pagenum">11 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 12 — Skill 五步驟 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">HOW IT WORKS</div>
+    <div class="h1">Skill 一步步問你什麼</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:.4em;margin-top:.2em;">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">商品類型（台股個股 / ETF / 美股）</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">操作週期（日線 / 週線 / 月線）</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">策略邏輯偏好（順勢 / 逆勢 / 基本面 / 籌碼）</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">持有時間（短線 / 波段 / 長持）</div></div>
+      <div class="step-row"><div class="step-num">5</div><div class="step-text">風控需求（停損幅度、每月操作次數）</div></div>
+    </div>
+    <div style="color:var(--o600);font-size:.95em;font-weight:600;margin-top:.5em;">
+      → 收到答案後，Skill 輸出 XS 策略框架（基本面 + 籌碼面 + 技術面三層）
+    </div>
+  </div>
+  <div class="pagenum">12 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 13 — 章節 04 ═══ -->
+<div class="slide s-divider">
+  <div class="s-inner" style="justify-content:center;">
+    <div class="num">04</div>
+    <div class="title">XQ 實作<br/>+ 回測</div>
+    <div class="div-sub">把 AI 輸出的 XS 框架跑起來</div>
+    <div class="div-accent"></div>
+  </div>
+  <div class="watermark" style="color:var(--g400);">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 14 — XQ 四步驟 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">LIVE DEMO</div>
+    <div class="h1">XQ 實作四步驟</div>
+    <div class="four-grid" style="margin-top:.4em;">
+      <div class="four-card"><div class="fc-num">01</div><div class="fc-label">選股中心設定三因子條件</div></div>
+      <div class="four-card"><div class="fc-num">02</div><div class="fc-label">建立 XS 交易腳本（AI 生成）</div></div>
+      <div class="four-card"><div class="fc-num">03</div><div class="fc-label">設計出場邏輯（季度換倉）</div></div>
+      <div class="four-card"><div class="fc-num">04</div><div class="fc-label">執行回測，分析報告</div></div>
+    </div>
+  </div>
+  <div class="pagenum">14 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 15 — 回測結果 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">RESULT · 因子 ETF 策略</div>
+    <div class="h1">5 年回測成績</div>
+    <div class="stat-grid">
+      <div class="stat-card pos">
+        <div class="s-lab">5年最大報酬</div>
+        <div class="s-num">+112.42%</div>
+        <div class="s-delta">優化版 · 3 因子</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="s-lab">基礎版報酬</div>
+        <div class="s-num">+86.42%</div>
+        <div class="s-delta">3 因子基礎設定</div>
+      </div>
+      <div class="stat-card mute">
+        <div class="s-lab">0050 同期</div>
+        <div class="s-num">+62%</div>
+        <div class="s-delta">大盤對比基準</div>
+      </div>
+    </div>
+    <div style="font-size:.82em;color:var(--g400);margin-top:.8em;font-style:italic;">
+      2022 年下半年起逆轉領先大盤，2019–2022 年表現弱於 0050 · 詳見 byslashie.com/build-factor-etf-xq/
+    </div>
+  </div>
+  <div class="pagenum">15 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 16 — 存進 HTML ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">ANALYSIS</div>
+    <div class="h1">回測結果存進 HTML 分析</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:.5em;margin-top:.2em;">
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">XQ 回測完成 → 匯出 CSV</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">把 CSV 拖入 Demo 分析系統</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">AI 自動計算 CAGR / Sharpe / MDD 等 18 項 KPI</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6em;margin-top:.3em;">
+        <div style="background:var(--o100);border:1px solid var(--o500);border-radius:8px;padding:.5em;text-align:center;font-family:var(--fm);font-size:.9em;font-weight:700;color:var(--o600);">CAGR</div>
+        <div style="background:var(--o100);border:1px solid var(--o500);border-radius:8px;padding:.5em;text-align:center;font-family:var(--fm);font-size:.9em;font-weight:700;color:var(--o600);">Sharpe</div>
+        <div style="background:var(--o100);border:1px solid var(--o500);border-radius:8px;padding:.5em;text-align:center;font-family:var(--fm);font-size:.9em;font-weight:700;color:var(--o600);">MaxDD</div>
+        <div style="background:var(--o100);border:1px solid var(--o500);border-radius:8px;padding:.5em;text-align:center;font-family:var(--fm);font-size:.9em;font-weight:700;color:var(--o600);">WinRate</div>
+      </div>
+    </div>
+    <div class="hint-box">視覺化報告一鍵生成，今天 DEMO 現場示範 📊</div>
+  </div>
+  <div class="pagenum">16 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 17 — AI 解讀回測 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">AI REVIEW</div>
+    <div class="h1">讓 AI 幫你解讀回測報告</div>
+    <div class="code-block" style="margin-top:.4em;">
+      <div class="c-prompt">這是我的回測結果：[貼上數據]</div>
+      <div class="c-mute">&nbsp;</div>
+      <div class="c-prompt">請幫我分析：</div>
+      <div class="c-code">1. 勝率和賠率是否合理？</div>
+      <div class="c-code">2. 這個策略的弱點在哪？</div>
+      <div class="c-code">3. 給我 3 個具體改進方向</div>
+    </div>
+    <div class="hint-box" style="margin-top:.7em;">Claude 會給你策略診斷 + 3 個具體優化方向 💡</div>
+  </div>
+  <div class="pagenum">17 / 19</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 18 — 禮物章節 ═══ -->
+<div class="slide s-closing">
+  <div class="label" style="position:relative;z-index:1;">今天的禮物</div>
+  <div class="big" style="font-size:3em;">帶走這個工具<br/><em>自己找下一個因子</em></div>
+  <div class="watermark" style="color:hsla(0,0%,100%,.4);">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 19 — 禮物包 + 結尾 ═══ -->
+<div class="slide" style="background:
+  radial-gradient(ellipse at 22% 30%, hsla(20,80%,57%,.55), transparent 45%),
+  radial-gradient(ellipse at 78% 72%, hsla(341,100%,71%,.4), transparent 45%),
+  radial-gradient(ellipse at 62% 18%, hsla(187,72%,56%,.35), transparent 42%),
+  linear-gradient(135deg, hsl(222,60%,11%), hsl(218,60%,22%));
+  color:white; position:relative;">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(hsla(0,0%,100%,.04) 1px,transparent 1px),linear-gradient(90deg,hsla(0,0%,100%,.04) 1px,transparent 1px);background-size:6% 11%;"></div>
+  <div class="s-inner" style="position:relative;z-index:1;">
+    <div style="width:52px;height:4px;background:var(--grad-warm);border-radius:99px;margin-bottom:.5em;"></div>
+    <div class="tag-dark">GIFT · 填表免費領取</div>
+    <div style="font-family:var(--fd);font-size:2.8em;font-weight:800;color:white;letter-spacing:-.025em;margin-bottom:.6em;">禮物包內容</div>
+    <div class="gifts-list">
+      <div class="gift-row">
+        <div class="gift-num">1</div>
+        <div class="gift-text"><strong>Claude Skill Prompt</strong>貼入 Claude 即用（免費版就夠），一步步建立你的量化策略</div>
+      </div>
+      <div class="gift-row">
+        <div class="gift-num">2</div>
+        <div class="gift-text"><strong>Perplexity 學術搜尋關鍵字清單</strong>直接複製貼上，找因子論文不用想關鍵字</div>
+      </div>
+      <div class="gift-row">
+        <div class="gift-num">3</div>
+        <div class="gift-text"><strong>XS 策略框架模板</strong>三層選股邏輯（基本面 + 籌碼 + 技術），可直接貼入 XQ 修改</div>
+      </div>
+    </div>
+    <div class="cta-bar" style="background:var(--o500);">直播留言「積木」→ 填表領取三份禮物</div>
+  </div>
+  <div class="footer-bar" style="color:hsla(0,0%,100%,.45);">
+    <span>byslashie.com</span>
+    <span>Threads @byslashie</span>
+  </div>
+  <div class="watermark" style="color:hsla(0,0%,100%,.4);">斜槓姐姐 · @byslashie</div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Speaker Notes -->
+<button id="notes-toggle" onclick="toggleNotes()">📋 唸稿 N</button>
+<div id="notes-panel">
+  <div id="notes-header">
+    <strong>SPEAKER NOTES</strong>
+    <span id="notes-slide-num">Slide 1 / 19</span>
+    <button id="notes-close" onclick="toggleNotes()">✕</button>
+  </div>
+  <div id="notes-body"></div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <button onclick="prev()">◀</button>
+  <span id="slide-indicator">1 / 19</span>
+  <div id="progress"><div id="progress-inner" style="width:5.3%"></div></div>
+  <button onclick="next()">▶</button>
+  <span style="opacity:.5;font-size:10px;margin-left:.3em;">← → Space F</span>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+const total = slides.length;
+
+// ── 唸稿內容（19頁）──────────────────────────────────────
+const NOTES = [
+  // 01 封面
+  `<span class="notes-cue">開場</span>大家好，我是斜槓姐姐 Krystal，歡迎來到今天的直播。今天要講的主題是「不會寫程式也能做策略」。<br/><br/><span class="notes-cue">重點</span>很多人以為做量化策略一定要會 Python，要會程式。但其實現在有 AI 工具，你只需要知道<strong>你想要什麼</strong>，其他的讓 AI 幫你。<br/><br/><span class="notes-cue">預告</span>今天我們會從頭跑一遍完整流程，兩小時後你會帶走三個可以直接用的工具。`,
+
+  // 02 議程
+  `<span class="notes-cue">說明</span>今天的內容分四大塊。先講為什麼以前的做法有問題，然後介紹怎麼用 Perplexity 找學術論文，再來是 Claude Skill 怎麼幫你一步步建策略，最後是 XQ 實作和回測。<br/><br/><span class="notes-cue">互動</span>有沒有人之前也試過自己找指標、結果回測完實單就虧的？歡迎留言。`,
+
+  // 03 以前怎麼做
+  `<span class="notes-cue">痛點</span>這是大多數散戶做策略的流程。有了想法，直接去 YouTube 找別人說的指標，設一個看起來不錯的參數，回測好像可以，然後實單進去。<br/><br/><span class="notes-cue">問題</span>問題在哪裡？你不知道這個邏輯背後有沒有真正的根據。別人說的參數，是他自己試出來的，不一定適合你的市場和風格。<br/><br/><span class="notes-cue">轉折</span>所以今天要教的，是從根本改變這個流程。`,
+
+  // 04 現在的流程
+  `<span class="notes-cue">對比</span>加入 AI 之後，流程變成這樣。每一個環節都有對應的工具幫你。<br/><br/><span class="notes-cue">說明</span>有想法 → Claude Skill 幫你釐清目標 → Perplexity 找論文驗證因子 → Claude 把論文邏輯轉成 XS 腳本 → XQ 跑回測 → AI 解讀報告告訴你哪裡可以改。<br/><br/><span class="notes-cue">強調</span>整個流程你不需要懂程式，你只需要會問問題。`,
+
+  // 05 章節 01
+  `<span class="notes-cue">過場</span>好，第一個模組，為什麼要從論文找因子？<br/><br/><span class="notes-cue">預告</span>很多人可能會問，我直接用 KD、MACD 不行嗎？可以，但你知道這些指標在統計上是否有效嗎？接下來我們來看看。`,
+
+  // 06 論文 vs 網路
+  `<span class="notes-cue">對比</span>左邊是網路資訊，右邊是學術論文。最大的差異是可驗證性。<br/><br/><span class="notes-cue">舉例</span>比如說「動能因子」，這是 1993 年 Jegadeesh & Titman 就發表在頂尖期刊的研究，過去 30 年無數研究複製驗證過。這跟你在 YouTube 看到的「這個參數我用了三個月覺得不錯」是完全不同層次的根據。<br/><br/><span class="notes-cue">重點</span>不是說網路資訊都是錯的，而是你不知道它有沒有效。論文至少給你一個起點。`,
+
+  // 07 章節 02
+  `<span class="notes-cue">過場</span>好，那要怎麼找論文？今天介紹兩種方法。一個是完全免費、零設定，今天 DEMO 用這個。另一個是我自己平常用的進階版。`,
+
+  // 08 Perplexity
+  `<span class="notes-cue">操作</span>先開啟 perplexity.ai，右上角有一個 Focus 選項，切換成 Academic。這樣它的搜尋結果就會優先引用學術論文。<br/><br/><span class="notes-cue">示範關鍵字</span>然後你輸入英文關鍵字，比如說「momentum factor Taiwan stock」。Perplexity 會給你一個摘要，並且標明引用哪些論文。<br/><br/><span class="notes-cue">下一步</span>把這個摘要複製，貼給 Claude，問它：「根據這個研究，如果要在 XQ 篩選台股，需要什麼條件？」<br/><br/><span class="notes-cue">補充</span>禮物包裡我已經幫你整理好 20 個關鍵字，等一下填表就拿到。`,
+
+  // 09 MCP 進階
+  `<span class="notes-cue">說明</span>這是我自己平常用的方式，需要設定 MCP Server，接 Consensus 和 Scholar Gateway 這兩個工具。<br/><br/><span class="notes-cue">差異</span>Consensus 可以直接問「動能因子在台股有效嗎？」，它會搜尋論文後直接告訴你有沒有支持這個論點。Scholar Gateway 則是語意搜尋，可以找到更多相關文獻。<br/><br/><span class="notes-cue">給學員</span>如果你是進階用戶，有興趣設定 MCP 的話，可以私訊我，我之後會出教學文章。`,
+
+  // 10 章節 03
+  `<span class="notes-cue">過場</span>找到論文之後，下一步是把因子邏輯轉化成策略。這就是 Claude Skill 的功能。`,
+
+  // 11 Skill 介紹
+  `<span class="notes-cue">解釋</span>很多人聽到 Skill 會覺得很複雜，其實它就是一段文字。你把這段文字貼進 Claude 的對話框，Claude 就變成你的策略顧問。<br/><br/><span class="notes-cue">強調免費</span>不需要 Claude Pro，免費版就可以用。不需要設定任何東西，開新對話貼上去就好。<br/><br/><span class="notes-cue">互動</span>有沒有人用過 Claude？留言讓我知道。今天的 Skill 是我自己整理的，填表就送你，可以直接拿去用。`,
+
+  // 12 Skill 五步驟
+  `<span class="notes-cue">走流程</span>Skill 會一步一步問你五個問題。<br/><br/>第一個是你要做什麼商品，台股、ETF 還是美股。第二個是操作週期，你想做短線還是月線。第三個是策略邏輯偏好，你比較喜歡追強勢股還是找便宜貨。第四個是持有時間。第五個是你的風控需求。<br/><br/><span class="notes-cue">輸出</span>回答完之後，Skill 會給你一個 XS 的框架，分三層：基本面過濾、籌碼面確認、技術面進場。這個框架你可以直接貼進 XQ 修改。`,
+
+  // 13 章節 04
+  `<span class="notes-cue">過場</span>有了 XS 框架，下一步就是把它在 XQ 裡面跑起來。這裡我們要做四個步驟。`,
+
+  // 14 XQ 四步驟
+  `<span class="notes-cue">操作</span>第一步，在 XQ 的選股中心設定三個因子條件。這個對應我們之前從 Skill 拿到的基本面 + 籌碼 + 技術三層框架。<br/><br/>第二步，建立 XS 交易腳本。如果你不會寫，直接把 Skill 給你的框架貼進去，XQ 會告訴你哪裡有語法問題。<br/><br/>第三步，設計出場邏輯。我通常用季度換倉，每季重新排名選前幾名。<br/><br/>第四步，執行回測，看結果。<br/><br/><span class="notes-cue">DEMO</span>我們現在來實際操作一遍。`,
+
+  // 15 回測結果
+  `<span class="notes-cue">說明數據</span>這是我在 byslashie.com 文章裡分享的因子 ETF 回測結果。三因子策略，2019 到 2024 年，優化版最高達到 +112%。<br/><br/><span class="notes-cue">誠實</span>但我要說清楚，2019 到 2022 年表現是弱於 0050 的，2022 年下半年之後才開始逆轉領先。所以這個策略不是每年都打敗大盤，但長期下來是有超額報酬的。<br/><br/><span class="notes-cue">重點</span>回測只是驗證邏輯，不是保證未來。你自己調整參數、找你認同的因子，才是關鍵。`,
+
+  // 16 存進 HTML
+  `<span class="notes-cue">說明</span>XQ 跑完回測之後，我們把結果存成 CSV，然後拖進這個分析系統。系統會自動計算 18 個 KPI，包括年化報酬、Sharpe 比率、最大回撤、勝率。<br/><br/><span class="notes-cue">示範</span>現在來 DEMO 一遍，大家看我的畫面。`,
+
+  // 17 AI 解讀
+  `<span class="notes-cue">技巧</span>有了數據之後，你可以把數字貼給 Claude，問它三個問題：勝率賠率合理嗎、弱點在哪裡、給我三個具體改進方向。<br/><br/><span class="notes-cue">強調</span>這個步驟很重要，因為很多人回測出來不知道怎麼解讀，或是不知道哪個方向可以改。AI 可以幫你快速找到問題所在。<br/><br/><span class="notes-cue">注意</span>AI 給的建議你還是要自己判斷，它的分析是參考，不是直接照做。`,
+
+  // 18 禮物章節
+  `<span class="notes-cue">過場</span>好，今天的課程內容講完了。我答應大家的禮物，現在來說明怎麼領取。`,
+
+  // 19 禮物包
+  `<span class="notes-cue">說明禮物</span>今天的禮物包有三樣東西。第一個是 Claude Skill Prompt，這是我剛才示範的那個 Prompt 的完整版，你可以直接拿去用。<br/><br/>第二個是 Perplexity 學術搜尋關鍵字清單，我整理了 20 個可以直接用的英文關鍵字，不用自己想。<br/><br/>第三個是 XS 策略框架模板，三層選股邏輯可以直接貼進 XQ 修改。<br/><br/><span class="notes-cue">CTA</span>現在在直播留言打「積木」，我等一下把表單連結貼出來，填完馬上收到。<br/><br/><span class="notes-cue">結尾</span>今天很謝謝大家，有任何問題歡迎在 Threads @byslashie 找我，我都會回。我們下次見！`
+];
+
+let notesOpen = false;
+
+function go(n){
+  slides[cur].classList.remove('active');
+  cur = (n + total) % total;
+  slides[cur].classList.add('active');
+  document.getElementById('slide-indicator').textContent = `${cur+1} / ${total}`;
+  document.getElementById('progress-inner').style.width = `${((cur+1)/total)*100}%`;
+  updateNotes();
+}
+function next(){ go(cur+1); }
+function prev(){ go(cur-1); }
+
+function updateNotes(){
+  document.getElementById('notes-body').innerHTML = NOTES[cur] || '（本頁無備忘錄）';
+  document.getElementById('notes-slide-num').textContent = `Slide ${cur+1} / ${total}`;
+}
+
+function toggleNotes(){
+  notesOpen = !notesOpen;
+  document.getElementById('notes-panel').classList.toggle('open', notesOpen);
+  document.getElementById('notes-toggle').textContent = notesOpen ? '✕ 關閉' : '📋 唸稿 N';
+  if(notesOpen) updateNotes();
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); next(); }
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); prev(); }
+  if(e.key==='n'||e.key==='N'){ toggleNotes(); }
+  if(e.key==='f'||e.key==='F') document.documentElement.requestFullscreen?.();
+  if(e.key==='Escape'&&notesOpen){ toggleNotes(); }
+  else if(e.key==='Escape') document.exitFullscreen?.();
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=tx-e.changedTouches[0].clientX;
+  if(Math.abs(dx)>40){ dx>0?next():prev(); }
+},{passive:true});
+
+go(0);
+</script>
+</body>
+</html>

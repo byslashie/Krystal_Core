@@ -1,0 +1,45 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "workbench.commandPalette.experimental.askForNarrowedDownCommands": true,
+  "claude.skills": {
+    "enabled": true,
+    "path": "./skills",
+    "manifest": "./skills/manifest.json",
+    "autoLoad": true
+  },
+  "claude.skillsConfig": {
+    "registry": {
+      "location": "./.claude/skills.json",
+      "autoSync": true
+    }
+  },
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "search.exclude": {
+    "node_modules": true,
+    ".git": true,
+    "__pycache__": true
+  }
+}

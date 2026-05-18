@@ -1,0 +1,93 @@
+{
+  "$schema": "https://claude.ai/schema/project.json",
+  "projectName": "Krystal Core System",
+  "projectVersion": "2.0.0",
+  "description": "Krystal 的完整交易 + PM + 自媒體系統",
+  "author": "Krystal",
+  "created": "2026-05-16",
+  "updated": "2026-05-17",
+  "workspaces": [
+    {
+      "name": "Trading System",
+      "path": "01-交易系統程式碼",
+      "type": "trading"
+    },
+    {
+      "name": "Strategy Library",
+      "path": "02-策略知識庫",
+      "type": "knowledge-base"
+    },
+    {
+      "name": "Personal Development",
+      "path": "04-個人特質與規劃",
+      "type": "personal"
+    }
+  ],
+  "skills": {
+    "enabled": true,
+    "path": "./skills",
+    "manifestFile": "./skills/manifest.json",
+    "registryFile": "./.claude/skills.json",
+    "autoLoad": true,
+    "autoActivate": true
+  },
+  "claude": {
+    "model": "haiku",
+    "temperature": 0.7,
+    "maxTokens": 4096,
+    "version": "4.5"
+  },
+  "extensions": [
+    {
+      "name": "Skills Support",
+      "enabled": true,
+      "config": {
+        "manifestPath": "skills/manifest.json",
+        "commandPrefix": "/",
+        "fuzzyMatch": true
+      }
+    }
+  ],
+  "commands": {
+    "overrides": {
+      "/strategy-reflection": {
+        "description": "8 鏡頭決策框架",
+        "file": "skills/krystal_strategy_reflection_partner.md"
+      },
+      "/daily-check": {
+        "description": "四重身份日程檢查",
+        "file": "skills/four_identities_daily_schedule.md"
+      },
+      "/self-media-strategy": {
+        "description": "自媒體內容戰略",
+        "file": "skills/self_media_content_strategy.md"
+      },
+      "/quick-ref": {
+        "description": "快速參考卡",
+        "file": "skills/quick_reference_v2_may2026.md"
+      }
+    }
+  },
+  "settings": {
+    "editor": {
+      "formatOnSave": true,
+      "defaultFormatter": "prettier",
+      "tabSize": 2
+    },
+    "terminal": {
+      "scrollback": 1000
+    },
+    "search": {
+      "followSymlinks": false,
+      "exclude": [
+        "**/node_modules",
+        "**/.git",
+        "**/__pycache__"
+      ]
+    }
+  },
+  "dependencies": {
+    "claude-code": "^4.5.0",
+    "claude-skills": "^1.0.0"
+  }
+}

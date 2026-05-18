@@ -1,11 +1,33 @@
 ---
-title: 願景板（Vision Board）2026
+title: 願景板（Vision Board）2026-2030
 type: vision
-updated: 2026-03-12
-tags: [vision, mandala, krystal, goals, 2026]
+updated: 2026-05-17
+tags: [vision, mandala, krystal, goals, 2026, 2030, soul-system]
 ---
 
-# 願景板（Vision Board）2026
+# 願景板（Vision Board）2026-2030
+
+## Krystal Soul & System 2030
+
+> **MY LIFE · MY CHOICE · MY CREATION**
+> 選擇權 · 自由 · 創造
+
+![Krystal Soul & System 2030](assets/krystal_soul_system_2030.png)
+
+| 我的價值觀 | 我的靈魂 | 我的自由 |
+|:---:|:---:|:---:|
+| 自由選擇 | 靈魂覺醒 | 財務自由 |
+| 內在穩定 | 內在穩定 | 時間自由 |
+| 財務自主 | 愛自己 | 資源自主 |
+| 持續成長 | 相信宇宙的安排 | 創造被動收入 |
+| 深度連結 | | 選擇想要的生活 |
+| 影響世界 | | |
+
+**身份**：Quantitative Trader · Soul Aligned · Financial Freedom · Global Citizen
+
+**五大支柱**：Trading 量化交易策略系統 · Lifestyle 品味生活質感體驗 · Travel 世界旅居文化探索 · Healing 靈性成長身心平衡 · Impact 影響他人回饋世界
+
+---
 
 > [!QUOTE]
 > 我不再靠意志力死撐，而是學會傾聽靈魂。

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://claude.ai/schema/skill-manifest.json",
+  "version": "1.0",
+  "metadata": {
+    "name": "Krystal Skills Registry",
+    "description": "Krystal 的決策框架和系統管理 Skill 集合",
+    "author": "Krystal",
+    "version": "1.0.0",
+    "lastUpdated": "2026-05-17",
+    "skillsPath": "./"
+  },
+  "skills": [
+    {
+      "id": "strategy-reflection",
+      "command": "strategy-reflection",
+      "title": "策略反思夥伴",
+      "description": "Krystal 的策略反思夥伴 — 8 個鏡頭決策框架（交易員+哲學家+PM+自媒體）",
+      "longDescription": "核心決策框架，包含 8 個思維鏡頭、禁止行為清單、使用流程和應用案例。適用於所有重大決策分析。",
+      "category": "decision-making",
+      "tags": ["決策", "分析", "框架", "投資", "人生規劃", "交易", "自媒體"],
+      "icon": "🧠",
+      "file": "krystal_strategy_reflection_partner.md",
+      "triggerPatterns": [
+        "分析決策",
+        "用八鏡頭",
+        "策略反思",
+        "決策框架",
+        "評估想法"
+      ],
+      "keywords": ["決策", "分析", "8鏡頭", "交易員", "哲學家", "PM", "自媒體"],
+      "usage": "當需要從多個維度深度分析決策時使用。自動按 8 個鏡頭逐一檢查，給出綜合建議。",
+      "examples": [
+        "/strategy-reflection 我想評估開始做自媒體課程",
+        "/strategy-reflection 這個交易策略值得試嗎？",
+        "/strategy-reflection 要不要辭職全職交易？"
+      ],
+      "enabled": true,
+      "version": "1.0"
+    },
+    {
+      "id": "daily-check",
+      "command": "daily-check",
+      "title": "日程檢查",
+      "description": "四重身份日程系統 — 交易 40% + PM 35% + 個人 10% + 自媒 5%",
+      "longDescription": "快速查詢「現在應該做什麼」。提供每日時程表、週特殊日期規則、身份切換指南、衝突解決方案。",
+      "category": "schedule-management",
+      "tags": ["日程", "時間管理", "四重身份", "優先級", "時段"],
+      "icon": "⏰",
+      "file": "four_identities_daily_schedule.md",
+      "triggerPatterns": [
+        "現在應該做",
+        "檢查日程",
+        "時段查詢",
+        "身份切換",
+        "今天時程"
+      ],
+      "keywords": ["日程", "時間", "身份", "優先級", "時段", "檢查"],
+      "usage": "任何時候想知道「現在應該做什麼」時使用。自動查詢當前時段的工作內容。",
+      "examples": [
+        "/daily-check 現在是 14:35，我要做什麼？",
+        "/daily-check",
+        "/daily-check 檢查今天的優先級"
+      ],
+      "enabled": true,
+      "version": "1.0"
+    },
+    {
+      "id": "self-media-strategy",
+      "command": "self-media-strategy",
+      "title": "自媒體戰略",
+      "description": "自媒體內容戰略 — 三支柱（交易系統+人生規劃+身心平衡）",
+      "longDescription": "規劃自媒體內容方向和變現路徑。包含三大支柱定位、TA 分析、痛點驅動、內容日曆、變現時線。",
+      "category": "content-strategy",
+      "tags": ["自媒體", "內容", "變現", "TA分析", "策略", "課程", "社群"],
+      "icon": "💰",
+      "file": "self_media_content_strategy.md",
+      "triggerPatterns": [
+        "自媒體",
+        "內容戰略",
+        "變現路徑",
+        "TA分析",
+        "課程規劃"
+      ],
+      "keywords": ["自媒體", "內容", "變現", "課程", "TA", "社群", "KOL"],
+      "usage": "用於規劃自媒體內容方向和商業模式。分析三支柱內容、TA 痛點、變現時機。",
+      "examples": [
+        "/self-media-strategy 自媒體內容應該怎麼規劃？",
+        "/self-media-strategy 什麼時候應該開始做課程？",
+        "/self-media-strategy TA分析"
+      ],
+      "enabled": true,
+      "version": "1.0"
+    },
+    {
+      "id": "quick-ref",
+      "command": "quick-ref",
+      "title": "快速參考卡",
+      "description": "快速參考卡 v2.0 — 3 秒內快速查閱",
+      "longDescription": "包含時段快查、8 鏡頭檢查表、禁止行為清單、食物清單、交易進場條件、3-6-12 月檢查點。",
+      "category": "quick-reference",
+      "tags": ["快速參考", "檢查清單", "禁止行為", "健康", "交易", "食物"],
+      "icon": "⚡",
+      "file": "quick_reference_v2_may2026.md",
+      "triggerPatterns": [
+        "快速參考",
+        "快查",
+        "禁止行為",
+        "食物清單",
+        "進場條件"
+      ],
+      "keywords": ["快速參考", "檢查", "禁止", "清單", "快查"],
+      "usage": "需要快速查閱時使用。3 秒內找到答案。",
+      "examples": [
+        "/quick-ref",
+        "/quick-ref 禁止行為",
+        "/quick-ref 低FODMAP食物"
+      ],
+      "enabled": true,
+      "version": "1.0"
+    }
+  ],
+  "skillGroups": {
+    "decision": {
+      "name": "決策與分析",
+      "description": "用於決策分析的 Skills",
+      "skills": ["strategy-reflection"]
+    },
+    "productivity": {
+      "name": "生產力與時間管理",
+      "description": "用於時間管理和日程檢查的 Skills",
+      "skills": ["daily-check"]
+    },
+    "content": {
+      "name": "內容與創作",
+      "description": "用於內容戰略和自媒體的 Skills",
+      "skills": ["self-media-strategy"]
+    },
+    "reference": {
+      "name": "快速參考",
+      "description": "快速查閱和檢查清單",
+      "skills": ["quick-ref"]
+    }
+  },
+  "settings": {
+    "autoActivate": true,
+    "showInCommandPalette": true,
+    "enableKeyboardShortcuts": true,
+    "defaultCategory": "decision"
+  }
+}
