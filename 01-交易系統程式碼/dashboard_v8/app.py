@@ -564,8 +564,19 @@ def sync_from_google_sheets():
         new_positions = [dict(r) for r in c.fetchall()]
         conn.close()
 
-        closed = _detect_closed_positions(old_positions, new_positions)
+        # AUTO_DETECT_CLOSE 預設關閉（2026-05-18 暫停：重複記帳 bug 待修）
+        # 啟用方式：環境變數 AUTO_DETECT_CLOSE=1
         auto_closed = []
+        if os.environ.get('AUTO_DETECT_CLOSE', '0') != '1':
+            print("ℹ️ [C] AUTO_DETECT_CLOSE 已停用，跳過自動平倉偵測")
+            return {
+                'status': 'success',
+                'count': count,
+                'auto_closed': auto_closed,
+                'timestamp': datetime.now().isoformat()
+            }
+
+        closed = _detect_closed_positions(old_positions, new_positions)
         today = datetime.now().strftime('%Y-%m-%d')
 
         for pos in closed:
@@ -2696,6 +2707,30 @@ def api_performance():
                 'period_end':     last['date'],
                 'cash_flow_total': round(total_cf, 0),
             })
+
+            # MDD（最大回撤）：對「扣除累積出入金後的等價市值」計算
+            # adjusted_mv[i] = mv[i] - 累積出入金到第 i 天，這樣才不會把入金算成獲利
+            cum_cf = 0.0
+            peak = None
+            mdd_pct = 0.0
+            mdd_date = None
+            mdd_peak_date = None
+            cur_peak_date = first['date']
+            for s in snaps:
+                cum_cf += float(s.get('cash_flow_twd') or 0)
+                adj_mv = float(s['total_mv_twd']) - cum_cf
+                if peak is None or adj_mv > peak:
+                    peak = adj_mv
+                    cur_peak_date = s['date']
+                if peak and peak > 0:
+                    dd = (adj_mv - peak) / peak * 100  # 負值或 0
+                    if dd < mdd_pct:
+                        mdd_pct = dd
+                        mdd_date = s['date']
+                        mdd_peak_date = cur_peak_date
+            ret['mdd_pct'] = round(mdd_pct, 2)
+            ret['mdd_date'] = mdd_date
+            ret['mdd_peak_date'] = mdd_peak_date
 
             # 同期 0050 報酬（用 TWD 帳戶當基準參考）
             try:

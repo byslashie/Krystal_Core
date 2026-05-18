@@ -2182,7 +2182,7 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
         <span><span style="color:var(--yellow);font-weight:700">⚠ 真實但有警告</span> — 樣本不足或計算有限制</span>
         <span><span style="color:var(--red);font-weight:700">🔴 示範資料</span> — 寫死的 demo，尚未串接真實資料</span>
       </div>
-      <div class="kpi-grid kpi-grid-4">
+      <div class="kpi-grid kpi-grid-5">
         <div class="kpi-card" style="border-left:3px solid var(--green)">
           <div class="kpi-label">
             <span style="color:var(--green);font-weight:700">✓</span> 累積報酬
@@ -2198,6 +2198,14 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
           </div>
           <div class="kpi-val blue" id="kp-bench">--</div>
           <div class="kpi-sub" id="kp-bench-sub">--</div>
+        </div>
+        <div class="kpi-card" style="border-left:3px solid var(--red)">
+          <div class="kpi-label">
+            <span style="color:var(--red);font-weight:700">⚠</span> 最大回撤 MDD
+            <span class="qbadge" id="qb-mdd" style="float:right;font-size:11px;cursor:help">🟡</span>
+          </div>
+          <div class="kpi-val red" id="kp-mdd">--</div>
+          <div class="kpi-sub" id="kp-mdd-sub">--</div>
         </div>
         <div class="kpi-card" style="border-left:3px solid var(--green)">
           <div class="kpi-label">
@@ -7249,6 +7257,28 @@ async function loadPerformance() {
       set('kp-bench-sub', '基準資料不足');
     }
 
+    // 2.5) 最大回撤 MDD（已扣出入金）
+    if (d.mdd_pct != null) {
+      // mdd_pct 是負值或 0
+      const mddColor = d.mdd_pct >= -5  ? 'var(--green)'
+                    : d.mdd_pct >= -15 ? 'var(--yellow)'
+                    :                    'var(--red)';
+      set('kp-mdd', `${d.mdd_pct.toFixed(2)}%`, mddColor);
+      if (d.mdd_pct < 0 && d.mdd_date) {
+        const peak = d.mdd_peak_date ? `${d.mdd_peak_date} → ` : '';
+        set('kp-mdd-sub', `${peak}${d.mdd_date}（自記錄以來）`);
+      } else {
+        set('kp-mdd-sub', '尚未發生回撤');
+      }
+      const mddBadge = document.getElementById('qb-mdd');
+      if (mddBadge) {
+        mddBadge.title = `最大回撤 = 帳戶市值（已扣出入金）相對歷史高點的最大跌幅\n基於 ${d.period_days || 0} 天市值快照\n\n標準：≥-5% 🟢 健康 / ≥-15% 🟡 中等 / <-15% 🔴 偏深\n\n注意：自記錄以來的單一最大回撤，不代表未來風險上限`;
+      }
+    } else {
+      set('kp-mdd', '--');
+      set('kp-mdd-sub', '資料不足');
+    }
+
     // 3) 勝率
     if (d.win_rate_pct != null) {
       set('kp-win', `${d.win_rate_pct.toFixed(1)}%`);
@@ -7337,6 +7367,7 @@ async function loadPerformance() {
     };
     updateBadge('qb-ret',   qRet, 'return');
     updateBadge('qb-bench', qRet, 'return');
+    updateBadge('qb-mdd',   qRet, 'return');
     updateBadge('qb-win',   qTr,  'trades');
     updateBadge('qb-pf',    qTr,  'trades');
 
