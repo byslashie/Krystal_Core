@@ -367,6 +367,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   letter-spacing:.08em;
 }
 #notes-toggle:hover{ background:hsl(20,80%,57%); color:white; }
+
+/* ── Presenter mode ── */
+#presenter-badge{
+  position:fixed; top:14px; right:20px; z-index:300;
+  background:#E8734A; color:white;
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  letter-spacing:.12em; padding:.35em .9em; border-radius:99px;
+  box-shadow:0 2px 8px rgba(232,115,74,.4);
+  display:none;
+}
+body.presenter-mode #presenter-badge{ display:block; }
+body.presenter-mode #notes-toggle{ display:none; }
+body.presenter-mode #notes-panel{
+  transform:translateY(0);
+  max-height:40vh;
+}
+body.presenter-mode #notes-close{ display:none; }
+#notes-footer{
+  padding:.5em 1.4em;
+  border-top:1px solid hsla(0,0%,100%,.08);
+  display:none;
+}
+/* footer only visible in presenter mode */
+body.presenter-mode #notes-panel #notes-footer{ display:block; }
+#open-presenter-btn{
+  background:none; border:1px solid hsl(20,80%,57%);
+  color:hsl(20,80%,57%); font-family:"JetBrains Mono",monospace;
+  font-size:10px; font-weight:700; letter-spacing:.08em;
+  padding:.3em .8em; border-radius:5px; cursor:pointer;
+}
+#open-presenter-btn:hover{ background:hsl(20,80%,57%); color:white; }
 </style>
 </head>
 <body>
@@ -387,20 +418,74 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
-<!-- ═══ SLIDE 02 — 今天議程 ═══ -->
+<!-- ═══ SLIDE 02 — 自我介紹 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner" style="flex-direction:row;gap:0;padding:0;">
+    <!-- 左側：橙色背景 + 名字 -->
+    <div style="width:36%;background:linear-gradient(160deg,hsl(20,80%,57%),hsl(16,76%,46%));display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2em 1.5em;gap:.6em;flex-shrink:0;">
+      <div style="font-family:'Outfit',sans-serif;font-size:2em;font-weight:900;color:white;line-height:1.1;text-align:center;">水晶<br/>KRYSTAL</div>
+      <div style="width:40px;height:3px;background:hsla(0,0%,100%,.5);border-radius:99px;"></div>
+      <div style="font-size:.78em;color:hsla(0,0%,100%,.9);text-align:center;line-height:1.6;">斜槓姐姐<br/>品牌創辦人</div>
+    </div>
+    <!-- 右側：介紹內容 -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2.5em 2.5em 2.5em 2em;gap:.75em;">
+      <div style="font-family:'Outfit',sans-serif;font-size:1.5em;font-weight:800;color:var(--navy);margin-bottom:.2em;">關於我</div>
+      <div style="display:flex;align-items:flex-start;gap:.7em;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--o500);margin-top:.45em;flex-shrink:0;"></div>
+        <div style="font-size:.9em;color:var(--g700);line-height:1.5;"><strong style="color:var(--navy);">背景</strong>｜大學資管系 · 研究所金融資訊所</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.7em;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--o500);margin-top:.45em;flex-shrink:0;"></div>
+        <div style="font-size:.9em;color:var(--g700);line-height:1.5;"><strong style="color:var(--navy);">現任</strong>｜看盤軟體產品專案經理（PM）</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.7em;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--o500);margin-top:.45em;flex-shrink:0;"></div>
+        <div style="font-size:.9em;color:var(--g700);line-height:1.5;"><strong style="color:var(--navy);">金融證照</strong>｜證券商高業 · 期貨業務員 · 投信投顧業務員</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.7em;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--o500);margin-top:.45em;flex-shrink:0;"></div>
+        <div style="font-size:.9em;color:var(--g700);line-height:1.5;"><strong style="color:var(--navy);">量化交易</strong>｜使用 XQ 建構量化策略 · AI 輔助策略開發</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.7em;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--o500);margin-top:.45em;flex-shrink:0;"></div>
+        <div style="font-size:.9em;color:var(--g700);line-height:1.5;"><strong style="color:var(--navy);">自媒體</strong>｜斜槓姐姐創辦人 · byslashie.com · Threads @byslashie</div>
+      </div>
+      <div style="margin-top:.4em;background:var(--o100);border-left:4px solid var(--o500);border-radius:8px;padding:.55em 1em;font-size:.82em;color:var(--o700);font-weight:600;">
+        「不會寫程式的我，用 AI 把量化策略變成可執行的系統」
+      </div>
+    </div>
+  </div>
+  <div class="pagenum">03 / 23</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 03 — 今天議程 ═══ -->
 <div class="slide s-content">
   <div class="s-inner">
     <div class="accent-line"></div>
     <div class="tag">TODAY'S AGENDA</div>
     <div class="h1">今天你會學到什麼</div>
-    <div style="flex:1; display:flex; flex-direction:column; gap:.55em; margin-top:.3em;">
-      <div class="step-row"><div class="step-num">1</div><div class="step-text">以前建構策略的流程與痛點</div></div>
-      <div class="step-row"><div class="step-num">2</div><div class="step-text">用 Perplexity + 論文找到有根據的因子</div></div>
-      <div class="step-row"><div class="step-num">3</div><div class="step-text">Claude Skill 一步步釐清目標、建立 XS 策略</div></div>
-      <div class="step-row"><div class="step-num">4</div><div class="step-text">XQ 回測 → 結果存進 HTML 視覺化分析</div></div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:.5em .8em;margin-top:.3em;">
+      <div class="step-row" style="align-items:flex-start;">
+        <div class="step-num">1</div>
+        <div><div class="step-text" style="font-weight:700;">為什麼要用 AI + XQ？</div><div style="font-size:.82em;color:var(--g400);margin-top:.15em;">兩者各有不可取代的優勢，缺一不可</div></div>
+      </div>
+      <div class="step-row" style="align-items:flex-start;">
+        <div class="step-num">2</div>
+        <div><div class="step-text" style="font-weight:700;">用論文找有根據的交易因子</div><div style="font-size:.82em;color:var(--g400);margin-top:.15em;">Perplexity 搜尋學術驗證，不靠感覺選指標</div></div>
+      </div>
+      <div class="step-row" style="align-items:flex-start;">
+        <div class="step-num">3</div>
+        <div><div class="step-text" style="font-weight:700;">Claude Skill 建立策略邏輯</div><div style="font-size:.82em;color:var(--g400);margin-top:.15em;">一問一答，把你的想法轉成 XScript 框架</div></div>
+      </div>
+      <div class="step-row" style="align-items:flex-start;">
+        <div class="step-num">4</div>
+        <div><div class="step-text" style="font-weight:700;">XQ 實作回測 + 視覺化報告</div><div style="font-size:.82em;color:var(--g400);margin-top:.15em;">把策略跑起來、看懂數字、知道下一步怎麼優化</div></div>
+      </div>
     </div>
+    <div class="hint-box" style="margin-top:.5em;">兩小時後你會帶走：完整流程 SOP + 三個可直接使用的工具 🎁</div>
   </div>
-  <div class="pagenum">02 / 19</div>
+  <div class="pagenum">02 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -410,23 +495,63 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     <div class="accent-line"></div>
     <div class="tag">BEFORE · 舊方法</div>
     <div class="h1">以前建構策略怎麼做？</div>
-    <div class="compare-grid" style="margin-top:.4em;">
-      <div class="compare-card bad">
-        <div class="ch">❌ 舊流程</div>
-        <ul>
-          <li>有想法 → 憑感覺量化</li>
-          <li>隨便找指標回測</li>
-          <li>實單進去就曝虧</li>
-          <li>不知道哪裡改起</li>
-        </ul>
+    <!-- 舊流程：單排 + 時間標籤 -->
+    <style>
+    .old-flow{display:flex;align-items:flex-start;gap:0;width:100%;margin-top:.7em;}
+    .onode{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.3em;}
+    .onode-box{width:100%;background:hsl(35,20%,92%);border:2px solid hsl(35,20%,80%);border-radius:12px;padding:.65em .5em;display:flex;flex-direction:column;align-items:center;gap:.2em;}
+    .onode-icon{font-size:1.5em;}
+    .onode-label{font-family:'Outfit',sans-serif;font-weight:700;font-size:.88em;color:var(--navy);}
+    .onode-time{display:inline-block;margin-top:.3em;background:hsl(38,90%,92%);border:1px solid hsl(38,80%,72%);border-radius:99px;padding:.1em .55em;font-size:.65em;font-weight:700;color:hsl(38,80%,35%);white-space:nowrap;}
+    .oarr{display:flex;align-items:center;padding:0 .2em;color:hsl(35,20%,65%);font-size:1.1em;flex-shrink:0;margin-top:1.2em;}
+    </style>
+    <div class="old-flow">
+      <div class="onode">
+        <div class="onode-box">
+          <div class="onode-icon">💡</div>
+          <div class="onode-label">有想法</div>
+          <div class="onode-time">即時</div>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.6em;">
-        <div style="background:hsl(4,60%,96%);border-left:3px solid var(--pos);border-radius:8px;padding:.7em 1em;font-size:.9em;color:var(--pos);font-weight:600;">耗時費力 · 靠感覺 · 沒有學術根據</div>
-        <div style="background:var(--g100);border-radius:8px;padding:.7em 1em;font-size:.85em;color:var(--g500);">→ 問題不是你不夠努力，是根基就不對</div>
+      <div class="oarr">▶</div>
+      <div class="onode">
+        <div class="onode-box">
+          <div class="onode-icon">🔍</div>
+          <div class="onode-label">找資料 / 找因子</div>
+          <div class="onode-time">數天 ~ 數週</div>
+        </div>
+      </div>
+      <div class="oarr">▶</div>
+      <div class="onode">
+        <div class="onode-box">
+          <div class="onode-icon">⌨️</div>
+          <div class="onode-label">手寫 XScript</div>
+          <div class="onode-time">數天 ~ 數週</div>
+        </div>
+      </div>
+      <div class="oarr">▶</div>
+      <div class="onode">
+        <div class="onode-box">
+          <div class="onode-icon">🧪</div>
+          <div class="onode-label">XQ 回測</div>
+          <div class="onode-time">幾小時</div>
+        </div>
+      </div>
+      <div class="oarr">▶</div>
+      <div class="onode">
+        <div class="onode-box" style="border-color:hsl(38,80%,65%);background:hsl(38,80%,93%);">
+          <div class="onode-icon">🔁</div>
+          <div class="onode-label">看不懂結果<br/>重頭再來</div>
+          <div class="onode-time" style="background:hsl(4,60%,93%);border-color:hsl(4,60%,75%);color:var(--pos);">反覆循環</div>
+        </div>
       </div>
     </div>
+    <!-- 結論 -->
+    <div style="margin-top:.8em;background:hsl(38,80%,93%);border-left:4px solid hsl(38,80%,55%);border-radius:10px;padding:.65em 1.2em;font-size:.9em;color:var(--navy);font-weight:600;">
+      光是「找資料 → 寫出第一版策略」就要花好幾週——<span style="color:hsl(38,80%,35%);">AI 讓這段壓縮到幾小時</span>
+    </div>
   </div>
-  <div class="pagenum">03 / 19</div>
+  <div class="pagenum">04 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -436,14 +561,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     <div class="accent-line"></div>
     <div class="tag">NOW WITH AI · 新流程</div>
     <div class="h1">加入 AI 之後</div>
-    <div class="process-row" style="margin-bottom:.6em;">
+    <div class="process-row" style="margin-bottom:.3em;">
       <span class="proc-step">有想法</span><span class="proc-arrow">▶</span>
-      <span class="proc-step">Claude Skill</span><span class="proc-arrow">▶</span>
-      <span class="proc-step">Perplexity 找論文</span><span class="proc-arrow">▶</span>
-      <span class="proc-step">Claude 寫 XS</span><span class="proc-arrow">▶</span>
-      <span class="proc-step">XQ 回測</span><span class="proc-arrow">▶</span>
-      <span class="proc-step">AI 解讀報告</span>
+      <span class="proc-step" style="display:flex;flex-direction:column;gap:.1em;align-items:center;">
+        <span>AI 釐清邏輯</span>
+        <span style="font-size:.65em;color:var(--g400);font-weight:400;">Claude / ChatGPT / Gemini</span>
+      </span><span class="proc-arrow">▶</span>
+      <span class="proc-step" style="display:flex;flex-direction:column;gap:.1em;align-items:center;">
+        <span>AI 找學術根據</span>
+        <span style="font-size:.65em;color:var(--g400);font-weight:400;">Perplexity / ChatGPT Search</span>
+      </span><span class="proc-arrow">▶</span>
+      <span class="proc-step" style="display:flex;flex-direction:column;gap:.1em;align-items:center;">
+        <span>AI 寫 XScript</span>
+        <span style="font-size:.65em;color:var(--g400);font-weight:400;">Claude / ChatGPT / Copilot</span>
+      </span><span class="proc-arrow">▶</span>
+      <span class="proc-step" style="background:var(--g200);color:var(--g500);">XQ 回測</span><span class="proc-arrow">▶</span>
+      <span class="proc-step" style="display:flex;flex-direction:column;gap:.1em;align-items:center;">
+        <span>AI 解讀報告</span>
+        <span style="font-size:.65em;color:var(--g400);font-weight:400;">任何 AI 都行</span>
+      </span>
     </div>
+    <div style="font-size:.75em;color:var(--g400);margin-bottom:.4em;text-align:center;">※ 今天示範用 Claude + Perplexity，但概念適用所有 AI 工具</div>
     <div style="flex:1;display:flex;flex-direction:column;gap:.5em;margin-top:.3em;">
       <div class="step-row"><div class="step-num">✓</div><div class="step-text">每個環節 AI 輔助，有論文根據不是憑感覺</div></div>
       <div class="step-row"><div class="step-num">✓</div><div class="step-text">省去 80% 試錯時間</div></div>
@@ -451,11 +589,50 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
     <div class="hint-box">今天直播：帶你把這個流程完整跑一遍 🎯</div>
   </div>
-  <div class="pagenum">04 / 19</div>
+  <div class="pagenum">05 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
-<!-- ═══ SLIDE 05 — 章節 01 ═══ -->
+<!-- ═══ SLIDE 05 — AI vs XQ 各司其職 ═══ -->
+<div class="slide s-content">
+  <div class="s-inner">
+    <div class="accent-line"></div>
+    <div class="tag">WHY XQ · 工具定位</div>
+    <div class="h1">AI 取代不了 XQ 的原因</div>
+    <div style="flex:1;display:flex;gap:.8em;margin-top:.4em;min-height:0;">
+      <!-- 左：AI 能做的 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:.4em;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.82em;color:var(--o600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.1em;">🤖 AI 擅長的</div>
+        <div class="step-row" style="background:hsl(187,30%,94%);border-color:hsl(187,40%,80%);"><div class="step-num" style="background:hsl(187,72%,56%);color:white;">✓</div><div class="step-text">從學術論文找到有根據的因子</div></div>
+        <div class="step-row" style="background:hsl(187,30%,94%);border-color:hsl(187,40%,80%);"><div class="step-num" style="background:hsl(187,72%,56%);color:white;">✓</div><div class="step-text">把邏輯轉化為 XScript 偽代碼</div></div>
+        <div class="step-row" style="background:hsl(187,30%,94%);border-color:hsl(187,40%,80%);"><div class="step-num" style="background:hsl(187,72%,56%);color:white;">✓</div><div class="step-text">解讀回測報告、提出優化建議</div></div>
+        <div class="step-row" style="background:hsl(187,30%,94%);border-color:hsl(187,40%,80%);"><div class="step-num" style="background:hsl(187,72%,56%);color:white;">✓</div><div class="step-text">整理思路、加速策略建構流程</div></div>
+      </div>
+      <!-- 中：但是 -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3em;padding:0 .4em;">
+        <div style="width:2px;flex:1;background:hsl(35,20%,82%);"></div>
+        <div style="font-family:'Outfit',sans-serif;font-weight:900;font-size:1.1em;color:var(--g400);white-space:nowrap;">但</div>
+        <div style="width:2px;flex:1;background:hsl(35,20%,82%);"></div>
+      </div>
+      <!-- 右：XQ 獨有 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:.4em;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.82em;color:var(--navy);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.1em;">📊 XQ 獨有的</div>
+        <div class="step-row"><div class="step-num">🔒</div><div class="step-text"><strong>法人籌碼</strong>｜外資、投信、自營商即時資料</div></div>
+        <div class="step-row"><div class="step-num">🔒</div><div class="step-text"><strong>財報細項</strong>｜季報、月營收、存貨周轉率</div></div>
+        <div class="step-row"><div class="step-num">🔒</div><div class="step-text"><strong>即時報價</strong>｜Tick 級別 K 線、盤中選股</div></div>
+        <div class="step-row"><div class="step-num">🔒</div><div class="step-text"><strong>回測引擎</strong>｜滑價、手續費、實際交易模擬</div></div>
+      </div>
+    </div>
+    <!-- 結論 -->
+    <div style="margin-top:.6em;background:linear-gradient(135deg,hsl(20,80%,57%),hsl(341,100%,71%));border-radius:10px;padding:.65em 1.2em;font-family:'Outfit',sans-serif;font-weight:700;font-size:.95em;color:white;text-align:center;">
+      AI 負責「想清楚」· XQ 負責「跑出來」· 兩者缺一不可
+    </div>
+  </div>
+  <div class="pagenum">06 / 23</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 06 — 章節 01 ═══ -->
 <div class="slide s-divider">
   <div class="s-inner" style="justify-content:center;">
     <div class="num">01</div>
@@ -493,7 +670,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       </div>
     </div>
   </div>
-  <div class="pagenum">06 / 19</div>
+  <div class="pagenum">08 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -527,7 +704,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
     <div class="hint-box">完全免費，人人可用，今天 DEMO 用這個 ✅</div>
   </div>
-  <div class="pagenum">08 / 19</div>
+  <div class="pagenum">10 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -535,25 +712,58 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 <div class="slide s-content">
   <div class="s-inner">
     <div class="accent-line"></div>
-    <div class="tag">ADVANCED · 我自己用的方式</div>
-    <div class="h1">MCP：Consensus + Scholar Gateway</div>
-    <div class="tool-grid" style="margin-top:.4em;">
-      <div class="tool-card orange">
-        <div class="tc-name">Consensus</div>
-        <div class="tc-sub">找實證結論</div>
-        <div class="tc-desc">輸入研究問題<br/>→ 直接輸出有 / 無支持</div>
+    <div class="tag">ADVANCED · Claude Pro Connectors</div>
+    <div class="h1">接上學術資料庫，直接在 Claude 找論文</div>
+    <div style="flex:1;display:flex;gap:.7em;margin-top:.4em;min-height:0;">
+      <!-- 左：Connector 比較 -->
+      <div style="flex:1.2;display:flex;flex-direction:column;gap:.4em;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.78em;color:var(--o600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.1em;">金融 / 量化因子研究適用</div>
+        <div style="display:flex;gap:.4em;align-items:flex-start;background:hsl(20,60%,96%);border:1.5px solid hsl(20,60%,82%);border-radius:9px;padding:.55em .8em;">
+          <div style="font-size:1.3em;flex-shrink:0;">🥇</div>
+          <div>
+            <div style="font-weight:700;font-size:.85em;color:var(--navy);">Consensus</div>
+            <div style="font-size:.72em;color:var(--g500);margin-top:.1em;">跨資料庫，有 economics / finance 論文<br/>直接問「動能因子有學術根據嗎？」→ 給你結論</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.4em;align-items:flex-start;background:var(--g100);border:1.5px solid var(--g200);border-radius:9px;padding:.55em .8em;">
+          <div style="font-size:1.3em;flex-shrink:0;">🥈</div>
+          <div>
+            <div style="font-weight:700;font-size:.85em;color:var(--navy);">Scholar Gateway</div>
+            <div style="font-size:.72em;color:var(--g500);margin-top:.1em;">Wiley 旗下期刊，含 Journal of Finance<br/>有 DOI 連結，可驗證來源</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.4em;align-items:flex-start;background:var(--g100);border:1.5px solid var(--g200);border-radius:9px;padding:.55em .8em;">
+          <div style="font-size:1.3em;flex-shrink:0;">⚠️</div>
+          <div>
+            <div style="font-weight:700;font-size:.85em;color:var(--navy);">The Economist / SSRN</div>
+            <div style="font-size:.72em;color:var(--g500);margin-top:.1em;">目前無直接 Connector<br/>用 Perplexity 或 Google Scholar 補足</div>
+          </div>
+        </div>
       </div>
-      <div class="tool-card navy">
-        <div class="tc-name">Scholar Gateway</div>
-        <div class="tc-sub">語意搜尋</div>
-        <div class="tc-desc">找最新文獻<br/>→ 多角度交叉驗證</div>
+      <!-- 右：建議工作流 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:.4em;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.78em;color:var(--o600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.1em;">建議工作流</div>
+        <div style="flex:1;background:var(--g100);border:1.5px solid var(--g200);border-radius:10px;padding:.8em 1em;display:flex;flex-direction:column;gap:.5em;justify-content:center;">
+          <div style="display:flex;gap:.5em;align-items:center;">
+            <div style="width:1.5em;height:1.5em;border-radius:4px;background:var(--o500);color:white;font-size:.7em;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+            <div style="font-size:.78em;color:var(--g700);">Claude + <span style="color:var(--o600);font-weight:600;">Consensus</span> 問「因子有根據嗎？」</div>
+          </div>
+          <div style="display:flex;gap:.5em;align-items:center;">
+            <div style="width:1.5em;height:1.5em;border-radius:4px;background:var(--o500);color:white;font-size:.7em;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+            <div style="font-size:.78em;color:var(--g700);">拿到論文名 → <span style="color:hsl(187,55%,38%);font-weight:600;">Perplexity / Google Scholar</span> 撈 PDF</div>
+          </div>
+          <div style="display:flex;gap:.5em;align-items:center;">
+            <div style="width:1.5em;height:1.5em;border-radius:4px;background:var(--o500);color:white;font-size:.7em;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+            <div style="font-size:.78em;color:var(--g700);">上傳 PDF 到 Project Files → Claude 讀全文</div>
+          </div>
+        </div>
+        <div style="background:hsl(38,80%,93%);border-left:3px solid hsl(38,80%,55%);border-radius:8px;padding:.45em .8em;font-size:.72em;color:var(--navy);">
+          需要 Claude Pro · 今天先用 Perplexity，效果一樣好
+        </div>
       </div>
-    </div>
-    <div style="background:var(--g100);border-radius:8px;padding:.7em 1em;margin-top:.8em;font-size:.88em;color:var(--g500);font-style:italic;">
-      需設定 MCP Server，適合進階使用者；今天先用 Perplexity，效果一樣好
     </div>
   </div>
-  <div class="pagenum">09 / 19</div>
+  <div class="pagenum">11 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -572,17 +782,68 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 <div class="slide s-content">
   <div class="s-inner">
     <div class="accent-line"></div>
-    <div class="tag">THE SKILL</div>
-    <div class="h1">什麼是 Claude Skill？</div>
-    <p style="font-size:.95em;color:var(--g700);margin-bottom:.8em;line-height:1.6;">一段 Prompt，貼進 Claude 對話框就能用。<br/>不需要 Claude Pro、不需要設定，開新對話貼上就是你的策略顧問。</p>
-    <div style="flex:1;display:flex;flex-direction:column;gap:.5em;">
-      <div class="step-row"><div class="step-num">1</div><div class="step-text">打開 claude.ai → 開新對話</div></div>
-      <div class="step-row"><div class="step-num">2</div><div class="step-text">把 Skill Prompt 全選複製，貼進去</div></div>
-      <div class="step-row"><div class="step-num">3</div><div class="step-text">Claude 會問你策略方向 → 一步步建立邏輯</div></div>
+    <div class="tag">CLAUDE PROJECT · 設定一次，永久可用</div>
+    <div class="h1" style="margin-bottom:.4em;">建一個 Project，就是你的策略顧問</div>
+    <!-- 兩欄 Demo -->
+    <div style="flex:1;display:flex;gap:.8em;min-height:0;">
+      <!-- 左欄：設定步驟 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:.3em;min-width:0;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.8em;color:var(--o600);text-transform:uppercase;letter-spacing:.05em;">① 怎麼開始用</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:.5em;justify-content:center;">
+          <!-- 免費 -->
+          <div style="background:hsl(120,35%,94%);border:2px solid hsl(120,40%,72%);border-radius:10px;padding:.65em .9em;">
+            <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:.88em;color:hsl(120,45%,28%);margin-bottom:.3em;">✅ 免費帳號就能用（今天 DEMO 這個）</div>
+            <div style="font-size:.78em;color:var(--g700);line-height:1.6;">
+              開新對話 → Prompt 全選貼進去 → 送出<br/>
+              <span style="color:var(--g400);">每次對話貼一次，不需要任何付費方案</span>
+            </div>
+          </div>
+          <!-- Pro -->
+          <div style="background:hsl(222,25%,94%);border:2px solid hsl(222,30%,75%);border-radius:10px;padding:.65em .9em;">
+            <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:.88em;color:var(--navy);margin-bottom:.3em;">⭐ Claude Pro — 進階用法</div>
+            <div style="font-size:.78em;color:var(--g700);line-height:1.6;">
+              建 Project → Instructions 貼入 → 永久套用<br/>
+              + 上傳 XScript 腳本讓 Claude 直接改程式碼
+            </div>
+          </div>
+          <div style="font-size:.7em;color:var(--g400);text-align:center;margin-top:.1em;">各人用自己帳號 · 各燒各的 token</div>
+        </div>
+      </div>
+      <!-- 右欄：Claude 回應 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:.3em;min-width:0;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.8em;color:var(--o600);text-transform:uppercase;letter-spacing:.05em;">② Claude 的回應</div>
+        <div style="flex:1;background:hsl(35,30%,97%);border:1.5px solid hsl(35,20%,85%);border-radius:10px;padding:.8em 1em;display:flex;flex-direction:column;gap:.6em;">
+          <!-- Claude 訊息泡泡 -->
+          <div style="display:flex;gap:.5em;align-items:flex-start;">
+            <div style="width:1.8em;height:1.8em;border-radius:50%;background:linear-gradient(135deg,hsl(262,60%,50%),hsl(220,60%,45%));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7em;color:white;font-weight:700;">C</div>
+            <div style="background:white;border:1px solid hsl(35,20%,88%);border-radius:4px 12px 12px 12px;padding:.6em .8em;font-size:.78em;color:var(--navy);line-height:1.6;flex:1;">
+              嗨！我是你的量化策略建構夥伴 👋<br/>
+              我們來一步一步打造你自己的選股策略。<br/><br/>
+              <strong>首先，你想操作：</strong><br/>
+              台股個股、台股 ETF、還是美股呢？
+            </div>
+          </div>
+          <!-- 使用者回覆 -->
+          <div style="display:flex;gap:.5em;align-items:flex-start;justify-content:flex-end;">
+            <div style="background:hsl(20,80%,57%);border-radius:12px 4px 12px 12px;padding:.5em .8em;font-size:.78em;color:white;line-height:1.5;max-width:80%;">
+              台股個股，週線波段
+            </div>
+            <div style="width:1.8em;height:1.8em;border-radius:50%;background:hsl(35,40%,80%);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:700;color:var(--navy);">你</div>
+          </div>
+          <!-- Claude 繼續 -->
+          <div style="display:flex;gap:.5em;align-items:flex-start;">
+            <div style="width:1.8em;height:1.8em;border-radius:50%;background:linear-gradient(135deg,hsl(262,60%,50%),hsl(220,60%,45%));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7em;color:white;font-weight:700;">C</div>
+            <div style="background:white;border:1px solid hsl(35,20%,88%);border-radius:4px 12px 12px 12px;padding:.6em .8em;font-size:.78em;color:var(--navy);line-height:1.6;flex:1;">
+              好！週線波段台股，我建議考慮<br/>
+              <strong style="color:hsl(20,80%,45%);">動能因子 + 籌碼因子</strong>的組合…<br/>
+              <span style="color:var(--g400);">（根據你的偏好推薦學術論文）</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="cta-bar">今天直播結束後，填表就送你這個 Skill！</div>
   </div>
-  <div class="pagenum">11 / 19</div>
+  <div class="pagenum">13 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -603,7 +864,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       → 收到答案後，Skill 輸出 XS 策略框架（基本面 + 籌碼面 + 技術面三層）
     </div>
   </div>
-  <div class="pagenum">12 / 19</div>
+  <div class="pagenum">14 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -631,7 +892,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <div class="four-card"><div class="fc-num">04</div><div class="fc-label">執行回測，分析報告</div></div>
     </div>
   </div>
-  <div class="pagenum">14 / 19</div>
+  <div class="pagenum">16 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -639,18 +900,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 <div class="slide s-content">
   <div class="s-inner">
     <div class="accent-line"></div>
-    <div class="tag">RESULT · 因子 ETF 策略</div>
+    <div class="tag">RESULT · 三因子策略再優化</div>
     <div class="h1">5 年回測成績</div>
+    <div style="background:hsl(222,30%,95%);border-left:4px solid var(--navy);border-radius:8px;padding:.45em 1em;font-size:.8em;color:var(--navy);margin-bottom:.5em;">
+      延伸上次分享的三因子策略（動能 + 籌碼 + 基本面），今天用 AI 流程進一步優化
+    </div>
     <div class="stat-grid">
       <div class="stat-card pos">
-        <div class="s-lab">5年最大報酬</div>
+        <div class="s-lab">優化版 5 年報酬</div>
         <div class="s-num">+112.42%</div>
-        <div class="s-delta">優化版 · 3 因子</div>
+        <div class="s-delta">AI 輔助調參後</div>
       </div>
       <div class="stat-card warn">
-        <div class="s-lab">基礎版報酬</div>
+        <div class="s-lab">原始三因子版</div>
         <div class="s-num">+86.42%</div>
-        <div class="s-delta">3 因子基礎設定</div>
+        <div class="s-delta">上次分享的基礎版</div>
       </div>
       <div class="stat-card mute">
         <div class="s-lab">0050 同期</div>
@@ -658,11 +922,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <div class="s-delta">大盤對比基準</div>
       </div>
     </div>
-    <div style="font-size:.82em;color:var(--g400);margin-top:.8em;font-style:italic;">
-      2022 年下半年起逆轉領先大盤，2019–2022 年表現弱於 0050 · 詳見 byslashie.com/build-factor-etf-xq/
+    <div style="font-size:.78em;color:var(--g400);margin-top:.6em;font-style:italic;">
+      2022 年下半年起逆轉領先大盤 · 詳見 byslashie.com/build-factor-etf-xq/
     </div>
   </div>
-  <div class="pagenum">15 / 19</div>
+  <div class="pagenum">17 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -685,7 +949,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
     <div class="hint-box">視覺化報告一鍵生成，今天 DEMO 現場示範 📊</div>
   </div>
-  <div class="pagenum">16 / 19</div>
+  <div class="pagenum">18 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -705,7 +969,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
     <div class="hint-box" style="margin-top:.7em;">Claude 會給你策略診斷 + 3 個具體優化方向 💡</div>
   </div>
-  <div class="pagenum">17 / 19</div>
+  <div class="pagenum">19 / 23</div>
   <div class="watermark">斜槓姐姐 · @byslashie</div>
 </div>
 
@@ -751,10 +1015,60 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div class="watermark" style="color:hsla(0,0%,100%,.4);">斜槓姐姐 · @byslashie</div>
 </div>
 
+<!-- ═══ SLIDE 20 — Q&A ═══ -->
+<div class="slide s-content">
+  <div class="s-inner" style="align-items:center;justify-content:center;text-align:center;">
+    <div style="font-family:'Outfit',sans-serif;font-size:6em;font-weight:900;color:var(--navy);letter-spacing:-.04em;line-height:1;">Q & A</div>
+    <div style="width:80px;height:5px;background:var(--grad-warm);border-radius:99px;margin:1em auto;"></div>
+    <div style="font-size:1.1em;color:var(--g500);margin-bottom:1.5em;">有任何問題都可以問！</div>
+    <div style="background:var(--o100);border:2px solid var(--o500);border-radius:14px;padding:.8em 2em;display:inline-block;">
+      <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1em;color:var(--o600);">填寫問卷 + 索取講義</div>
+      <div style="font-size:.8em;color:var(--g500);margin-top:.3em;">電子報發送 · 請確認信箱</div>
+    </div>
+  </div>
+  <div class="pagenum">21 / 23</div>
+  <div class="watermark">斜槓姐姐 · @byslashie</div>
+</div>
+
+<!-- ═══ SLIDE 21 — 感謝頁 ═══ -->
+<div class="slide" style="background:
+  radial-gradient(ellipse at 22% 30%, hsla(20,80%,57%,.55), transparent 45%),
+  radial-gradient(ellipse at 78% 72%, hsla(341,100%,71%,.4), transparent 45%),
+  linear-gradient(135deg, hsl(222,60%,11%), hsl(218,60%,22%));
+  color:white; position:relative;">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(hsla(0,0%,100%,.04) 1px,transparent 1px),linear-gradient(90deg,hsla(0,0%,100%,.04) 1px,transparent 1px);background-size:6% 11%;"></div>
+  <div class="s-inner" style="position:relative;z-index:1;align-items:center;justify-content:center;text-align:center;">
+    <div style="font-family:'Outfit',sans-serif;font-size:3.5em;font-weight:900;color:white;margin-bottom:.3em;">🎉 感謝大家</div>
+    <div style="width:80px;height:4px;background:var(--grad-warm);border-radius:99px;margin:.5em auto 1.2em;"></div>
+    <!-- 三個 QR Code 佔位 -->
+    <div style="display:flex;gap:2em;justify-content:center;align-items:flex-start;margin-top:.5em;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.5em;">
+        <div style="width:130px;height:130px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.7em;color:var(--g500);">[ 電子報 QR ]</div>
+        <div style="font-size:.78em;color:hsla(0,0%,100%,.85);font-weight:600;">📧 電子報訂閱</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.5em;">
+        <div style="width:130px;height:130px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.7em;color:var(--g500);">[ Threads QR ]</div>
+        <div style="font-size:.78em;color:hsla(0,0%,100%,.85);font-weight:600;">🧵 Threads @byslashie</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.5em;">
+        <div style="width:130px;height:130px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.7em;color:var(--g500);">[ XQ 社群 QR ]</div>
+        <div style="font-size:.78em;color:hsla(0,0%,100%,.85);font-weight:600;">📊 XQ 量化交易社群</div>
+      </div>
+    </div>
+    <div style="margin-top:1.2em;font-size:.85em;color:hsla(0,0%,100%,.6);">斜槓姐姐XQ優惠碼：@sister</div>
+  </div>
+  <div class="footer-bar" style="color:hsla(0,0%,100%,.4);">
+    <span>byslashie.com</span>
+    <span>Threads @byslashie</span>
+  </div>
+</div>
+
 </div><!-- /deck -->
 
+<!-- Presenter badge -->
+<div id="presenter-badge">PRESENTER VIEW</div>
+
 <!-- Speaker Notes -->
-<button id="notes-toggle" onclick="toggleNotes()">📋 唸稿 N</button>
 <div id="notes-panel">
   <div id="notes-header">
     <strong>SPEAKER NOTES</strong>
@@ -762,6 +1076,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     <button id="notes-close" onclick="toggleNotes()">✕</button>
   </div>
   <div id="notes-body"></div>
+  <div id="notes-footer">
+    <button id="open-presenter-btn" onclick="window.open(location.pathname + '?presenter', '_blank')">🖥 開啟講師視窗</button>
+  </div>
 </div>
 
 <!-- Controls -->
@@ -774,9 +1091,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 </div>
 
 <script>
+// ── Dual-screen presenter mode ────────────────────────────
+const isPresenter = location.search.includes('presenter');
+if(isPresenter) document.body.classList.add('presenter-mode');
+
 const slides = document.querySelectorAll('.slide');
 let cur = 0;
 const total = slides.length;
+let syncing = false;
 
 // ── 唸稿內容（19頁）──────────────────────────────────────
 const NOTES = [
@@ -838,7 +1160,7 @@ const NOTES = [
   `<span class="notes-cue">說明禮物</span>今天的禮物包有三樣東西。第一個是 Claude Skill Prompt，這是我剛才示範的那個 Prompt 的完整版，你可以直接拿去用。<br/><br/>第二個是 Perplexity 學術搜尋關鍵字清單，我整理了 20 個可以直接用的英文關鍵字，不用自己想。<br/><br/>第三個是 XS 策略框架模板，三層選股邏輯可以直接貼進 XQ 修改。<br/><br/><span class="notes-cue">CTA</span>現在在直播留言打「積木」，我等一下把表單連結貼出來，填完馬上收到。<br/><br/><span class="notes-cue">結尾</span>今天很謝謝大家，有任何問題歡迎在 Threads @byslashie 找我，我都會回。我們下次見！`
 ];
 
-let notesOpen = false;
+let notesOpen = isPresenter; // presenter always starts open
 
 function go(n){
   slides[cur].classList.remove('active');
@@ -847,9 +1169,24 @@ function go(n){
   document.getElementById('slide-indicator').textContent = `${cur+1} / ${total}`;
   document.getElementById('progress-inner').style.width = `${((cur+1)/total)*100}%`;
   updateNotes();
+  if(!syncing){
+    try{ localStorage.setItem('krystal_slide', cur); }catch(e){}
+  }
 }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
+
+// ── Cross-window sync via localStorage ───────────────────
+window.addEventListener('storage', e => {
+  if(e.key === 'krystal_slide' && e.newValue !== null){
+    const n = parseInt(e.newValue, 10);
+    if(!isNaN(n) && n !== cur){
+      syncing = true;
+      go(n);
+      syncing = false;
+    }
+  }
+});
 
 function updateNotes(){
   document.getElementById('notes-body').innerHTML = NOTES[cur] || '（本頁無備忘錄）';
@@ -857,6 +1194,7 @@ function updateNotes(){
 }
 
 function toggleNotes(){
+  if(isPresenter) return; // presenter: always open, no toggle
   notesOpen = !notesOpen;
   document.getElementById('notes-panel').classList.toggle('open', notesOpen);
   document.getElementById('notes-toggle').textContent = notesOpen ? '✕ 關閉' : '📋 唸稿 N';
@@ -866,9 +1204,9 @@ function toggleNotes(){
 document.addEventListener('keydown', e => {
   if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); next(); }
   if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); prev(); }
-  if(e.key==='n'||e.key==='N'){ toggleNotes(); }
+  if(!isPresenter && (e.key==='n'||e.key==='N')){ toggleNotes(); }
   if(e.key==='f'||e.key==='F') document.documentElement.requestFullscreen?.();
-  if(e.key==='Escape'&&notesOpen){ toggleNotes(); }
+  if(!isPresenter && e.key==='Escape'&&notesOpen){ toggleNotes(); }
   else if(e.key==='Escape') document.exitFullscreen?.();
 });
 
