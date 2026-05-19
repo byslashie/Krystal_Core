@@ -1610,6 +1610,14 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
         <div class="broker-card">
           <div class="broker-card-header"><span class="broker-card-title">🇺🇸 Interactive Brokers</span><span class="badge badge-green" id="ib-status">連線中</span></div>
           <div class="broker-card-body">
+            <div id="ib-error-banner" style="display:none;padding:10px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.4);border-radius:6px;margin-bottom:12px;font-size:12px;line-height:1.5;">
+              <div style="display:flex;align-items:center;gap:6px;font-weight:600;color:#ef4444;margin-bottom:4px;">
+                <span>⚠️ TWS API 連線失敗</span>
+                <button onclick="document.getElementById('ib-error-banner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;line-height:1;padding:0 4px;">×</button>
+              </div>
+              <div id="ib-error-msg" style="color:var(--text-primary);font-family:monospace;font-size:11px;word-break:break-all;margin-bottom:6px;"></div>
+              <div id="ib-error-hint" style="color:var(--text-muted);font-size:11px;"></div>
+            </div>
             <div id="ib-summary" style="display:none;padding:10px;background:var(--bg-raised);border-radius:6px;margin-bottom:12px;border:1px solid var(--border);">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;">
                 <div><span style="color:var(--text-muted)">帳戶權益</span><div style="font-weight:600;color:var(--text-primary);" id="ib-nlv">$1,234,567</div></div>
@@ -4838,12 +4846,44 @@ async function syncYuantaPositions() {
   }
 }
 
+function _showIBError(msg, hint) {
+  const banner = document.getElementById('ib-error-banner');
+  const msgEl  = document.getElementById('ib-error-msg');
+  const hintEl = document.getElementById('ib-error-hint');
+  const badge  = document.getElementById('ib-status');
+  if (msgEl)  msgEl.textContent  = msg  || '未知錯誤';
+  if (hintEl) hintEl.innerHTML   = hint || '';
+  if (banner) banner.style.display = 'block';
+  if (badge)  { badge.textContent = 'API 失敗'; badge.className = 'badge'; badge.style.cssText = 'background:rgba(239,68,68,0.15);color:#ef4444'; }
+}
+function _hideIBError() {
+  const banner = document.getElementById('ib-error-banner');
+  const badge  = document.getElementById('ib-status');
+  if (banner) banner.style.display = 'none';
+  if (badge)  { badge.textContent = '連線中'; badge.className = 'badge badge-green'; badge.style.cssText = ''; }
+}
+function _classifyIBError(msg) {
+  const m = (msg || '').toLowerCase();
+  if (m.includes('1225') || m.includes('拒絕') || m.includes('refused')) {
+    return 'TCP 連線被拒：TWS/Gateway 未啟動，或 port 不對。<br>檢查：TWS 是否開啟？.env 的 <code>IB_PORT</code> 是否=7496 (live) / 7497 (paper) / 4001 (gateway live) / 4002 (gateway paper)';
+  }
+  if (m.includes('timeout') || m.includes('逾時')) {
+    return 'TCP 連得到但 API handshake 逾時。<br>到 TWS → <b>File → Global Configuration → API → Settings</b>：<br>① 勾「Enable ActiveX and Socket Clients」<br>② Trusted IPs 加入 <code>127.0.0.1</code><br>③ 確認沒有彈窗等你按「允許」<br>④ 若已有腳本佔用同一 clientId，到 .env 設 <code>IB_QUERY_CLIENT_ID</code> 為其他數字';
+  }
+  if (m.includes('connection') || m.includes('connect')) {
+    return '連線異常。檢查 TWS 是否在跑、API 設定是否開啟。';
+  }
+  return '查看 TWS → File → Global Configuration → API → Settings，並確認 .env 的 IB_HOST / IB_PORT / IB_CLIENT_ID。';
+}
+
 async function loadIBPositions() {
   const tbody = document.querySelector('#ib-table tbody');
+  let queryErrMsg = null;  // 保留錯誤訊息，最後若連 Sheets fallback 也沒資料就顯示
   try {
     const res = await fetch(`${API_BASE}/api/query-ib`, {signal: AbortSignal.timeout(20000)}).catch(() => ({ok: false}));
     const json = res.ok ? await res.json().catch(() => ({})) : {};
     if (res.ok && json.status === 'success') {
+      _hideIBError();
       const data = json;
       const nlv = parseFloat(data.net_liquidation_value) || 0;
       const pnl = parseFloat(data.unrealized_pnl) || 0;
@@ -4869,7 +4909,18 @@ async function loadIBPositions() {
       }
       return;
     }
-  } catch(e) { /* fallback to Sheets */ }
+    // 走到這代表 res.ok=false 或 json.status!=='success' — 抓錯誤訊息給 banner
+    if (json && json.message) queryErrMsg = json.message;
+    else if (!res.ok) queryErrMsg = `HTTP ${res.status || '?'}`;
+    else queryErrMsg = '未知錯誤';
+  } catch(e) {
+    queryErrMsg = e.message || String(e);
+  }
+
+  // 走 fallback 前先把 banner 顯示出來（讓使用者知道即時連線失敗，但下方仍會用 Sheets 資料）
+  if (queryErrMsg) {
+    _showIBError(queryErrMsg, _classifyIBError(queryErrMsg));
+  }
 
   // fallback: Google Sheets IB data + Yahoo Finance 即時價
   try {

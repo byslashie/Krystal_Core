@@ -95,15 +95,18 @@ else:
         sys.path.insert(0, str(PROJECT))
         from modules.notifier import notify_sync_event
         import os, socket
+        host = socket.gethostname()
+        stderr_tail = (r2.stderr or "")[-400:]
         src_info = (
             f"RC={r2.returncode}\n"
             f"來源: krystal_sync.py\n"
             f"PID: {os.getpid()}\n"
-            f"主機: {socket.gethostname()}\n"
+            f"主機: {host}\n"
             f"使用者: {os.environ.get('USERNAME','?')}\n"
-            f"log: {log_path.name}"
+            f"log: {log_path.name}\n"
+            f"stderr: {stderr_tail}"
         )
-        notify_sync_event("元大 Step2 上傳失敗", src_info, ok=False)
+        notify_sync_event(f"[{host}] 元大 Step2 上傳失敗", src_info, ok=False)
     except Exception:
         pass
 

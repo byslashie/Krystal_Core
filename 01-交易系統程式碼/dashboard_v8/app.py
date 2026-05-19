@@ -1558,6 +1558,8 @@ def api_ib_sync():
     wrote_db = 0
 
     # ── 1. 寫入 Google Sheets broker_positions ───────────────────
+    #   重要：必須保留使用者手動填寫的 strategy / notes 欄
+    #   做法：刪除舊 IB 行前先記下 (symbol → strategy/notes)，append 時還原
     try:
         sys.path.insert(0, str(Path(__file__).parent.parent))
         from sheets_utils import get_sheet
@@ -1566,15 +1568,32 @@ def api_ib_sync():
             all_vals = sheet.get_all_values()
             header = all_vals[0] if all_vals else []
 
-            # 找出「券商」欄位（相容中英文）
-            broker_idx = None
-            for candidate in ['券商', 'broker', 'Broker']:
-                if candidate in header:
-                    broker_idx = header.index(candidate)
-                    break
+            def _hidx(*names):
+                for n in names:
+                    if n in header:
+                        return header.index(n)
+                return -1
+
+            broker_idx = _hidx('broker', '券商', 'Broker')
+            sym_idx    = _hidx('symbol', '標的')
+            strat_idx  = _hidx('strategy', '策略')
+            notes_idx  = _hidx('notes', '備註')
+
+            # 把現有 IB 行的手動欄位記下來（key=symbol）
+            manual_keep = {}
+            if broker_idx >= 0 and sym_idx >= 0 and (strat_idx >= 0 or notes_idx >= 0):
+                for r_vals in all_vals[1:]:
+                    if len(r_vals) <= broker_idx: continue
+                    if r_vals[broker_idx].upper() not in ('IB', 'IBKR', 'INTERACTIVE BROKERS'): continue
+                    sym = r_vals[sym_idx] if len(r_vals) > sym_idx else ''
+                    if not sym: continue
+                    manual_keep[sym.strip()] = {
+                        'strategy': r_vals[strat_idx] if strat_idx >= 0 and len(r_vals) > strat_idx else '',
+                        'notes':    r_vals[notes_idx] if notes_idx >= 0 and len(r_vals) > notes_idx else '',
+                    }
 
             # 刪除既有 IB / IBKR 行（由下往上刪避免行號偏移）
-            if broker_idx is not None:
+            if broker_idx >= 0:
                 rows_to_delete = []
                 for r_idx, r_vals in enumerate(all_vals[1:], start=2):
                     if len(r_vals) > broker_idx and r_vals[broker_idx].upper() in ('IB', 'IBKR', 'INTERACTIVE BROKERS'):
@@ -1582,20 +1601,21 @@ def api_ib_sync():
                 for r_idx in reversed(rows_to_delete):
                     sheet.delete_rows(r_idx)
 
-            # 按照現有 header 填入新的 IB 持倉
+            # 按照現有 header 填入新的 IB 持倉，還原 strategy/notes
             new_rows = []
             for p in positions:
                 row_data = [''] * len(header)
                 qty  = p.get('position', '')
                 avg  = p.get('avgCost', '')
                 cost = round(float(qty) * float(avg), 2) if qty and avg else ''
-                # 對照 Sheets 實際欄位名稱
+                sym  = p.get('symbol', '')
+                kept = manual_keep.get(str(sym).strip(), {})
                 mapping = {
                     '時間':           now_str,
                     'timestamp':      now_str,
                     '券商':           'IB',
                     'broker':         'IB',
-                    'symbol':         p.get('symbol', ''),
+                    'symbol':         sym,
                     'secType':        'STK',
                     'exchange':       p.get('exchange') or 'US',
                     'currency':       p.get('currency') or 'USD',
@@ -1607,6 +1627,10 @@ def api_ib_sync():
                     'marketValue':    p.get('marketValue', ''),
                     'unrealizedPnL':  p.get('unrealizedPNL', ''),
                     'unrealizedPNL':  p.get('unrealizedPNL', ''),
+                    'strategy':       kept.get('strategy', ''),
+                    '策略':           kept.get('strategy', ''),
+                    'notes':          kept.get('notes', ''),
+                    '備註':           kept.get('notes', ''),
                 }
                 for k, v in mapping.items():
                     if k in header:
@@ -1619,10 +1643,23 @@ def api_ib_sync():
         print(f"⚠️ IB → Sheets 寫入失敗: {e}")
         import traceback; traceback.print_exc()
 
-    # ── 2. 寫入本地 DB（UPSERT）──────────────────────────────────
+    # ── 2. 寫入本地 DB（先清除本次未出現的 IB symbol，再 UPSERT）──
+    #   重要：保留使用者手動填寫的 strategy / notes（UPSERT 不會碰它們，
+    #   但 DELETE 也只刪除「本次新清單不含」的舊 symbol，避免誤刪手動標註）
     try:
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
+        # 把這次 IB 已不存在的 symbol 從 DB 移除（例如已賣出的 ACWX）
+        new_syms = [p.get('symbol', '') for p in positions if p.get('symbol')]
+        if new_syms:
+            placeholders = ','.join('?' * len(new_syms))
+            c.execute(
+                f"DELETE FROM broker_positions WHERE broker='IB' AND symbol NOT IN ({placeholders})",
+                new_syms,
+            )
+        else:
+            c.execute("DELETE FROM broker_positions WHERE broker='IB'")
+        # UPSERT：明確「不」覆寫 strategy / notes，由使用者手填維護
         for p in positions:
             c.execute('''INSERT INTO broker_positions
                 (symbol, position, avgCost, currentPrice, marketValue, unrealizedPnL, broker, currency, timestamp)
@@ -1690,35 +1727,59 @@ def api_schwab_sync():
         wrote_db = 0
 
         # ── 寫入 Google Sheets ──
+        #   重要：必須保留使用者手動填寫的 strategy / notes 欄
         try:
             from sheets_utils import get_sheet
             sheet = get_sheet('broker_positions')
             if sheet:
                 all_vals = sheet.get_all_values()
                 header = all_vals[0] if all_vals else []
-                broker_idx = None
-                for candidate in ['券商', 'broker', 'Broker']:
-                    if candidate in header:
-                        broker_idx = header.index(candidate)
-                        break
+
+                def _hidx(*names):
+                    for n in names:
+                        if n in header:
+                            return header.index(n)
+                    return -1
+
+                broker_idx = _hidx('broker', '券商', 'Broker')
+                sym_idx    = _hidx('symbol', '標的')
+                strat_idx  = _hidx('strategy', '策略')
+                notes_idx  = _hidx('notes', '備註')
+
+                # 把現有 Schwab 行的手動欄位記下來（key=symbol）
+                manual_keep = {}
+                if broker_idx >= 0 and sym_idx >= 0 and (strat_idx >= 0 or notes_idx >= 0):
+                    for r_vals in all_vals[1:]:
+                        if len(r_vals) <= broker_idx: continue
+                        if r_vals[broker_idx].lower() not in ('schwab', 'charles schwab'): continue
+                        sym = r_vals[sym_idx] if len(r_vals) > sym_idx else ''
+                        if not sym: continue
+                        manual_keep[sym.strip()] = {
+                            'strategy': r_vals[strat_idx] if strat_idx >= 0 and len(r_vals) > strat_idx else '',
+                            'notes':    r_vals[notes_idx] if notes_idx >= 0 and len(r_vals) > notes_idx else '',
+                        }
+
                 # 刪除舊 Schwab 行
-                if broker_idx is not None:
+                if broker_idx >= 0:
                     rows_del = []
                     for r_idx, r_vals in enumerate(all_vals[1:], start=2):
                         if len(r_vals) > broker_idx and r_vals[broker_idx].lower() in ('schwab', 'charles schwab'):
                             rows_del.append(r_idx)
                     for r_idx in reversed(rows_del):
                         sheet.delete_rows(r_idx)
-                # 寫入新行
+
+                # 寫入新行（還原 strategy / notes）
                 new_rows = []
                 for p in positions:
                     row_data = [''] * len(header)
                     qty = p['position']
                     avg = p['avgCost']
+                    sym = p['symbol']
+                    kept = manual_keep.get(str(sym).strip(), {})
                     mapping = {
                         '時間': now_str, 'timestamp': now_str,
                         '券商': 'Schwab', 'broker': 'Schwab',
-                        'symbol': p['symbol'], 'secType': 'STK',
+                        'symbol': sym, 'secType': 'STK',
                         'exchange': p.get('exchange') or 'US',
                         'currency': p.get('currency') or 'USD',
                         'position': qty, 'avgCost': avg,
@@ -1726,6 +1787,10 @@ def api_schwab_sync():
                         'currentPrice': p.get('marketPrice', ''),
                         'marketValue': p.get('marketValue', ''),
                         'unrealizedPnL': p.get('unrealizedPNL', ''),
+                        'strategy':     kept.get('strategy', ''),
+                        '策略':         kept.get('strategy', ''),
+                        'notes':        kept.get('notes', ''),
+                        '備註':         kept.get('notes', ''),
                     }
                     for k, v in mapping.items():
                         if k in header:

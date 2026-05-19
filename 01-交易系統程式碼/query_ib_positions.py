@@ -6,9 +6,11 @@
 
 import asyncio
 import json
+import os
 import sys
 import logging
 from datetime import datetime
+from pathlib import Path
 
 # Python 3.14 相容：ib_insync 需要 event loop 預先建立
 try:
@@ -20,16 +22,25 @@ logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stderr)
 logger = logging.getLogger(__name__)
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except Exception:
+    pass
+
+IB_HOST = os.getenv("IB_HOST", "127.0.0.1")
+IB_PORT = int(os.getenv("IB_PORT", "7496"))
+IB_CLIENT_ID = int(os.getenv("IB_QUERY_CLIENT_ID", "198"))
+
+try:
     from ib_insync import IB
 
-    # 連接 IB
     ib = IB()
-    ib.connect(host='127.0.0.1', port=7497, clientId=199, readonly=True)
+    ib.connect(host=IB_HOST, port=IB_PORT, clientId=IB_CLIENT_ID, readonly=True)
 
     if not ib.isConnected():
         print(json.dumps({
             'status': 'error',
-            'message': '無法連接 IB TWS/Gateway (port 7496)'
+            'message': f'無法連接 IB TWS/Gateway ({IB_HOST}:{IB_PORT})'
         }))
         sys.exit(1)
 
