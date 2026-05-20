@@ -9424,9 +9424,10 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
   // ========== 尾部風險分析 ==========
 
   // VaR @ 95% (第5百分位)
-  // 優先用「單筆純價差%」(exit/entry-1) 算，比 pnl/initialCapital 準（後者把所有報酬率壓扁）
+  // 優先順序：① CSV returnPct 欄位 → ② exit/entry-1 純價差 → ③ fallback pnl/avgPosition
   const pureReturns = trades
     .map(t => {
+      if (t.returnPct != null && !isNaN(t.returnPct)) return t.returnPct / 100;
       const ep = parseFloat(t.entryPrice || t.entry_price);
       const xp = parseFloat(t.exitPrice || t.exit_price);
       if (ep > 0 && xp > 0) return xp / ep - 1;
@@ -13511,13 +13512,14 @@ function initFinlabCharts(panelId) {
     let tradeReturns = [];
     const csvKpis = window.currentStrategyAnalysis?.kpis;
     const csvTrades = window.currentStrategyAnalysis?.trades || [];
-    // 從 trades 算單筆純價差%（最準）
+    // 從 trades 算單筆報酬%：① CSV returnPct → ② exit/entry-1
     if (csvTrades.length > 0) {
       tradeReturns = csvTrades
         .map(t => {
+          if (t.returnPct != null && !isNaN(t.returnPct)) return t.returnPct;  // 已是 %
           const ep = parseFloat(t.entryPrice || t.entry_price);
           const xp = parseFloat(t.exitPrice || t.exit_price);
-          if (ep > 0 && xp > 0) return (xp / ep - 1) * 100;  // 百分比
+          if (ep > 0 && xp > 0) return (xp / ep - 1) * 100;
           return null;
         })
         .filter(r => r != null && !isNaN(r))
@@ -13541,8 +13543,8 @@ function initFinlabCharts(panelId) {
     if (warnBanner && realMetrics) {
       const mdd = parseFloat(realMetrics.max_drawdown);
       const mddAbs = Math.abs(mdd);
-      const varOk = var95 != null && Math.abs(var95) <= 7;
-      const cvarOk = cvar95 != null && Math.abs(cvar95) <= 10;
+      const varOk = var95 != null && var95 >= -7;
+      const cvarOk = cvar95 != null && cvar95 >= -10;
       if (mddAbs <= 30 && varOk && cvarOk) {
         warnBanner.style.background = 'var(--ok-soft,rgba(34,197,94,0.08))';
         warnBanner.style.borderColor = 'rgba(34,197,94,0.3)';
@@ -15044,12 +15046,22 @@ function _sdmRenderFinlab(d, sc5) {
   const p12Pane = document.getElementById('sdm-fl-p12');
   if (p12Pane) {
     const mddDisp = '-' + mdd.toFixed(1) + '%';
-    const var95   = (mdd * 0.35).toFixed(1) + '%';
-    const cvar95  = (mdd * 0.45).toFixed(1) + '%';
+    // 優先用真實 VaR/CVaR（從上傳資料計算），fallback 用代理公式
+    const _csvKpis = window.currentStrategyAnalysis?.kpis;
+    const _realVar  = _csvKpis?.var95  != null ? _csvKpis.var95  * 100 : null;
+    const _realCvar = _csvKpis?.cvar95 != null ? _csvKpis.cvar95 * 100 : null;
+    const var95num  = _realVar  != null ? _realVar  : -(mdd * 0.35);
+    const cvar95num = _realCvar != null ? _realCvar : -(mdd * 0.45);
+    const var95disp  = var95num.toFixed(1)  + '%';
+    const cvar95disp = cvar95num.toFixed(1) + '%';
     p12Pane.querySelectorAll('[data-metric="mdd"]').forEach(el => { el.textContent = mddDisp; el.className = 'kpi-val red'; });
     p12Pane.querySelectorAll('[data-metric-sub="mdd"]').forEach(el => {
       el.innerHTML = mdd <= 30 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 &lt;-30%' : '<span style="color:var(--err)">❌ 未達</span>｜需 &lt;-30%';
     });
+    // 雙 MDD（資產 / 獲利）
+    const _mddProfit = _csvKpis?.mddProfit != null ? (_csvKpis.mddProfit * 100).toFixed(2) + '%' : null;
+    p12Pane.querySelectorAll('[id$="fl-p12-mdd-asset"],[id="sdm-fl-p12-mdd-asset"]').forEach(el => { el.textContent = '-' + mdd.toFixed(2) + '%'; });
+    if (_mddProfit) p12Pane.querySelectorAll('[id$="fl-p12-mdd-profit"],[id="sdm-fl-p12-mdd-profit"]').forEach(el => { el.textContent = _mddProfit; });
     p12Pane.querySelectorAll('[data-metric="calmar"]').forEach(el => { el.textContent = f2(calmar); el.className = 'kpi-val ' + (calmar >= 0.9 ? 'green' : calmar >= 0.5 ? '' : 'red'); });
     p12Pane.querySelectorAll('[data-metric-sub="calmar"]').forEach(el => {
       el.innerHTML = calmar >= 0.9 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 &gt;0.9' : '<span style="color:var(--err)">❌ 未達</span>｜需 &gt;0.9';
@@ -15058,13 +15070,13 @@ function _sdmRenderFinlab(d, sc5) {
     p12Pane.querySelectorAll('[data-metric-sub="sortino"]').forEach(el => {
       el.innerHTML = sortino >= 1.8 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 &gt;1.8' : '<span style="color:var(--err)">❌ 未達</span>｜需 &gt;1.8';
     });
-    p12Pane.querySelectorAll('[data-metric="var95"]').forEach(el => { el.textContent = '-' + var95; el.className = 'kpi-val red'; });
+    p12Pane.querySelectorAll('[data-metric="var95"]').forEach(el => { el.textContent = var95disp; el.className = 'kpi-val ' + (var95num >= -7 ? 'green' : 'red'); });
     p12Pane.querySelectorAll('[data-metric-sub="var95"]').forEach(el => {
-      el.innerHTML = mdd * 0.35 <= 7 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 &lt;7%' : '<span style="color:var(--err)">❌ 未達</span>｜需 &lt;7%';
+      el.innerHTML = var95num >= -7 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 ≥-7%' : '<span style="color:var(--err)">❌ 未達</span>｜需 ≥-7%';
     });
-    p12Pane.querySelectorAll('[data-metric="cvar95"]').forEach(el => { el.textContent = '-' + cvar95; el.className = 'kpi-val red'; });
+    p12Pane.querySelectorAll('[data-metric="cvar95"]').forEach(el => { el.textContent = cvar95disp; el.className = 'kpi-val ' + (cvar95num >= -10 ? 'green' : 'red'); });
     p12Pane.querySelectorAll('[data-metric-sub="cvar95"]').forEach(el => {
-      el.innerHTML = mdd * 0.45 <= 10 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 &lt;10%' : '<span style="color:var(--err)">❌ 未達</span>｜需 &lt;10%';
+      el.innerHTML = cvar95num >= -10 ? '<span style="color:var(--ok)">✅ 達標</span>｜需 ≥-10%' : '<span style="color:var(--err)">❌ 未達</span>｜需 ≥-10%';
     });
     // score
     const scoreP12 = document.getElementById(R('fl-score-p12'));
