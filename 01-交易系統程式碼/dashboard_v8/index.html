@@ -2540,9 +2540,13 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
                 <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Sharpe <span id="kpi-src-sharpe" style="font-size:9px;opacity:.6"></span></div>
                 <div id="kpi-sharpe" style="font-size: 20px; font-weight: 700; color: var(--accent);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--red);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">MDD <span id="kpi-src-mdd" style="font-size:9px;opacity:.6"></span></div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--red); position: relative;" title="MDD（資產角度）：總資產從歷史高點回吐多少 %&#10;公式：(谷值 NAV − 峰值 NAV) ÷ 峰值 NAV&#10;意義：你的「帳戶總資產」最痛時縮水多少&#10;&#10;MDD（獲利角度）：累計獲利從歷史高點回吐多少 %&#10;公式：(累計獲利谷值 − 累計獲利峰值) ÷ 累計獲利峰值&#10;意義：你「賺到的錢」最痛時被吃掉多少">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">MDD <span id="kpi-src-mdd" style="font-size:9px;opacity:.6"></span> <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-mdd" style="font-size: 20px; font-weight: 700; color: var(--red);">—</div>
+                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4;">
+                  <span style="opacity:.7">資產 </span><span id="kpi-mdd-asset" style="font-weight:600">—</span><br/>
+                  <span style="opacity:.7">獲利 </span><span id="kpi-mdd-profit" style="font-weight:600">—</span>
+                </div>
               </div>
               <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--yellow);">
                 <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">勝率 <span id="kpi-src-winrate" style="font-size:9px;opacity:.6"></span></div>
@@ -2602,28 +2606,28 @@ th[data-sort-col].sort-asc .sort-icon,th[data-sort-col].sort-desc .sort-icon{opa
 
             <!-- 風險統計 - 第三行 -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--purple);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">VaR @ 95%</div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--purple);" title="VaR @ 95% — Value at Risk（風險值）&#10;意義：最壞 5% 的交易日，單筆虧損預期會超過這個數字&#10;白話：100 筆交易裡最差的 5 筆，每筆會虧多少 %&#10;達標：≥ -7%（接近 0 越好）">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">VaR @ 95% <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-var" style="font-size: 18px; font-weight: 700; color: var(--purple);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--purple);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">CVaR @ 95%</div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--purple);" title="CVaR @ 95% — Conditional VaR（條件風險值）&#10;意義：比 VaR 更嚴格——看「最壞 5% 那些交易日的『平均』虧損」&#10;白話：最差 5 筆交易的平均虧多少 %&#10;達標：≥ -10%（接近 0 越好）">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">CVaR @ 95% <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-cvar" style="font-size: 18px; font-weight: 700; color: var(--purple);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--blue-deep);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">偏態 Skew</div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--blue-deep);" title="Skewness（偏態）&#10;意義：報酬分布偏哪一邊&#10;> 0：右偏（少數大贏拉升平均，常見於趨勢策略）&#10;= 0：對稱（常態分布）&#10;< 0：左偏（少數大虧拖累，警訊）&#10;趨勢/動能策略 typical 右偏 0.5-2">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">偏態 Skew <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-skew" style="font-size: 18px; font-weight: 700; color: var(--blue-deep);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--blue-deep);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">峰度 Kurt</div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--blue-deep);" title="Excess Kurtosis（超峰度）&#10;意義：報酬分布尾巴有多肥（極端事件多不多）&#10;> 0：肥尾（極端報酬比常態多，黑天鵝風險）&#10;= 0：常態分布&#10;< 0：薄尾（極端報酬比常態少）&#10;肥尾策略要小心 ─ 賺得猛但崩得也快">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">峰度 Kurt <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-kurtosis" style="font-size: 18px; font-weight: 700; color: var(--blue-deep);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--green);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">右尾 (%) </div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--green);" title="右尾貢獻 — 最賺的 5% 交易帶來的累計報酬 %&#10;意義：策略獲利集中度&#10;高（>50%）= 靠少數大贏支撐，撐不過去就 GG&#10;低（<30%）= 賺錢平均分散，更可靠">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">右尾 (%) <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-tail-right" style="font-size: 18px; font-weight: 700; color: var(--green);">—</div>
               </div>
-              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--red);">
-                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">左尾 (%)</div>
+              <div style="background: var(--bg-raised); padding: 14px; border-radius: 8px; border-left: 4px solid var(--red);" title="左尾貢獻 — 最賠的 5% 交易帶來的累計虧損 %&#10;意義：策略損失集中度&#10;高（絕對值 >50%）= 少數大賠吃光大部分獲利，停損機制需檢視&#10;低（絕對值 <30%）= 損失分散，控制良好">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">左尾 (%) <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
                 <div id="kpi-tail-left" style="font-size: 18px; font-weight: 700; color: var(--red);">—</div>
               </div>
             </div>
@@ -8484,6 +8488,63 @@ async function parseTrades(file) {
 }
 
 async function parseExcelFile(file) {
+  // 若 SheetJS 沒載到（CDN 被擋），改呼叫後端 Flask 解析
+  if (typeof XLSX === 'undefined') {
+    console.warn('[Excel] SheetJS 未載入，fallback 到後端解析');
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const resp = await fetch('/api/strategy/parse-xlsx', { method: 'POST', body: form });
+      const data = await resp.json();
+      if (data.status !== 'success') throw new Error(data.message || '後端解析失敗');
+      const d = data.data;
+      const rawDaily = d.daily || [];
+
+      // 若有 cum_profit 但沒有 nav，用 cum_profit 重建 NAV
+      // NAV(t) = maxInvested（或首日估算值） + cum_profit(t)
+      // 首先找出 max_invested（最可靠）或用估算值
+      const hasCumProfit = rawDaily.some(item => item.cum_profit != null);
+      const hasNav       = rawDaily.some(item => item.nav != null && item.nav > 0);
+
+      let baseCapital = null;
+      if (hasCumProfit && !hasNav) {
+        // 用最大投入當 base，若無則用最大累計獲利 * 1.5 估算
+        if (d.max_invested && d.max_invested > 0) {
+          baseCapital = d.max_invested;
+        } else {
+          const maxCum = Math.max(...rawDaily.map(r => r.cum_profit || 0));
+          baseCapital = maxCum > 0 ? maxCum * 1.5 : null;
+        }
+      }
+
+      const trades = rawDaily.map(item => {
+        const t = {
+          date: item.date,
+          exitDate: item.date,
+          pnl: item.pnl || 0,
+          invested: item.invested,
+        };
+        if (item.nav != null && item.nav > 0) {
+          t.nav = item.nav;
+        } else if (item.cum_profit != null && baseCapital != null) {
+          // 重建 NAV：本金 + 累計獲利
+          t.nav = baseCapital + item.cum_profit;
+        }
+        return t;
+      }).filter(t => t.date);
+
+      trades.maxInvested = d.max_invested || null;
+      trades.source = 'xlsx-backend';
+      console.log('[Excel-backend] 解析到', trades.length, '筆每日資料，最大投入:', d.max_invested,
+                  'hasCumProfit:', hasCumProfit, 'hasNav:', hasNav, 'baseCapital:', baseCapital);
+      return trades;
+    } catch (err) {
+      console.error('[Excel-backend] 後端解析失敗:', err);
+      alert('XLSX 函式庫無法載入（CDN 被擋），且後端解析失敗：\n' + err.message + '\n\n請改用 CSV 上傳，或聯絡管理員開放 CDN 存取。');
+      throw err;
+    }
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
 
@@ -8602,8 +8663,25 @@ function parseDailySheet(rows) {
       // handled below via prevNav
     }
 
+    // ── 累計獲利（總獲利欄） ──
+    let cumProfitVal = null;
+    if (cumPnlIdx !== -1) {
+      const cum = parseFloat(String(row[cumPnlIdx] ?? '').replace(/,/g, ''));
+      if (!isNaN(cum)) cumProfitVal = cum;
+    }
+
     if (pnl !== null && !isNaN(pnl)) {
-      trades.push({ pnl, date: dateStr });
+      const entry = { pnl, date: dateStr };
+      if (cumProfitVal !== null) entry.cum_profit = cumProfitVal;
+      trades.push(entry);
+    }
+  }
+
+  // 重建 NAV：若有 cum_profit 欄位，用最大投入金額 + 累計獲利 → nav
+  const baseForNav = maxInvested > 0 ? maxInvested : null;
+  if (baseForNav && trades.some(t => t.cum_profit != null)) {
+    for (const t of trades) {
+      if (t.cum_profit != null) t.nav = baseForNav + t.cum_profit;
     }
   }
 
@@ -9114,7 +9192,20 @@ function drawKPIChart(kpis) {
 }
 
 function calculateKPIs(trades, initialCapital, maxInvested) {
-  const navCurve = [initialCapital];
+  // 偵測 xlsx 每日報表模式：有 nav 欄位代表真實淨值序列
+  const hasNavField = trades.length > 0 && trades.some(t => t.nav != null && t.nav > 0);
+
+  let navCurve;
+  if (hasNavField) {
+    // xlsx 模式：直接用真實 nav 序列，不依賴 initialCapital
+    const navVals = trades.filter(t => t.nav != null && t.nav > 0).map(t => t.nav);
+    navCurve = [navVals[0], ...navVals];  // 第一個點複製作為 t=0
+    // 用 nav 序列重建 initialCapital（真實起始值）
+    initialCapital = navVals[0];
+  } else {
+    navCurve = [initialCapital];
+  }
+
   let currentNav = initialCapital;
   let profitableTrades = 0;
   let totalWins = 0;
@@ -9123,11 +9214,18 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
   const returns = [];
 
   // 計算淨值曲線和報酬率
-  for (let trade of trades) {
+  for (let i = 0; i < trades.length; i++) {
+    const trade = trades[i];
     const pnl = trade.pnl || 0;
     const prevNav = currentNav;
-    currentNav += pnl;
-    navCurve.push(currentNav);
+
+    if (hasNavField) {
+      // 用真實 nav 值；currentNav 跟著走
+      currentNav = (trade.nav != null && trade.nav > 0) ? trade.nav : currentNav + pnl;
+    } else {
+      currentNav += pnl;
+      navCurve.push(currentNav);
+    }
 
     if (pnl > 0) {
       profitableTrades++;
@@ -9137,8 +9235,11 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
       lossCount++;
     }
 
-    // 計算交易報酬率（用初始資金為分母，避免小資金放大效應）
-    if (initialCapital > 0) {
+    // 每日報酬率：用 nav 環比（更準確）
+    if (hasNavField) {
+      const prevN = i === 0 ? navCurve[0] : (trades[i-1].nav || currentNav);
+      if (prevN > 0) returns.push((currentNav - prevN) / prevN);
+    } else if (initialCapital > 0) {
       returns.push(pnl / initialCapital);
     }
   }
@@ -9176,10 +9277,13 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
 
   // MDD：NAV curve 從 initialCapital 開始，分母永遠是正的 peak NAV
   // MDD 計算：
-  //   xlsx 每日報表 → 分母 = maxInvested（最大投入金額，對齊 Python 規範）
+  //   xlsx 每日報表 → 用真實 nav 序列（hasNavField），分母 = maxInvested 或 peakNav
   //   CSV 交易記錄  → 分母 = peak NAV（含本金）
-  const navForMdd = [initialCapital];
-  for (const t of trades) navForMdd.push(navForMdd[navForMdd.length - 1] + (t.pnl || 0));
+  const navForMdd = hasNavField ? navCurve : (() => {
+    const arr = [initialCapital];
+    for (const t of trades) arr.push(arr[arr.length - 1] + (t.pnl || 0));
+    return arr;
+  })();
 
   let mdd = 0;
   let mddAmt = 0;
@@ -9232,6 +9336,56 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
     }
   }
 
+  // ========== 獲利角度 MDD（mddProfit） ==========
+  // 公式：MDD% = (累計獲利谷值 - 累計獲利峰值) / 累計獲利峰值
+  // 不含本金，純粹看「賺到的錢被吃掉多少比例」
+  let mddProfit = 0;
+  let mddProfitAmt = 0;
+  let mddProfitPeakDate = null;
+  let mddProfitTroughDate = null;
+  let mddProfitPeakVal = 0;
+  let mddProfitTroughVal = 0;
+  if (trades.length > 0) {
+    // 累計獲利曲線（從 0 開始，不加本金）
+    const cumProfit = [0];
+    for (const t of trades) cumProfit.push(cumProfit[cumProfit.length - 1] + (t.pnl || 0));
+
+    let peakProfit = cumProfit[0];
+    let peakProfitIdx = 0;
+    let troughProfitIdx = 0;
+    let minDdProfit = 0;
+    for (let i = 1; i < cumProfit.length; i++) {
+      if (cumProfit[i] > peakProfit) {
+        peakProfit = cumProfit[i];
+        peakProfitIdx = i;
+      }
+      // 分母用峰值累計獲利；峰值為 0 或負時略過（避免除零或符號翻轉）
+      if (peakProfit > 0) {
+        const ddP = (cumProfit[i] - peakProfit) / peakProfit;
+        if (ddP < minDdProfit) {
+          minDdProfit = ddP;
+          troughProfitIdx = i;
+        }
+      }
+    }
+    mddProfit = minDdProfit;
+
+    // 找谷值前的真實峰值
+    let actualPeakProfit = cumProfit[0];
+    let actualPeakProfitIdx = 0;
+    for (let i = 1; i <= troughProfitIdx; i++) {
+      if (cumProfit[i] > actualPeakProfit) {
+        actualPeakProfit = cumProfit[i];
+        actualPeakProfitIdx = i;
+      }
+    }
+    mddProfitAmt = cumProfit[troughProfitIdx] - actualPeakProfit;
+    mddProfitPeakVal = actualPeakProfit;
+    mddProfitTroughVal = cumProfit[troughProfitIdx];
+    mddProfitPeakDate = actualPeakProfitIdx > 0 ? (trades[actualPeakProfitIdx - 1]?.date || null) : null;
+    mddProfitTroughDate = troughProfitIdx > 0 ? (trades[troughProfitIdx - 1]?.date || null) : null;
+  }
+
   const calmar = mdd < 0 ? cagr / Math.abs(mdd) : 0;
 
   // Sortino：下行標準差分母用全部交易數 N（依規範）
@@ -9270,12 +9424,26 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
   // ========== 尾部風險分析 ==========
 
   // VaR @ 95% (第5百分位)
-  const sortedReturns = [...returns].sort((a, b) => a - b);
-  const varIndex = Math.floor(sortedReturns.length * 0.05);
-  const var95 = sortedReturns[varIndex] || meanRet;
+  // 優先用「單筆純價差%」(exit/entry-1) 算，比 pnl/initialCapital 準（後者把所有報酬率壓扁）
+  const pureReturns = trades
+    .map(t => {
+      const ep = parseFloat(t.entryPrice || t.entry_price);
+      const xp = parseFloat(t.exitPrice || t.exit_price);
+      if (ep > 0 && xp > 0) return xp / ep - 1;
+      return null;
+    })
+    .filter(r => r != null && !isNaN(r));
 
+  let sortedReturns, var95, cvar95;
+  if (pureReturns.length >= 5) {
+    sortedReturns = [...pureReturns].sort((a, b) => a - b);
+  } else {
+    sortedReturns = [...returns].sort((a, b) => a - b);
+  }
+  const varIndex = Math.floor(sortedReturns.length * 0.05);
+  var95 = sortedReturns[varIndex] || meanRet;
   // CVaR @ 95% (VaR以下的平均)
-  const cvar95 = sortedReturns.slice(0, varIndex + 1).reduce((a, b) => a + b, 0) / (varIndex + 1) || meanRet;
+  cvar95 = sortedReturns.slice(0, varIndex + 1).reduce((a, b) => a + b, 0) / (varIndex + 1) || meanRet;
 
   // 右尾 (top 5%) 和左尾 (bottom 5%) 的貢獻
   const topIndex = Math.ceil(sortedReturns.length * 0.95);
@@ -9295,6 +9463,8 @@ function calculateKPIs(trades, initialCapital, maxInvested) {
   return {
     cagr, volatility, sharpe, mdd, mddAmt, mddPeakDate, mddTroughDate, mddRecoveryDate,
     mddPeakVal, mddTroughVal,
+    mddProfit, mddProfitAmt, mddProfitPeakDate, mddProfitTroughDate,
+    mddProfitPeakVal, mddProfitTroughVal,
     calmar, sortino, winRate, profitableTrades,
     lossCount,
     kelly: Math.max(0, Math.min(kelly, 1)),
@@ -10995,6 +11165,13 @@ async function uploadStrategyCSV() {
     const kpis = Object.assign({}, kpisCsv || kpisXlsx, {
       // 績效曲線類：xlsx 更準（真實每日淨值）
       mdd:        (kpisXlsx || kpisCsv).mdd,
+      mddProfit:  (kpisXlsx || kpisCsv).mddProfit,
+      mddAmt:        (kpisXlsx || kpisCsv).mddAmt,
+      mddProfitAmt:  (kpisXlsx || kpisCsv).mddProfitAmt,
+      mddPeakVal:    (kpisXlsx || kpisCsv).mddPeakVal,
+      mddTroughVal:  (kpisXlsx || kpisCsv).mddTroughVal,
+      mddProfitPeakVal:    (kpisXlsx || kpisCsv).mddProfitPeakVal,
+      mddProfitTroughVal:  (kpisXlsx || kpisCsv).mddProfitTroughVal,
       cagr:       (kpisXlsx || kpisCsv).cagr,
       sharpe:     (kpisXlsx || kpisCsv).sharpe,
       sortino:    (kpisXlsx || kpisCsv).sortino,
@@ -11015,6 +11192,9 @@ async function uploadStrategyCSV() {
     setEl('kpi-cagr',         (kpis.cagr * 100).toFixed(2) + '%');
     setEl('kpi-sharpe',       kpis.sharpe.toFixed(2));
     setEl('kpi-mdd',          (kpis.mdd * 100).toFixed(2) + '%');
+    // 雙 MDD 副標
+    if (kpis.mdd != null) setEl('kpi-mdd-asset', (kpis.mdd * 100).toFixed(2) + '%');
+    if (kpis.mddProfit != null) setEl('kpi-mdd-profit', (kpis.mddProfit * 100).toFixed(2) + '%');
     setEl('kpi-win-rate',     (kpis.winRate * 100).toFixed(2) + '%');
     setEl('kpi-volatility',   (kpis.volatility * 100).toFixed(2) + '%');
     setEl('kpi-calmar',       kpis.calmar.toFixed(2));
@@ -11039,6 +11219,31 @@ async function uploadStrategyCSV() {
     const ar = document.getElementById('analysis-results');
     if (ar) ar.style.display = 'block';
 
+    // ── CSV-only 精度警示：在分析結果區頂部插入提示 banner ──────────
+    const hasXlsx = !!xlsxTrades;
+    const hasCsv = !!csvTrades;
+    const dataSourceNotice = document.getElementById('data-source-notice');
+    if (dataSourceNotice) {
+      if (hasXlsx && hasCsv) {
+        dataSourceNotice.style.cssText = 'margin-bottom:12px; padding:10px 14px; border-radius:8px; background:var(--ok-soft,rgba(34,197,94,0.10)); color:var(--ok); border-left:3px solid var(--ok); font-size:12px;';
+        dataSourceNotice.innerHTML = '✅ <strong>完整雙檔案模式</strong>：xlsx 提供真實每日 NAV/MDD/CAGR，csv 提供逐筆交易明細與勝率。所有指標精度最佳。';
+      } else if (hasXlsx) {
+        dataSourceNotice.style.cssText = 'margin-bottom:12px; padding:10px 14px; border-radius:8px; background:var(--ok-soft,rgba(34,197,94,0.10)); color:var(--ok); border-left:3px solid var(--ok); font-size:12px;';
+        dataSourceNotice.innerHTML = '✅ <strong>xlsx 模式</strong>：MDD、回撤、CAGR 從真實每日 NAV 算，精度最佳。但缺 csv 逐筆明細，勝率/期望值較粗略。';
+      } else if (hasCsv) {
+        dataSourceNotice.style.cssText = 'margin-bottom:12px; padding:10px 14px; border-radius:8px; background:var(--yellow-soft,rgba(251,191,36,0.10)); color:var(--yellow,#d97706); border-left:3px solid var(--yellow,#d97706); font-size:12px;';
+        dataSourceNotice.innerHTML = `⚠️ <strong>僅 CSV 模式 — 多個指標為「估算值」</strong>：
+          <ul style="margin:6px 0 0 18px;padding:0;line-height:1.6">
+            <li><strong>MDD / 回撤</strong>：只看出場日，未含盤中浮虧（實際可能 5-10 倍深）</li>
+            <li><strong>波動率 / Sharpe / Sortino / Calmar</strong>：用單筆%估算，比真實每日數據樂觀</li>
+            <li><strong>VaR / CVaR</strong>：單筆最差 5%，非每日最差 5%</li>
+            <li><strong>恢復時間 / 回撤分佈圖</strong>：無法顯示</li>
+            <li><strong>不受影響</strong>：勝率、獲利因子、期望值、凱利、平均賺賠%、偏態/峰度、超額報酬 Alpha</li>
+          </ul>
+          建議補上 <strong>xlsx 每日報表</strong> 取得真實風險畫像。`;
+      }
+    }
+
     // ── 5. 設定 currentStrategyAnalysis（讓確認存檔可用）────────
     const fileForName = dualFileCsv || dualFileXlsx;
     const strategyName = (document.getElementById('strategy-name') || {}).value
@@ -11047,6 +11252,8 @@ async function uploadStrategyCSV() {
       strategy_name: strategyName,
       kpis,
       trades,
+      hasXlsx,
+      hasCsv,
       initialCapital: initCap,
       meta: {
         start_date: trades.length ? (trades[0].exitDate || trades[0].entryDate || '') : '',
@@ -11201,19 +11408,51 @@ async function uploadStrategyCSV() {
     // 逐筆交易 holdings（供 VaR / 虧損分佈用）
     // 若同時有 csv（含真實報酬率），優先用 csvTrades 建 holdings
     const _holdingsSrc = csvTrades || sortedTrades;
-    const _holdings = _holdingsSrc.map(t => ({
-      symbol:     t.symbol || t.name || t.ticker || '—',
-      entry_date: t.entryDate || t.date || '',
-      exit_date:  t.exitDate  || t.date || '',
-      return_pct: t.returnPct != null ? t.returnPct : (initCap > 0 ? t.pnl / initCap * 100 : 0),
-      pnl:        t.pnl || 0,
-    }));
+    const _holdings = _holdingsSrc.map(t => {
+      // 計算個股報酬率：優先用 CSV 的 returnPct 欄位，其次用 (exit-entry)/entry
+      let retPct = null;
+      if (t.returnPct != null) {
+        retPct = t.returnPct;
+      } else if (t.exitPrice > 0 && t.entryPrice > 0) {
+        retPct = (t.exitPrice - t.entryPrice) / t.entryPrice * 100;
+      } else if (initCap > 0 && t.pnl != null) {
+        // fallback：相對本金（估算）
+        retPct = t.pnl / initCap * 100;
+      } else {
+        retPct = 0;
+      }
+      const sym = t.symbol || t.name || t.ticker || '—';
+      return {
+        name:       sym,
+        code:       sym,
+        entry:      t.entryDate || t.date || '',
+        exit:       t.exitDate  || t.date || '',
+        return_pct: +retPct.toFixed(2),
+        pnl:        t.pnl || 0,
+      };
+    });
 
     const frontendCharts = {
       nav_chart: { labels: monthKeys, strategy: navVals, benchmark: monthKeys.map((_,i)=>+(100*Math.pow(1.08,i/12)).toFixed(2)) },
-      monthly_returns: { labels: monthKeys, values: monthKeys.map(m=>+((navByMonth[m]||0)/initCap*100).toFixed(2)) },
+      // monthly_returns 欄位對齊後端格式：months + profit（絕對金額），供熱力圖使用
+      monthly_returns: {
+        months: monthKeys,
+        profit: monthKeys.map(m => +(navByMonth[m] || 0)),
+        labels: monthKeys,
+        values: monthKeys.map(m => +((navByMonth[m]||0)/initCap*100).toFixed(2)),
+      },
       drawdown: { dates: _ddDates, values_pct: _ddVals },
       holdings: _holdings,
+      // 報酬分布：從 holdings 計算每筆報酬率的直方圖
+      return_distribution: (() => {
+        const rets = _holdings.map(h => h.return_pct).filter(r => !isNaN(r));
+        if (!rets.length) return null;
+        const edges = [-Infinity,-40,-30,-20,-15,-10,-5,0,5,10,15,20,30,40,Infinity];
+        const labels = ['-40↓','-40~-30','-30~-20','-20~-15','-15~-10','-10~-5','-5~0','0~5','5~10','10~15','15~20','20~30','30~40','40↑'];
+        const counts = labels.map((_,i) => rets.filter(r => r >= edges[i] && r < edges[i+1]).length);
+        const colors = labels.map((_,i) => edges[i] >= 0 ? 'rgba(239,68,68,0.7)' : 'rgba(34,197,94,0.7)');
+        return { labels, counts, colors };
+      })(),
       // metrics 供 updateFinlabKPIs / p11-p15 五大分析 tab 使用
       metrics: {
         cagr:           +(kpis.cagr       * 100).toFixed(2),
@@ -11232,6 +11471,8 @@ async function uploadStrategyCSV() {
     currentChartsData = frontendCharts;
     window.currentChartsData = frontendCharts;
     displayCharts(frontendCharts);
+    // 重置圖表初始化旗標，確保切換到研究室時重新繪製含新資料的圖表
+    Object.keys(_flChartsInited).forEach(k => delete _flChartsInited[k]);
     // 立即更新五大分析 tab KPI（不依賴後端，xlsx/csv 均適用）
     refreshAllFinlabKPIs();
 
@@ -12835,18 +13076,47 @@ function initFinlabCharts(panelId) {
         });
       }
     }
-    // 超額報酬（僅在有真實年度資料時才畫）
+    // 超額報酬 Alpha 曲線
+    // 優先用後端 realYearly.excess；fallback：從 trades 直接算年度報酬 - TAIEX
     const ctx5 = getCtx('fl-p11-c5');
     if (ctx5) {
+      let exLabels = null, exData = null;
       if (realYearly?.excess?.length) {
-        const exLabels = realYearly.years.map(String);
+        exLabels = realYearly.years.map(String);
+        exData = realYearly.excess;
+      } else {
+        // 前端 fallback：從 currentStrategyAnalysis.trades 算
+        const tFb = window.currentStrategyAnalysis?.trades || [];
+        const initCap = window.currentStrategyAnalysis?.initialCapital
+          || parseFloat((document.getElementById('initial-capital')||{}).value)
+          || 1000000;
+        const taiexMap2 = {2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0};
+        if (tFb.length > 0) {
+          const byYr = {};
+          tFb.forEach(t => {
+            const dt = t.date || t.exitDate || t.entryDate;
+            const yr = dt ? new Date(dt).getFullYear() : null;
+            if (yr) byYr[yr] = (byYr[yr] || 0) + (t.pnl || 0);
+          });
+          const years = Object.keys(byYr).map(Number).sort();
+          if (years.length > 0) {
+            exLabels = years.map(String);
+            exData = years.map(yr => {
+              const stratRet = (byYr[yr] / initCap) * 100;
+              const benchRet = taiexMap2[yr] != null ? taiexMap2[yr] : 10;
+              return parseFloat((stratRet - benchRet).toFixed(2));
+            });
+          }
+        }
+      }
+      if (exLabels && exData) {
         ctx5._chart = new Chart(ctx5, {
           type: 'line',
-          data: { labels: exLabels, datasets: [{ label: '超額報酬 Alpha', data: realYearly.excess, borderColor: purple, backgroundColor: 'rgba(168,85,247,0.08)', fill: true, tension: 0.4, pointRadius: 3 }] },
+          data: { labels: exLabels, datasets: [{ label: '超額報酬 Alpha (策略 − 大盤)', data: exData, borderColor: purple, backgroundColor: 'rgba(168,85,247,0.08)', fill: true, tension: 0.4, pointRadius: 3 }] },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'var(--text-secondary)', font: { size: 11 } } } }, scales: { x: { ticks: { color: 'var(--chart-text)' }, grid: { color: 'var(--chart-grid)' } }, y: { ticks: { color: 'var(--chart-text)', callback: v => v >= 0 ? '+'+v+'%' : v+'%' }, grid: { color: 'var(--chart-grid)' } } } }
         });
       } else {
-        ctx5.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px">需後端逐年資料才能計算 Alpha 曲線</div>';
+        ctx5.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px">上傳含交易日期的回測檔後顯示 Alpha 曲線</div>';
       }
     }
     // 月報酬熱力圖 tbody (profit = NT$, 顯示金額)
@@ -13063,11 +13333,30 @@ function initFinlabCharts(panelId) {
       setInfo('fl-info-trades', `${realMetrics.total_trades} 筆`);
       setInfo('fl-info-hold', `${realMetrics.avg_hold_days} 天`);
     }
+
+    // 回撤歷史 (fl-drawdown sub-tab) — Plotly
+    const ddData = window.currentChartsData?.drawdown || realCharts?.drawdown;
+    if (ddData?.dates?.length) drawDrawdownChart(ddData);
+
+    // 報酬分布 (fl-dist sub-tab) — Plotly
+    const rdData = window.currentChartsData?.return_distribution || realCharts?.return_distribution;
+    if (rdData) drawReturnDistribution(rdData, window.currentChartsData?.metrics);
   }
 
   if (resolvedId === 'finlab-risk-tab') {
     const realCharts = window.currentChartsData?.charts || window.currentChartsData || {};
     const realMetrics = window.currentChartsData?.metrics;
+
+    // ── 資料來源警示：只有 CSV 時 MDD/回撤等指標精度有限 ─────────
+    const hasXlsx = !!(window.currentChartsData?.drawdown?.dates?.length
+      || realCharts?.drawdown?.dates?.length
+      || window.currentStrategyAnalysis?.hasXlsx);
+    const hasCsv = !!(window.currentStrategyAnalysis?.trades?.length);
+    const warnBannerSrc = document.getElementById('fl-p12-warn-banner');
+    if (!hasXlsx && hasCsv && warnBannerSrc) {
+      warnBannerSrc.style.cssText = 'background:var(--yellow-soft,rgba(251,191,36,0.10));border-color:rgba(251,191,36,0.35);color:var(--yellow,#d97706);padding:10px 14px;border-radius:8px;border-width:1px;border-style:solid;font-size:12px;line-height:1.5';
+      warnBannerSrc.innerHTML = `⚠️ <strong>僅上傳 CSV 模式</strong>：MDD、回撤歷史、恢復時間等指標僅以「出場日」為錨點估算，<strong>無法看到盤中真實浮虧</strong>。<br/>例：CSV 模式 MDD 可能顯示 -5%，但實際盤中可能曾到 -60%。<strong>建議補上 xlsx 每日報表</strong>才能拿到真實風險畫像。`;
+    }
 
     // ── 回撤歷史圖 (fl-p12-c1) ─────────────────────────────────
     const ctx1 = getCtx('fl-p12-c1');
@@ -13109,10 +13398,28 @@ function initFinlabCharts(panelId) {
       return taiexMap[yr] != null ? taiexMap[yr] : null;
     };
 
-    // ── VaR / CVaR（從真實交易報酬率計算）────────────────────────
-    // 優先用前端 holdings（從上傳 csv 計算），其次後端
-    const holdings = window.currentChartsData?.holdings || realCharts?.holdings || [];
-    const tradeReturns = holdings.map(h => h.return_pct).filter(r => !isNaN(r)).sort((a,b) => a-b);
+    // ── VaR / CVaR（從真實交易單筆%報酬率計算）────────────────────────
+    // 優先用上傳 csv 的單筆%（exit/entry - 1），其次後端 holdings.return_pct
+    let tradeReturns = [];
+    const csvKpis = window.currentStrategyAnalysis?.kpis;
+    const csvTrades = window.currentStrategyAnalysis?.trades || [];
+    // 從 trades 算單筆純價差%（最準）
+    if (csvTrades.length > 0) {
+      tradeReturns = csvTrades
+        .map(t => {
+          const ep = parseFloat(t.entryPrice || t.entry_price);
+          const xp = parseFloat(t.exitPrice || t.exit_price);
+          if (ep > 0 && xp > 0) return (xp / ep - 1) * 100;  // 百分比
+          return null;
+        })
+        .filter(r => r != null && !isNaN(r))
+        .sort((a, b) => a - b);
+    }
+    // fallback：用後端 holdings
+    if (tradeReturns.length < 5) {
+      const holdings = window.currentChartsData?.holdings || realCharts?.holdings || [];
+      tradeReturns = holdings.map(h => h.return_pct).filter(r => !isNaN(r)).sort((a,b) => a-b);
+    }
     let var95 = null, cvar95 = null;
     if (tradeReturns.length >= 5) {
       const varIdx = Math.max(0, Math.floor(tradeReturns.length * 0.05) - 1);
@@ -13142,10 +13449,62 @@ function initFinlabCharts(panelId) {
       }
     }
 
-    // ── 更新 KPI var95 / cvar95（覆寫 updateFinlabKPIs 的替代值）
+    // ── 更新 KPI var95 / cvar95（覆寫 updateFinlabKPIs 的替代值 + 修正達標判斷邏輯）
     if (var95 != null) {
       document.querySelectorAll('[data-metric="var95"]').forEach(el => { el.textContent = var95.toFixed(1)+'%'; });
       document.querySelectorAll('[data-metric="cvar95"]').forEach(el => { el.textContent = cvar95!=null?cvar95.toFixed(1)+'%':'—'; });
+      // 達標邏輯修正：VaR 為負數，需 >= -7%（不能比 -7% 更深虧）才算達標
+      const varDaBiao = var95 >= -7;
+      document.querySelectorAll('[data-metric-sub="var95"]').forEach(el => {
+        el.innerHTML = varDaBiao
+          ? '<span style="color:var(--ok)">✅ 達標</span>｜需 ≥-7%'
+          : '<span style="color:var(--err)">❌ 未達</span>｜需 ≥-7%';
+      });
+      if (cvar95 != null) {
+        const cvarDaBiao = cvar95 >= -10;
+        document.querySelectorAll('[data-metric-sub="cvar95"]').forEach(el => {
+          el.innerHTML = cvarDaBiao
+            ? '<span style="color:var(--ok)">✅ 達標</span>｜需 ≥-10%'
+            : '<span style="color:var(--err)">❌ 未達</span>｜需 ≥-10%';
+        });
+      }
+    }
+
+    // ── 雙 MDD 副標填值（資產 / 獲利）─────────────────────────────
+    if (csvKpis) {
+      const mddAssetEl = document.getElementById('fl-p12-mdd-asset');
+      const mddProfitEl = document.getElementById('fl-p12-mdd-profit');
+      if (mddAssetEl && csvKpis.mdd != null) mddAssetEl.textContent = (csvKpis.mdd * 100).toFixed(2) + '%';
+      if (mddProfitEl && csvKpis.mddProfit != null) mddProfitEl.textContent = (csvKpis.mddProfit * 100).toFixed(2) + '%';
+    }
+
+    // ── CSV-only 時：把 KPI 卡 "—" 改成「需 xlsx」提示，避免讓人以為計算失敗 ──
+    if (!hasXlsx && hasCsv) {
+      const needXlsxLabel = '<span style="color:var(--yellow,#d97706);font-size:11px" title="此指標需要每日 NAV 資料才能計算，請上傳 xlsx 每日報表">⚠️ 需上傳 xlsx</span>';
+      // 完全只能從每日 NAV 算的指標
+      const xlsxOnlyMetrics = ['fl-p12-rec-max', 'fl-p12-rec-avg', 'fl-p12-rec-pct'];
+      xlsxOnlyMetrics.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && (el.textContent === '—' || el.textContent === '')) el.innerHTML = needXlsxLabel;
+      });
+
+      // 中度受影響的指標 — 加「⚠️ 估算」標記（不阻斷顯示，但提醒精度）
+      const estimatedWarn = (tooltip) =>
+        ` <span style="color:var(--yellow,#d97706);font-size:10px;cursor:help" title="${tooltip}">⚠️ 估算</span>`;
+
+      // 抗風險頁的 MDD/Calmar/Sortino/VaR/CVaR sub
+      const subWarnings = {
+        'mdd': 'CSV 模式下 MDD 僅以出場日為錨點估算，未含盤中浮虧。實際 MDD 可能更深 5-10 倍。',
+        'calmar': 'CSV 模式下 Calmar = CAGR / 估算 MDD，分母不準連動誤差。',
+        'sortino': 'CSV 模式下 Sortino 用單筆%報酬估算下行波動，比真實每日波動樂觀。',
+        'var95': 'CSV 模式下 VaR 是「單筆最差 5%」，非「每日最差 5%」，數量級不同。',
+        'cvar95': 'CSV 模式下 CVaR 為「單筆最差 5% 平均」，與真實每日 CVaR 概念不同。',
+      };
+      Object.entries(subWarnings).forEach(([metric, tooltip]) => {
+        document.querySelectorAll(`[data-metric-sub="${metric}"]`).forEach(el => {
+          if (!el.innerHTML.includes('⚠️')) el.innerHTML = el.innerHTML + estimatedWarn(tooltip);
+        });
+      });
     }
 
     // ── 歷史最大回撤前 5 名 表格 ─────────────────────────────────
@@ -15992,30 +16351,35 @@ function _renderAdvice() {
 
   <!-- KPI 指標卡 -->
   <div class="kpi-grid kpi-grid-5" style="margin-bottom:20px">
-    <div class="kpi-card">
-      <div class="kpi-label">📉 最大回撤</div>
+    <div class="kpi-card" title="MDD（資產角度）：總資產從歷史高點回吐多少 %&#10;公式：(谷值 NAV − 峰值 NAV) ÷ 峰值 NAV&#10;意義：你的「帳戶總資產」最痛時縮水多少&#10;&#10;MDD（獲利角度）：累計獲利從歷史高點回吐多少 %&#10;公式：(累計獲利谷值 − 累計獲利峰值) ÷ 累計獲利峰值&#10;意義：你「賺到的錢」最痛時被吃掉多少">
+      <div class="kpi-label">📉 最大回撤 <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
       <div class="kpi-val red" data-metric="mdd">—</div>
       <div class="kpi-sub" data-metric-sub="mdd"><span style="color:var(--err)">❌ 未達</span>｜需 &lt;-30%</div>
+      <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
+        <span style="opacity:.7">資產 </span><span id="fl-p12-mdd-asset" style="font-weight:600">—</span>
+        <span style="opacity:.4"> ｜ </span>
+        <span style="opacity:.7">獲利 </span><span id="fl-p12-mdd-profit" style="font-weight:600">—</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">📊 Calmar Ratio</div>
+    <div class="kpi-card" title="Calmar Ratio — 報酬 / 痛苦比&#10;公式：年化報酬 (CAGR) ÷ |最大回撤 MDD|&#10;意義：每承受 1% 回撤可以換到多少報酬&#10;&#10;白話：你忍受 -30% 的最痛，換到多少年化報酬？&#10;&#10;✅ 達標 ≥0.9（每 1% 痛換 ≥0.9% 賺）&#10;⭐ 優秀 ≥3.0（賺很多、痛很少）&#10;❌ 未達 <0.5（不值得做）">
+      <div class="kpi-label">📊 Calmar Ratio <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
       <div class="kpi-val" data-metric="calmar">—</div>
       <div class="kpi-sub" data-metric-sub="calmar"><span style="color:var(--err)">❌ 未達</span>｜需 &gt;0.9</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">⬆️ Sortino Ratio</div>
+    <div class="kpi-card" title="Sortino Ratio — 下行風險調整報酬&#10;公式：(年化報酬 − 無風險利率) ÷ 下行波動率&#10;意義：比 Sharpe 更公平——只懲罰「向下」波動，不懲罰「向上」波動&#10;&#10;白話：上漲時的波動不算風險，只算下跌時的波動&#10;&#10;✅ 達標 ≥1.8（下行控制良好）&#10;⭐ 優秀 ≥2.5&#10;❌ 未達 <1.0（下行傷害大）">
+      <div class="kpi-label">⬆️ Sortino Ratio <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
       <div class="kpi-val" data-metric="sortino">—</div>
       <div class="kpi-sub" data-metric-sub="sortino"><span style="color:var(--err)">❌ 未達</span>｜需 &gt;1.8</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">⚡ Value at Risk (95%)</div>
+    <div class="kpi-card" title="Value at Risk (95%) — 風險值&#10;意義：「最壞 5% 的交易日，單日虧損預期至少超過這個數字」&#10;白話：100 個交易日中，最差的 5 天，每天虧損會比這個 % 還深&#10;&#10;達標標準：數字越接近 0 越好&#10;✅ 達標：≥ -7%（意思是最壞 5% 也不會深於 -7%）&#10;❌ 未達：< -7%（意思是會深於 -7%，風險高）">
+      <div class="kpi-label">⚡ Value at Risk (95%) <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
       <div class="kpi-val red" data-metric="var95">—</div>
-      <div class="kpi-sub" data-metric-sub="var95"><span style="color:var(--err)">❌ 未達</span>｜需 &lt;7%</div>
+      <div class="kpi-sub" data-metric-sub="var95"><span style="color:var(--err)">❌ 未達</span>｜需 ≥-7%</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">💥 Conditional VaR</div>
+    <div class="kpi-card" title="Conditional VaR (95%) — 條件風險值（CVaR）&#10;意義：比 VaR 更嚴格——看「最壞 5% 那些交易日的『平均』虧損」&#10;白話：100 天裡最差的 5 天，平均每天虧多少 %&#10;&#10;達標標準：數字越接近 0 越好&#10;✅ 達標：≥ -10%（最壞 5% 的「平均」不會深於 -10%）&#10;❌ 未達：< -10%（最壞 5% 的「平均」深於 -10%，尾部風險高）">
+      <div class="kpi-label">💥 Conditional VaR <span style="font-size:9px;opacity:.4;cursor:help">ⓘ</span></div>
       <div class="kpi-val red" data-metric="cvar95">—</div>
-      <div class="kpi-sub" data-metric-sub="cvar95"><span style="color:var(--err)">❌ 未達</span>｜需 &lt;10%</div>
+      <div class="kpi-sub" data-metric-sub="cvar95"><span style="color:var(--err)">❌ 未達</span>｜需 ≥-10%</div>
     </div>
   </div>
 

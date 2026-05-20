@@ -140,6 +140,102 @@ def read_csv_file(file_storage):
     return df
 
 
+def read_xlsx_file(file_storage):
+    """讀取 xlsx 每日報表，回傳 (date, daily_pnl, nav, max_invested) 結構。
+
+    支援欄位（自動偵測）：
+    - 日期：日期 / Date / 交易日
+    - 每日損益：每日損益 / 損益 / PnL / 獲利金額
+    - NAV / 淨值：淨值 / NAV / 累計淨值
+    - 投入金額：投入金額 / 部位市值 / 最大投入
+    """
+    raw = file_storage.read()
+    import io as _io
+
+    # 優先讀取「每日報表」工作表（XQ 回測格式）；找不到則用第一張
+    xl = pd.ExcelFile(_io.BytesIO(raw), engine='openpyxl')
+    daily_sheet = next(
+        (s for s in xl.sheet_names if any(k in s for k in ['每日報表', 'Daily', 'daily', '每日'])),
+        xl.sheet_names[0]
+    )
+    df = xl.parse(daily_sheet)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    # 找日期欄
+    date_col = None
+    for c in df.columns:
+        if any(k in c for k in ['日期', 'Date', 'date', '交易日']):
+            date_col = c; break
+
+    # 找每日損益欄
+    pnl_col = None
+    for c in df.columns:
+        if any(k in c for k in ['每日損益', '日損益', '損益', 'PnL', 'pnl', '獲利金額', '獲利']):
+            pnl_col = c; break
+
+    # 找 NAV/淨值欄（包含累計獲利，用來重建 NAV）
+    nav_col = None
+    cum_profit_col = None
+    for c in df.columns:
+        if any(k in c for k in ['淨值', 'NAV', 'nav', '累計淨值', '帳戶總值']):
+            nav_col = c; break
+    if not nav_col:
+        for c in df.columns:
+            if any(k in c for k in ['總獲利', '累計獲利', '累積獲利', '累計損益', 'CumPnl', 'cum_pnl']):
+                cum_profit_col = c; break
+
+    # 找投入金額欄
+    invest_col = None
+    for c in df.columns:
+        if any(k in c for k in ['投入金額', '部位市值', '最大投入', '已投入']):
+            invest_col = c; break
+
+    result = {
+        'rows': len(df),
+        'columns': df.columns.tolist(),
+        'date_col': date_col,
+        'pnl_col': pnl_col,
+        'nav_col': nav_col,
+        'cum_profit_col': cum_profit_col,
+        'invest_col': invest_col,
+    }
+
+    # 整理資料
+    daily = []
+    max_invested = 0
+    for _, r in df.iterrows():
+        item = {}
+        if date_col:
+            d = r[date_col]
+            if pd.notna(d):
+                item['date'] = pd.to_datetime(d).strftime('%Y-%m-%d')
+        def _f(v):
+            """將儲存格值（數字或含逗號字串）轉為 float。"""
+            if isinstance(v, (int, float)): return float(v)
+            return float(str(v).replace(',', '').strip())
+
+        if pnl_col and pd.notna(r[pnl_col]):
+            try: item['pnl'] = _f(r[pnl_col])
+            except: pass
+        if nav_col and pd.notna(r[nav_col]):
+            try: item['nav'] = _f(r[nav_col])
+            except: pass
+        elif cum_profit_col and pd.notna(r[cum_profit_col]):
+            try: item['cum_profit'] = _f(r[cum_profit_col])
+            except: pass
+        if invest_col and pd.notna(r[invest_col]):
+            try:
+                inv = _f(r[invest_col])
+                item['invested'] = inv
+                if inv > max_invested: max_invested = inv
+            except: pass
+        if item: daily.append(item)
+
+    result['daily'] = daily
+    result['max_invested'] = max_invested if max_invested > 0 else None
+    return result
+
+
 def convert_numpy_types(obj):
     """遞迴轉換 numpy/pandas 類型為 Python 原生類型，支持 JSON 序列化"""
     if isinstance(obj, dict):
@@ -3196,6 +3292,25 @@ def api_strategy_import():
         return jsonify(response_data)
 
     except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/strategy/parse-xlsx', methods=['POST'])
+def api_strategy_parse_xlsx():
+    """解析上傳的 xlsx 每日報表，回傳結構化資料給前端。
+    解決前端 SheetJS 因 CDN 被擋無法載入的問題。"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+        file = request.files['file']
+        if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+            return jsonify({'status': 'error', 'message': 'Only xlsx files supported'}), 400
+
+        result = read_xlsx_file(file)
+        return jsonify({'status': 'success', 'data': convert_numpy_types(result)})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
