@@ -12936,10 +12936,11 @@ function updateFinlabKPIs(container, metrics, charts) {
              + (sharpe>=3?30:sharpe>=1.3?22:sharpe>=0.8?14:5)
              + (pf>=3?20:pf>=1.5?14:pf>=1.2?8:3)
              + (totalRet>=200?15:totalRet>=50?10:totalRet>=20?6:2));
-  // 抗風險 (p12)
-  const s12 = Math.min(100, (mddAbs<=5?50:mddAbs<=10?40:mddAbs<=20?30:mddAbs<=30?15:5)
-             + (calmar>=10?30:calmar>=0.9?22:calmar>=0.5?12:3)
-             + (sortino>=10?20:sortino>=1.8?14:sortino>=1?8:2));
+  // 抗風險 (p12) — 拆分各項分數供顯示用
+  const s12_mdd    = mddAbs<=5?50:mddAbs<=10?40:mddAbs<=20?30:mddAbs<=30?15:5;
+  const s12_calmar = calmar>=10?30:calmar>=0.9?22:calmar>=0.5?12:3;
+  const s12_sort   = sortino>=10?20:sortino>=1.8?14:sortino>=1?8:2;
+  const s12 = Math.min(100, s12_mdd + s12_calmar + s12_sort);
   // 風險報酬比 (p13)
   const s13 = Math.min(100, (sharpe>=3?35:sharpe>=1.3?26:sharpe>=0.8?16:5)
              + (sortino>=10?30:sortino>=1.8?22:sortino>=1?12:3)
@@ -12959,6 +12960,19 @@ function updateFinlabKPIs(container, metrics, charts) {
   scoreLabel(s12, 'fl-score-p12');
   scoreLabel(s13, 'fl-score-p13');
   scoreLabel(s14, 'fl-score-p14');
+  // ── p12 評分明細（顯示在標題下方）────────────────────────────
+  const s12breakdown = document.getElementById('fl-score-p12-breakdown');
+  if (s12breakdown) {
+    const mddLabel   = mddAbs<=5?'≤5% 優秀':mddAbs<=10?'≤10% 良好':mddAbs<=20?'≤20% 尚可':mddAbs<=30?'≤30% 偏高':'&gt;30% 過大';
+    const calLabel   = calmar>=10?'≥10 極佳':calmar>=0.9?'≥0.9 達標':calmar>=0.5?'≥0.5 尚可':'&lt;0.5 不足';
+    const sortLabel  = sortino>=10?'≥10 極佳':sortino>=1.8?'≥1.8 達標':sortino>=1?'≥1.0 尚可':'&lt;1.0 不足';
+    s12breakdown.innerHTML =
+      `<span style="color:var(--text-muted);font-size:11px;font-weight:400">
+        MDD&nbsp;<b style="color:var(--text-primary)">${s12_mdd}</b>/50（${mddLabel}）&nbsp;＋&nbsp;
+        Calmar&nbsp;<b style="color:var(--text-primary)">${s12_calmar}</b>/30（${calLabel}）&nbsp;＋&nbsp;
+        Sortino&nbsp;<b style="color:var(--text-primary)">${s12_sort}</b>/20（${sortLabel}）
+      </span>`;
+  }
 
   // ── 子標籤狀態更新 ──────────────────────────────────────────
   setSubEl('cagr',         cagr    >= 15  ? okHtml('門檻 ≥15%')    : ngHtml('門檻 ≥15%'));
@@ -13121,16 +13135,8 @@ function initFinlabCharts(panelId) {
     }
     // 月報酬熱力圖 tbody (profit = NT$, 顯示金額)
     const heatBody = document.getElementById('fl-heatmap-body');
-    if (heatBody && realCharts?.monthly_returns) {
-      const mr = realCharts.monthly_returns;
-      const byYearMonth = {};
-      (mr.months || []).forEach((m, i) => {
-        const [yr, mo] = m.split('-');
-        if (!byYearMonth[yr]) byYearMonth[yr] = {};
-        byYearMonth[yr][parseInt(mo)] = mr.profit[i];
-      });
+    const _buildHeatmap = (byYearMonth) => {
       const yrList = Object.keys(byYearMonth).sort();
-      // 計算全局最大值做配色
       const allVals = Object.values(byYearMonth).flatMap(y => Object.values(y));
       const maxAbs = Math.max(...allVals.map(Math.abs), 1);
       heatBody.innerHTML = yrList.map(yr => {
@@ -13138,7 +13144,6 @@ function initFinlabCharts(panelId) {
           const v = byYearMonth[yr][i+1];
           if (v == null) return `<td style="color:#aaa">—</td>`;
           const intensity = Math.min(Math.abs(v) / maxAbs, 0.85);
-          // 台股慣例：盈利紅、虧損綠
           const bg = v > 0 ? `rgba(239,68,68,${intensity})` : v < 0 ? `rgba(34,197,94,${intensity})` : 'transparent';
           const color = intensity > 0.4 ? '#fff' : 'inherit';
           const txt = v >= 0 ? '+' + (v/1000).toFixed(0) + 'k' : (v/1000).toFixed(0) + 'k';
@@ -13149,11 +13154,65 @@ function initFinlabCharts(panelId) {
         const tTxt = total >= 0 ? '+' + (total/1000).toFixed(0) + 'k' : (total/1000).toFixed(0) + 'k';
         return `<tr><td style="font-weight:700">${yr}</td>${cells}<td style="font-weight:700;background:${tBg}">${tTxt}</td></tr>`;
       }).join('');
+    };
+    if (heatBody) {
+      if (realCharts?.monthly_returns) {
+        const mr = realCharts.monthly_returns;
+        const byYearMonth = {};
+        (mr.months || []).forEach((m, i) => {
+          const [yr, mo] = m.split('-');
+          if (!byYearMonth[yr]) byYearMonth[yr] = {};
+          byYearMonth[yr][parseInt(mo)] = mr.profit[i];
+        });
+        if (Object.keys(byYearMonth).length) _buildHeatmap(byYearMonth);
+      } else {
+        // fallback：從 trades 直接算每月 PnL
+        const tFb = window.currentStrategyAnalysis?.trades || [];
+        if (tFb.length > 0) {
+          const byYM = {};
+          tFb.forEach(t => {
+            const dt = t.date || t.exitDate || t.exit_date;
+            if (!dt) return;
+            const d = new Date(dt);
+            if (isNaN(d)) return;
+            const yr = String(d.getFullYear());
+            const mo = d.getMonth() + 1;
+            if (!byYM[yr]) byYM[yr] = {};
+            byYM[yr][mo] = (byYM[yr][mo] || 0) + (t.pnl || 0);
+          });
+          if (Object.keys(byYM).length) _buildHeatmap(byYM);
+        }
+      }
     }
 
     // 持股報酬分佈 (fl-p11-c3) + 交易明細表格
     const ctx3 = getCtx('fl-p11-c3');
-    const holdings = window.currentChartsData?.holdings || realCharts?.holdings || [];
+    let holdings = window.currentChartsData?.holdings || realCharts?.holdings || [];
+    // fallback：若無 holdings，從 trades groupby 商品代碼合計
+    if (!holdings.length) {
+      const tFb2 = window.currentStrategyAnalysis?.trades || [];
+      if (tFb2.length > 0) {
+        const byCode = {};
+        tFb2.forEach(t => {
+          const code = t.code || t.stockCode || t.stock_code || t.symbol || '—';
+          const name = t.name || t.stockName || t.stock_name || code;
+          if (!byCode[code]) byCode[code] = { code, name, pnl: 0, cost: 0, count: 0, entries: [], exits: [] };
+          byCode[code].pnl += (t.pnl || 0);
+          byCode[code].cost += Math.abs(t.cost || t.entryValue || 0);
+          byCode[code].count++;
+          const entryDate = t.entryDate || t.entry_date || t.date;
+          const exitDate  = t.exitDate  || t.exit_date  || t.date;
+          if (entryDate) byCode[code].entries.push(entryDate);
+          if (exitDate)  byCode[code].exits.push(exitDate);
+        });
+        holdings = Object.values(byCode).map(h => {
+          const returnPct = h.cost > 0 ? (h.pnl / h.cost) * 100 : 0;
+          const allDates = [...h.entries, ...h.exits].sort();
+          return { code: h.code, name: h.name, pnl: h.pnl, return_pct: returnPct,
+                   entry: allDates[0] || '—', exit: allDates[allDates.length-1] || '—' };
+        }).sort((a, b) => b.pnl - a.pnl);
+      }
+    }
     let holdingsFilter = null; // bin index filter from chart click
     const renderHoldingsTable = (filterBinIdx) => {
       const tbody = document.getElementById('fl-holdings-tbody');
@@ -13259,6 +13318,26 @@ function initFinlabCharts(panelId) {
         sy = realYearly.strategy;
         by = realYearly.benchmark || null;
       }
+      // fallback：從 trades 算每年 PnL%
+      if (!yrLabels) {
+        const tFb4 = window.currentStrategyAnalysis?.trades || [];
+        const initCap4 = window.currentStrategyAnalysis?.initialCapital || 1000000;
+        if (tFb4.length > 0) {
+          const byYrP = {};
+          tFb4.forEach(t => {
+            const dt = t.date || t.exitDate || t.exit_date;
+            if (!dt) return;
+            const yr = new Date(dt).getFullYear();
+            if (!isNaN(yr)) byYrP[yr] = (byYrP[yr] || 0) + (t.pnl || 0);
+          });
+          const yrs4 = Object.keys(byYrP).map(Number).sort();
+          if (yrs4.length > 0) {
+            yrLabels = yrs4.map(String);
+            sy = yrs4.map(yr => +((byYrP[yr] / initCap4) * 100).toFixed(1));
+            by = yrs4.map(yr => taiexRef[yr] || 10);
+          }
+        }
+      }
       if (!yrLabels) {
         ctx4.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px">⬆️ 請上傳回測檔案以顯示年度報酬</div>';
       } else {
@@ -13273,19 +13352,40 @@ function initFinlabCharts(panelId) {
     }
 
     // 各年表現摘要 table - 更新為真實數據
-    if (realYearly) {
+    const taiexRef = {2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0};
+    const _renderYearlySummary = (years, sy2, by2) => {
       const tbody = document.getElementById('fl-yearly-summary-body');
-      if (tbody) {
-        const sy2 = realYearly.strategy;
-        const by2 = realYearly.benchmark || realYearly.years.map(y => ({2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0}[y] || 10));
-        tbody.innerHTML = realYearly.years.map((yr, i) => {
-          const st = sy2[i], bm = by2[i], alpha = st - bm;
-          const stCls = st >= 0 ? 'green' : 'red';
-          const bmCls = bm >= 0 ? 'green' : 'red';
-          const aCls  = alpha >= 0 ? 'green' : 'red';
-          const win   = alpha >= 0 ? '<span class="green">✅ 勝</span>' : '<span class="red">❌ 輸</span>';
-          return `<tr><td>${yr}</td><td class="num ${stCls}">${st>=0?'+':''}${st.toFixed(1)}%</td><td class="num ${bmCls}">${bm>=0?'+':''}${bm.toFixed(1)}%</td><td class="num ${aCls}">${alpha>=0?'+':''}${alpha.toFixed(1)}%</td><td>${win}</td></tr>`;
-        }).join('');
+      if (!tbody) return;
+      tbody.innerHTML = years.map((yr, i) => {
+        const st = sy2[i], bm = by2[i], alpha = st - bm;
+        const stCls = st >= 0 ? 'green' : 'red';
+        const bmCls = bm >= 0 ? 'green' : 'red';
+        const aCls  = alpha >= 0 ? 'green' : 'red';
+        const win   = alpha >= 0 ? '<span class="green">✅ 勝</span>' : '<span class="red">❌ 輸</span>';
+        return `<tr><td>${yr}</td><td class="num ${stCls}">${st>=0?'+':''}${st.toFixed(1)}%</td><td class="num ${bmCls}">${bm>=0?'+':''}${bm.toFixed(1)}%</td><td class="num ${aCls}">${alpha>=0?'+':''}${alpha.toFixed(1)}%</td><td>${win}</td></tr>`;
+      }).join('');
+    };
+    if (realYearly) {
+      const by2 = realYearly.benchmark || realYearly.years.map(y => taiexRef[y] || 10);
+      _renderYearlySummary(realYearly.years, realYearly.strategy, by2);
+    } else {
+      // fallback：從 trades 算每年 PnL% (pnl / initCap * 100)
+      const tFb3 = window.currentStrategyAnalysis?.trades || [];
+      const initCap3 = window.currentStrategyAnalysis?.initialCapital || 1000000;
+      if (tFb3.length > 0) {
+        const byYrPnl = {};
+        tFb3.forEach(t => {
+          const dt = t.date || t.exitDate || t.exit_date;
+          if (!dt) return;
+          const yr = new Date(dt).getFullYear();
+          if (!isNaN(yr)) byYrPnl[yr] = (byYrPnl[yr] || 0) + (t.pnl || 0);
+        });
+        const years3 = Object.keys(byYrPnl).map(Number).sort();
+        if (years3.length > 0) {
+          const sy3 = years3.map(yr => (byYrPnl[yr] / initCap3) * 100);
+          const by3 = years3.map(yr => taiexRef[yr] || 10);
+          _renderYearlySummary(years3, sy3, by3);
+        }
       }
     }
 
@@ -14961,6 +15061,22 @@ function _sdmRenderFinlab(d, sc5) {
     // score
     const scoreP12 = document.getElementById(R('fl-score-p12'));
     if (scoreP12) { const s = sc5.risk; scoreP12.textContent = `評分：${s.toFixed(0)} / 100 ${scoreEmoji(s)}`; scoreP12.style.color = scoreColor(s); }
+    // score breakdown
+    const bdP12 = document.getElementById(R('fl-score-p12-breakdown'));
+    if (bdP12) {
+      const _mddAbs = Math.abs(mdd);
+      const _s12_mdd    = _mddAbs<=5?50:_mddAbs<=10?40:_mddAbs<=20?30:_mddAbs<=30?15:5;
+      const _s12_calmar = calmar>=10?30:calmar>=0.9?22:calmar>=0.5?12:3;
+      const _s12_sort   = sortino>=10?20:sortino>=1.8?14:sortino>=1?8:2;
+      const mddLbl  = _mddAbs<=5?'≤5% 優秀':_mddAbs<=10?'≤10% 良好':_mddAbs<=20?'≤20% 尚可':_mddAbs<=30?'≤30% 偏高':'&gt;30% 過大';
+      const calLbl  = calmar>=10?'≥10 極佳':calmar>=0.9?'≥0.9 達標':calmar>=0.5?'≥0.5 尚可':'&lt;0.5 不足';
+      const sortLbl = sortino>=10?'≥10 極佳':sortino>=1.8?'≥1.8 達標':sortino>=1?'≥1.0 尚可':'&lt;1.0 不足';
+      bdP12.innerHTML = `<span style="color:var(--text-muted);font-size:11px;font-weight:400">
+        MDD&nbsp;<b style="color:var(--text-primary)">${_s12_mdd}</b>/50（${mddLbl}）&nbsp;＋&nbsp;
+        Calmar&nbsp;<b style="color:var(--text-primary)">${_s12_calmar}</b>/30（${calLbl}）&nbsp;＋&nbsp;
+        Sortino&nbsp;<b style="color:var(--text-primary)">${_s12_sort}</b>/20（${sortLbl}）
+      </span>`;
+    }
     // warn banner
     const warnP12 = document.getElementById(R('fl-p12-warn-banner'));
     if (warnP12) {
@@ -16347,6 +16463,7 @@ function _renderAdvice() {
 ══════════════════════════════════════════════════════════════ -->
 <div id="p12" style="display:none">
   <div class="page-heading">🛡️ 抗風險能力分析 <span id="fl-score-p12" style="font-size:14px;font-weight:600;color:var(--err);margin-left:8px">評分：33 / 100 🔴</span></div>
+  <div id="fl-score-p12-breakdown" style="margin:-10px 0 14px 2px;min-height:16px"></div>
   <div id="fl-p12-warn-banner" class="banner" style="background:var(--bg-raised);border-color:var(--border);color:var(--text-secondary)">⬆️ 上傳回測檔案後顯示風控評估</div>
 
   <!-- KPI 指標卡 -->
