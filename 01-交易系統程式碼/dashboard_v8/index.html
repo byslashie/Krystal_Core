@@ -11378,12 +11378,15 @@ async function uploadStrategyCSV() {
     showStrategyPreview(preview);
 
     // 產生月度 NAV 供 displayCharts 使用
+    // 日期正規化：統一轉成 YYYY-MM（支援 YYYY/MM/DD 和 YYYY-MM-DD 兩種格式）
+    const _normYM = dt => dt ? dt.replace(/\//g, '-').slice(0, 7) : '';
+    const _normDate = dt => dt ? dt.replace(/\//g, '-').slice(0, 10) : '';
     const navByMonth = {};
     let cumPnl = 0;
-    const sortedTrades = [...trades].sort((a,b)=>new Date(a.date||a.exitDate||a.entryDate)-new Date(b.date||b.exitDate||b.entryDate));
+    const sortedTrades = [...trades].sort((a,b)=>new Date(_normDate(a.date||a.exitDate||a.entryDate))-new Date(_normDate(b.date||b.exitDate||b.entryDate)));
     sortedTrades.forEach(t => {
         const dt = t.date || t.exitDate || t.entryDate || '';
-        const ym = dt.slice(0,7);
+        const ym = _normYM(dt);
         if (ym) { cumPnl += t.pnl; navByMonth[ym] = (navByMonth[ym]||0) + t.pnl; }
       });
     const monthKeys = Object.keys(navByMonth).sort();
@@ -11395,7 +11398,7 @@ async function uploadStrategyCSV() {
     if (sortedTrades.length) {
       let peak = initCap, running = initCap;
       sortedTrades.forEach(t => {
-        const dt = (t.date || t.exitDate || t.entryDate || '').slice(0, 10);
+        const dt = _normDate(t.date || t.exitDate || t.entryDate || '');
         if (!dt) return;
         running += (t.pnl || 0);
         if (running > peak) peak = running;
@@ -11432,8 +11435,20 @@ async function uploadStrategyCSV() {
       };
     });
 
+    // 大盤基準：用 TAIEX 年報酬累積成月度指數（而非固定 8% 理論線）
+    const _taiexAnnual = {2014:8.1,2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0};
+    let _bmAcc = 100;
+    let _bmLastYr = monthKeys.length ? +monthKeys[0].slice(0,4) : 2020;
+    let _bmYrAcc = 0, _bmYrMonths = 0;
+    const _bmVals = monthKeys.map((m, i) => {
+      const yr = +m.slice(0,4);
+      const annRet = (_taiexAnnual[yr] ?? 8) / 100;
+      const monthRet = Math.pow(1 + annRet, 1/12) - 1;
+      _bmAcc *= (1 + monthRet);
+      return +_bmAcc.toFixed(2);
+    });
     const frontendCharts = {
-      nav_chart: { labels: monthKeys, strategy: navVals, benchmark: monthKeys.map((_,i)=>+(100*Math.pow(1.08,i/12)).toFixed(2)) },
+      nav_chart: { labels: monthKeys, strategy: navVals, benchmark: _bmVals },
       // monthly_returns 欄位對齊後端格式：months + profit（絕對金額），供熱力圖使用
       monthly_returns: {
         months: monthKeys,
@@ -13104,13 +13119,13 @@ function initFinlabCharts(panelId) {
         const initCap = window.currentStrategyAnalysis?.initialCapital
           || parseFloat((document.getElementById('initial-capital')||{}).value)
           || 1000000;
-        const taiexMap2 = {2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0};
+        const taiexMap2 = {2014:8.1,2015:-10.4,2016:11.0,2017:15.0,2018:-8.6,2019:23.3,2020:22.8,2021:23.7,2022:-22.4,2023:26.8,2024:28.5,2025:10.0,2026:5.0};
         if (tFb.length > 0) {
           const byYr = {};
           tFb.forEach(t => {
-            const dt = t.date || t.exitDate || t.entryDate;
+            const dt = (t.date || t.exitDate || t.entryDate || '').replace(/\//g, '-');
             const yr = dt ? new Date(dt).getFullYear() : null;
-            if (yr) byYr[yr] = (byYr[yr] || 0) + (t.pnl || 0);
+            if (yr && !isNaN(yr)) byYr[yr] = (byYr[yr] || 0) + (t.pnl || 0);
           });
           const years = Object.keys(byYr).map(Number).sort();
           if (years.length > 0) {
@@ -13171,9 +13186,9 @@ function initFinlabCharts(panelId) {
         if (tFb.length > 0) {
           const byYM = {};
           tFb.forEach(t => {
-            const dt = t.date || t.exitDate || t.exit_date;
-            if (!dt) return;
-            const d = new Date(dt);
+            const raw = t.date || t.exitDate || t.exit_date;
+            if (!raw) return;
+            const d = new Date(raw.replace(/\//g, '-'));
             if (isNaN(d)) return;
             const yr = String(d.getFullYear());
             const mo = d.getMonth() + 1;
@@ -13192,25 +13207,18 @@ function initFinlabCharts(panelId) {
     if (!holdings.length) {
       const tFb2 = window.currentStrategyAnalysis?.trades || [];
       if (tFb2.length > 0) {
-        const byCode = {};
-        tFb2.forEach(t => {
+        // 每筆交易一行（與圖表 bin 對應），優先用 returnPct，其次用 exitPrice/entryPrice
+        holdings = tFb2.map(t => {
           const code = t.code || t.stockCode || t.stock_code || t.symbol || '—';
           const name = t.name || t.stockName || t.stock_name || code;
-          if (!byCode[code]) byCode[code] = { code, name, pnl: 0, cost: 0, count: 0, entries: [], exits: [] };
-          byCode[code].pnl += (t.pnl || 0);
-          byCode[code].cost += Math.abs(t.cost || t.entryValue || 0);
-          byCode[code].count++;
-          const entryDate = t.entryDate || t.entry_date || t.date;
-          const exitDate  = t.exitDate  || t.exit_date  || t.date;
-          if (entryDate) byCode[code].entries.push(entryDate);
-          if (exitDate)  byCode[code].exits.push(exitDate);
-        });
-        holdings = Object.values(byCode).map(h => {
-          const returnPct = h.cost > 0 ? (h.pnl / h.cost) * 100 : 0;
-          const allDates = [...h.entries, ...h.exits].sort();
-          return { code: h.code, name: h.name, pnl: h.pnl, return_pct: returnPct,
-                   entry: allDates[0] || '—', exit: allDates[allDates.length-1] || '—' };
-        }).sort((a, b) => b.pnl - a.pnl);
+          let returnPct = 0;
+          if (t.returnPct != null) returnPct = t.returnPct;
+          else if (t.exitPrice > 0 && t.entryPrice > 0) returnPct = (t.exitPrice - t.entryPrice) / t.entryPrice * 100;
+          else if (t.exit_price > 0 && t.entry_price > 0) returnPct = (t.exit_price - t.entry_price) / t.entry_price * 100;
+          const entry = (t.entryDate || t.entry_date || t.date || '').replace(/\//g, '-').slice(0,10);
+          const exit  = (t.exitDate  || t.exit_date  || t.date || '').replace(/\//g, '-').slice(0,10);
+          return { code, name, pnl: t.pnl || 0, return_pct: +returnPct.toFixed(2), entry: entry||'—', exit: exit||'—' };
+        }).sort((a, b) => b.return_pct - a.return_pct);
       }
     }
     let holdingsFilter = null; // bin index filter from chart click
@@ -13325,7 +13333,7 @@ function initFinlabCharts(panelId) {
         if (tFb4.length > 0) {
           const byYrP = {};
           tFb4.forEach(t => {
-            const dt = t.date || t.exitDate || t.exit_date;
+            const dt = (t.date || t.exitDate || t.exit_date || '').replace(/\//g, '-');
             if (!dt) return;
             const yr = new Date(dt).getFullYear();
             if (!isNaN(yr)) byYrP[yr] = (byYrP[yr] || 0) + (t.pnl || 0);
@@ -13375,7 +13383,7 @@ function initFinlabCharts(panelId) {
       if (tFb3.length > 0) {
         const byYrPnl = {};
         tFb3.forEach(t => {
-          const dt = t.date || t.exitDate || t.exit_date;
+          const dt = (t.date || t.exitDate || t.exit_date || '').replace(/\//g, '-');
           if (!dt) return;
           const yr = new Date(dt).getFullYear();
           if (!isNaN(yr)) byYrPnl[yr] = (byYrPnl[yr] || 0) + (t.pnl || 0);
