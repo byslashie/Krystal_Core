@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "04-個人特質與規劃/諮商筆記_2026-05-21.md",
+                "file": "01-交易系統程式碼/dashboard_v8/TODO_RESEARCH_LAB_FIXES.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "諮商筆記_2026-05-21"
+              "title": "TODO_RESEARCH_LAB_FIXES"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "諮商筆記",
+                "query": "TODO_RESEARCH_LAB_FIXES.md",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -172,18 +172,20 @@
   },
   "active": "554404b646b596c1",
   "lastOpenFiles": [
-    "01-交易系統程式碼/dashboard_v8/temp_uploads/260519_V4.csv",
-    "01-交易系統程式碼/dashboard_v8/temp_uploads/260519_-.csv",
     "01-交易系統程式碼/dashboard_v8/broker_positions.db-journal",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.950d4a29a367",
+    "01-交易系統程式碼/dashboard_v8/temp_uploads/260519_V4.csv",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.537874499c3e",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.bda7bc272cb6",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.607d89464a62",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.8cee534b3932",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.95eb9626ae42",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.0a6d69ee95f9",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.e4229c0599be",
+    "01-交易系統程式碼/dashboard_v8/index.html.tmp.11536.a87c8e0dacc9",
+    "04-個人特質與規劃/諮商筆記_2026-05-21.md",
+    "01-交易系統程式碼/dashboard_v8/TODO_RESEARCH_LAB_FIXES.md",
     "02-策略知識庫/Strategies/S3-台股強勢股突破/V4.1_邏輯規格_可移植版.md",
-    "02-策略知識庫/Strategies/S3-台股強勢股突破/V4.1_邏輯規格_可移植版.md.tmp.14744.1779190180947",
-    "01-交易系統程式碼/dashboard_v8/__pycache__/app.cpython-311.pyc.2472689758208",
-    "01-交易系統程式碼/dashboard_v8/app.py.tmp.51432.1779170648050",
-    "01-交易系統程式碼/dashboard_v8/app.py.tmp.51432.1779170555411",
-    "01-交易系統程式碼/dashboard_v8/app.py.tmp.51432.1779170514206",
-    "01-交易系統程式碼/_tmp_check_strategy.py",
-    "01-交易系統程式碼/dashboard_v8/__pycache__/app.cpython-311.pyc.1979904847872",
-    "01-交易系統程式碼/dashboard_v8/_tmp_clear_acwx.py",
     "02-策略知識庫/Strategies/S3-台股強勢股突破/強勢股加碼策略_進出場規則手冊_v1.1.md",
     "11-自媒體專區/直播活動/2026-0530-AI量化策略/投影片/export/slide_23.png",
     "11-自媒體專區/直播活動/2026-0530-AI量化策略/投影片/export/slide_22.png",
@@ -209,14 +211,12 @@
     "11-自媒體專區/直播活動/2026-0530-AI量化策略/README.md",
     "11-自媒體專區/品牌規格/brand-tokens.md",
     "04-個人特質與規劃/週目標/weekly_2026-W20.md",
-    "04-個人特質與規劃/諮商筆記_2026-05-21.md",
     "04-個人特質與規劃/健康紀錄.md",
     "04-個人特質與規劃/self_media_content_strategy.md",
     "04-個人特質與規劃/four_identities_daily_schedule.md",
     "02-策略知識庫/quick_reference_v2_may2026.md",
     "02-策略知識庫/krystal_strategy_reflection_partner.md",
     "02-策略知識庫/01-台指期多單策略/daily_logs/template_daily_log.md",
-    "02-策略知識庫/01-台指期多單策略/daily_logs/20260522_thursday_final.md",
-    "02-策略知識庫/01-台指期多單策略/daily_logs/20260521_wednesday.md"
+    "02-策略知識庫/01-台指期多單策略/daily_logs/20260522_thursday_final.md"
   ]
 }

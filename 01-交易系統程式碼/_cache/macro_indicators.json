@@ -29,36 +29,36 @@
       "next_update": "FOMC 會議後 (FRED: FEDFUNDS)"
     },
     "real_rate": {
-      "value": "2.10%",
-      "label": "2.10% → 偏高",
-      "signal": "2.10% — 實質利率偏高，抑制風險資產",
+      "value": "2.13%",
+      "label": "2.13% → 偏高",
+      "signal": "2.13% — 實質利率偏高，抑制風險資產",
       "signal_color": "var(--red)",
       "source": "FRED: DFII10 (10年期TIPS實質利率)",
-      "analysis": "當前 2.10%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。",
+      "analysis": "當前 2.13%，實質利率偏高，抑制風險資產。成長股 DCF 折現率高，估值承壓。黃金缺乏多頭催化劑。若 CPI 持續降溫或 Fed 降息，實質利率下行有利布局成長股。",
       "next_update": "每日更新 (FRED: DFII10)"
     },
     "vix": {
-      "value": "18.0",
-      "label": "18.0 → 平靜",
-      "signal": "18.0 — 市場平靜",
-      "signal_color": "var(--green)",
+      "value": "455.8",
+      "label": "455.8 → 恐慌",
+      "signal": "455.8 — 高度恐慌",
+      "signal_color": "var(--red)",
       "source": "Yahoo Finance: ^VIX",
-      "analysis": "當前 18.0，處於正常波動區間，市場情緒穩定。VIX 未出現異常飆升，系統性風險目前受控。可正常持倉，留意若 VIX 突然從低位飆升 > 25 需減倉應對。",
+      "analysis": "當前 455.8，市場極度恐慌（金融危機等級）。這通常是歷史上絕佳的反向分批進場時機，但需分批、控制倉位。確認事件是否為系統性危機（如 2008/2020）再決定操作力度。",
       "next_update": "即時 (交易時段每分鐘)"
     },
     "usd_twd": {
-      "value": "31.66",
-      "label": "31.66 TWD/USD",
-      "signal": "31.66 — 台幣偏強",
+      "value": "18.06",
+      "label": "18.06 TWD/USD",
+      "signal": "18.06 — 台幣偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: TWD=X",
-      "analysis": "當前 31.66，台幣處於中性區間。匯率對台股影響中性，外資進出主要取決於基本面。密切追蹤外資買賣超作為台幣走向的先行指標。",
+      "analysis": "當前 18.06，台幣偏強，有利外資回流台股。台幣升值環境下，外資持有台股的美元計價報酬改善。進口商受益，出口科技業匯兌收益減少，但通常基本面更重要。",
       "next_update": "即時 (交易時段每分鐘)"
     },
     "jp_usdjpy": {
-      "value": "458.7",
-      "label": "458.7 JPY/USD",
-      "signal": "458.7 — 日圓偏弱",
+      "value": "220.6",
+      "label": "220.6 JPY/USD",
+      "signal": "220.6 — 日圓偏弱",
       "signal_color": "var(--yellow)",
       "source": "Yahoo Finance: JPY=X",
       "next_update": "即時 (交易時段每分鐘)"
@@ -80,9 +80,9 @@
       "next_update": "BOJ 會議後 (FRED: IRSTCB01JPM156N)"
     },
     "eu_eurusd": {
-      "value": "1.1625",
-      "label": "1.1625 EUR/USD",
-      "signal": "1.1625 — 歐元偏強",
+      "value": "1.1601",
+      "label": "1.1601 EUR/USD",
+      "signal": "1.1601 — 歐元偏強",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: EURUSD=X",
       "next_update": "即時 (交易時段每分鐘)"
@@ -104,9 +104,9 @@
       "next_update": "ECB 會議後"
     },
     "cn_usdcny": {
-      "value": "6.8043",
-      "label": "6.8043 CNY/USD",
-      "signal": "6.8043 — 人民幣穩定",
+      "value": "6.8097",
+      "label": "6.8097 CNY/USD",
+      "signal": "6.8097 — 人民幣穩定",
       "signal_color": "var(--green)",
       "source": "Yahoo Finance: CNY=X",
       "next_update": "即時 (Yahoo CNY=X)"
@@ -119,10 +119,10 @@
       "source": "FRED: CHNCPIALLMINMEI"
     },
     "kr_usdkrw": {
-      "value": "1509",
-      "label": "1509 KRW/USD",
-      "signal": "1509 — 韓元偏弱",
-      "signal_color": "var(--yellow)",
+      "value": "nan",
+      "label": "nan KRW/USD",
+      "signal": "nan — 韓元回穩",
+      "signal_color": "var(--green)",
       "source": "Yahoo Finance: KRW=X",
       "next_update": "即時 (Yahoo KRW=X)"
     },
@@ -214,5 +214,5 @@
     }
   },
   "errors": [],
-  "cached_at": "2026-05-19T19:41:34.230315"
+  "cached_at": "2026-05-20T12:39:39.550591"
 }
